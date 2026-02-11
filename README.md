@@ -5,15 +5,14 @@ This repository contains a short, runnable handbook (book/site) plus minimal Pyt
 ## Local dev
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
 
 ruff check .
 pytest
-
-# Build the site/book
-quarto render book --to html
-# Optional:
-quarto render book --to pdf
 ```
+
+## Build the book/site
+
+See [`docs/BUILD.md`](docs/BUILD.md) for prerequisites (Quarto + PDF deps) and render commands.
