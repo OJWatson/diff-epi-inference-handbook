@@ -7,5 +7,6 @@ updatedAtUtc: 2026-02-11T19:42:26Z
 ```
 
 ## Next steps
-- Decide whether to publish the rendered site via GitHub Pages in M0 or defer to M1.
-- Consider pinning exact tool versions for reproducibility (Quarto, Python, deps).
+- GitHub Pages publishing is deferred to **M1** (M0 focuses on a CI-gated, reproducible local+CI build).
+- If/when we add Pages in M1: add a `deploy-pages` workflow that publishes `book/_book/` on pushes to `main`.
+- Consider further pinning for reproducibility (e.g. a lockfile for Python deps).

@@ -4,8 +4,9 @@ This repo uses a single-source **Quarto** book (in `book/`) with executable Pyth
 
 ## Prerequisites
 
-- Python **3.10+**
-- Quarto CLI: https://quarto.org/docs/get-started/
+- Python **3.11** (CI uses 3.11; 3.10+ may work but is not tested in CI)
+- Quarto CLI **1.8.27** (CI pins this version for reproducibility)
+  - https://quarto.org/docs/get-started/
 
 ### PDF builds
 
@@ -30,6 +31,13 @@ pip install -e '.[dev]'
 # Quick sanity checks
 ruff check .
 pytest
+```
+
+## Verify tool versions
+
+```bash
+python --version
+quarto --version
 ```
 
 ## Render the book

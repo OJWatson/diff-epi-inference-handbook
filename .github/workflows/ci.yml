@@ -38,6 +38,9 @@ jobs:
           python -m pip check
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          # Pin for reproducibility (matches docs/BUILD.md)
+          version: '1.8.27'
       - name: Render book (HTML)
         run: |
           quarto render book --to html
@@ -58,6 +61,9 @@ jobs:
           python -m pip check
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          # Pin for reproducibility (matches docs/BUILD.md)
+          version: '1.8.27'
       - name: Set up TinyTeX
         uses: r-lib/actions/setup-tinytex@v2
       - name: Render book (PDF)
