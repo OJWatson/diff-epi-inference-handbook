@@ -7,7 +7,7 @@ This page executes a minimal deterministic **SEIR + reporting** pipeline using t
 Scope (M1 slice):
 
 - Deterministic SEIR simulation (Euler discretisation).
-- A minimal observation model: incidence derived from the drop in susceptibles, then **reported cases** with a reporting rate `rho`.
+- An observation model: incidence derived from the drop in susceptibles, then **reported cases** via under-reporting, a delay distribution, and NB noise.
 
 Assumptions / parameterisation:
 
@@ -15,15 +15,24 @@ Assumptions / parameterisation:
 - `beta` is the effective transmission rate, `sigma = 1 / latent_period`, `gamma = 1 / infectious_period`.
 - The solver is a simple **forward Euler** discretisation with step size `dt` (smaller `dt` is more stable).
 
+Observation model (per time step):
+
+- Incidence: \(i_t = \max(S_t - S_{t+1}, 0)\)
+- Under-reporting: \(\tilde{i}_t = \rho\, i_t\)
+- Delay: \(\mu_t = \sum_{d\ge 0} \tilde{i}_{t-d} w_d\), where \(w_d\) is a discrete delay PMF.
+- Noise: \(y_t \sim \text{NegBin}(\mu_t, \kappa)\) with \(\mathrm{Var}(y_t)=\mu_t + \mu_t^2/\kappa\).
+
 ```{python}
 import numpy as np
 import matplotlib.pyplot as plt
 
 from diff_epi_inference import (
     SEIRParams,
-    expected_reported_cases,
+    discrete_gamma_delay_pmf,
+    expected_reported_cases_delayed,
     incidence_from_susceptibles,
-    sample_poisson_reports,
+    nbinom_loglik,
+    sample_nbinom_reports,
     simulate_seir_euler,
 )
 
@@ -55,20 +64,34 @@ plt.show()
 # Basic invariant check
 assert np.allclose(S + E + I + R, S[0] + E[0] + I[0] + R[0])
 
-# --- Minimal reporting / observation model ---
+# --- Observation / reporting model ---
 
+# Incidence per step is derived from the drop in susceptibles.
 inc = incidence_from_susceptibles(S)
-mu = expected_reported_cases(incidence=inc, reporting_rate=0.3)
-y = sample_poisson_reports(expected=mu, rng=np.random.default_rng(0))
+
+# A slightly richer model than rho * incidence:
+#   1) under-reporting via rho
+#   2) a reporting delay distribution w_d
+#   3) negative binomial observation noise (over-dispersion)
+
+rho = 0.3
+w = discrete_gamma_delay_pmf(shape=2.0, scale=1.0, max_delay=20)
+mu = expected_reported_cases_delayed(incidence=inc, reporting_rate=rho, delay_pmf=w)
+
+dispersion = 20.0
+rng = np.random.default_rng(0)
+y = sample_nbinom_reports(expected=mu, dispersion=dispersion, rng=rng)
+ll = nbinom_loglik(y=y, mu=mu, dispersion=dispersion)
 
 fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(t[1:], mu, label="E[reported]")
-ax.plot(t[1:], y, label="reported (Poisson)", alpha=0.7)
+ax.plot(t[1:], mu, label="E[reported] (delay + rho)")
+ax.plot(t[1:], y, label="reported (NegBin)", alpha=0.7)
 ax.set_xlabel("time")
 ax.set_ylabel("cases / step")
-ax.set_title("Reporting model")
+ax.set_title("Observation model")
 ax.legend()
 plt.show()
 
+assert np.isfinite(ll)
 assert inc.shape == mu.shape == y.shape
 ```
