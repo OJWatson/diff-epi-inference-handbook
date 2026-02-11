@@ -1,8 +1,13 @@
 ---
-title: "Running example (M0)"
+title: "Running example (M1): SEIR + reporting"
 ---
 
-This page executes a minimal deterministic SEIR simulation using the companion Python package.
+This page executes a minimal deterministic **SEIR + reporting** pipeline using the companion Python package.
+
+Scope (M1 slice):
+
+- Deterministic SEIR simulation (Euler discretisation).
+- A minimal observation model: incidence derived from the drop in susceptibles, then **reported cases** with a reporting rate `rho`.
 
 Assumptions / parameterisation:
 
@@ -14,7 +19,13 @@ Assumptions / parameterisation:
 import numpy as np
 import matplotlib.pyplot as plt
 
-from diff_epi_inference import SEIRParams, simulate_seir_euler
+from diff_epi_inference import (
+    SEIRParams,
+    expected_reported_cases,
+    incidence_from_susceptibles,
+    sample_poisson_reports,
+    simulate_seir_euler,
+)
 
 params = SEIRParams(beta=0.6, sigma=1/5, gamma=1/7)
 out = simulate_seir_euler(
@@ -43,4 +54,21 @@ plt.show()
 
 # Basic invariant check
 assert np.allclose(S + E + I + R, S[0] + E[0] + I[0] + R[0])
+
+# --- Minimal reporting / observation model ---
+
+inc = incidence_from_susceptibles(S)
+mu = expected_reported_cases(incidence=inc, reporting_rate=0.3)
+y = sample_poisson_reports(expected=mu, rng=np.random.default_rng(0))
+
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(t[1:], mu, label="E[reported]")
+ax.plot(t[1:], y, label="reported (Poisson)", alpha=0.7)
+ax.set_xlabel("time")
+ax.set_ylabel("cases / step")
+ax.set_title("Reporting model")
+ax.legend()
+plt.show()
+
+assert inc.shape == mu.shape == y.shape
 ```
