@@ -1,0 +1,24 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "Differentiable Epidemiology"
+  subtitle: "Neural and Simulation-Based Inference for Infectious Diseases"
+  author: "OJWatson"
+  chapters:
+    - index.qmd
+    - running-example.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+  pdf:
+    documentclass: scrreprt
+    toc: true
+execute:
+  freeze: auto
+  echo: true
+  warning: false
+  message: false

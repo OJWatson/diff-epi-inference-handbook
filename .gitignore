@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+ruff_cache/
+
+# Quarto
+book/_book/
+book/.quarto/
+book/.quarto_cache/
+
+# Misc
+.DS_Store
+
+# Packaging
+*.egg-info/

@@ -1,0 +1,40 @@
+---
+title: "Running example (M0)"
+---
+
+This page executes a minimal deterministic SEIR simulation using the companion Python package.
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+from diff_epi_inference import SEIRParams, simulate_seir_euler
+
+params = SEIRParams(beta=0.6, sigma=1/5, gamma=1/7)
+out = simulate_seir_euler(
+    params=params,
+    s0=999.0,
+    e0=0.0,
+    i0=1.0,
+    r0=0.0,
+    dt=0.2,
+    steps=200,
+)
+
+t = out["t"]
+S, E, I, R = out["S"], out["E"], out["I"], out["R"]
+
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(t, S, label="S")
+ax.plot(t, E, label="E")
+ax.plot(t, I, label="I")
+ax.plot(t, R, label="R")
+ax.set_xlabel("time")
+ax.set_ylabel("population")
+ax.set_title("SEIR (Euler discretisation)")
+ax.legend()
+plt.show()
+
+# Basic invariant check
+assert np.allclose(S + E + I + R, S[0] + E[0] + I[0] + R[0])
+```

@@ -1,0 +1,9 @@
+---
+title: "Home"
+---
+
+This is the bootstrap scaffold for the *Differentiable Epidemiology* handbook.
+
+- Single-source Quarto book that can render to **HTML** and **PDF**.
+- Companion Python package (minimal, tested).
+- A runnable **end-to-end** example.
