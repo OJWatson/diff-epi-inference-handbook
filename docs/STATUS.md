@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M0
 state: running
-headSha: 084561af779cce2dea0c1c4c392a543aa94e14ea
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21921433320
-updatedAtUtc: 2026-02-11T20:16:10Z
+headSha: 4b86c83dc0deb887fb6f7950340f4c0df0fd43ed
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21921994649
+updatedAtUtc: 2026-02-11T20:33:28Z
 ```
 
 ## Next steps
