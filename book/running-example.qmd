@@ -4,6 +4,12 @@ title: "Running example (M0)"
 
 This page executes a minimal deterministic SEIR simulation using the companion Python package.
 
+Assumptions / parameterisation:
+
+- Compartments are continuous (real-valued) and **closed**: births/deaths are ignored, so total population is conserved.
+- `beta` is the effective transmission rate, `sigma = 1 / latent_period`, `gamma = 1 / infectious_period`.
+- The solver is a simple **forward Euler** discretisation with step size `dt` (smaller `dt` is more stable).
+
 ```{python}
 import numpy as np
 import matplotlib.pyplot as plt
