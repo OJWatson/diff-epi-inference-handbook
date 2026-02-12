@@ -178,7 +178,7 @@ accept_rate, beta_mean, beta_q05, beta_q95
 A quick visual check:
 
 ```{python}
-from diff_epi_inference.plotting import plot_trace_and_acf
+from diff_epi_inference.plotting.mcmc import plot_trace_and_acf
 
 fig, _ = plot_trace_and_acf(
     beta_chain,
@@ -306,7 +306,7 @@ accept_rate_hmc, beta_mean_hmc, beta_q05_hmc, beta_q95_hmc
 A quick trace plot:
 
 ```{python}
-from diff_epi_inference.plotting import plot_trace_and_acf
+from diff_epi_inference.plotting.mcmc import plot_trace_and_acf
 
 fig, _ = plot_trace_and_acf(
     beta_chain_hmc,
