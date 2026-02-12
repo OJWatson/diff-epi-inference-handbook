@@ -475,6 +475,79 @@ coverage_by_beta = {beta: float(np.mean(v)) for beta, v in sorted(by_beta.items(
 coverage_by_beta
 ```
 
+#### Calibration smoke test (HMC; `beta` only)
+
+We can repeat the same coverage experiment for the minimal HMC baseline.
+Because HMC here uses finite-difference gradients, we keep the chains *very short*.
+
+```{python}
+from diff_epi_inference.mcmc.hmc import hamiltonian_monte_carlo
+
+
+results_hmc: list[CoverageResult] = []
+
+for beta_true_i in beta_grid:
+    for _ in range(reps_per_beta):
+        params_true_i = SEIRParams(beta=float(beta_true_i), sigma=sigma_fixed, gamma=gamma_fixed)
+        out_true_i = simulate_seir_euler(
+            params=params_true_i,
+            s0=s0,
+            e0=e0,
+            i0=i0,
+            r0=r0,
+            dt=dt,
+            steps=steps,
+        )
+
+        inc_true_i = incidence_from_susceptibles(out_true_i["S"])
+        mu_true_i = expected_reported_cases_delayed(
+            incidence=inc_true_i,
+            reporting_rate=reporting_rate,
+            delay_pmf=w,
+        )
+
+        y_obs_i = sample_nbinom_reports(expected=mu_true_i, dispersion=dispersion, rng=rng)
+        log_post_i = make_log_post_logbeta_for_y(y_obs_i)
+
+        res_i = hamiltonian_monte_carlo(
+            log_post_i,
+            x0=np.array([np.log(0.5)]),
+            n_steps=400,
+            step_size=0.02,
+            n_leapfrog=15,
+            grad_eps=1e-4,
+            rng=rng,
+        )
+
+        beta_chain_i = np.exp(res_i.chain[:, 0])[100:]
+        q05_i, q95_i = [float(q) for q in np.quantile(beta_chain_i, [0.05, 0.95])]
+        contained_i = (q05_i <= float(beta_true_i) <= q95_i)
+
+        results_hmc.append(
+            CoverageResult(
+                beta_true=float(beta_true_i),
+                contained=bool(contained_i),
+                q05=q05_i,
+                q95=q95_i,
+                accept_rate=float(res_i.accept_rate),
+            )
+        )
+
+coverage_hmc = float(np.mean([r.contained for r in results_hmc]))
+coverage_hmc
+```
+
+Break down coverage by `beta_true`:
+
+```{python}
+by_beta_hmc = defaultdict(list)
+for r in results_hmc:
+    by_beta_hmc[r.beta_true].append(r.contained)
+
+coverage_by_beta_hmc = {beta: float(np.mean(v)) for beta, v in sorted(by_beta_hmc.items())}
+coverage_by_beta_hmc
+```
+
 ## Next coding tasks
 
 - Add `src/diff_epi_inference/mcmc/mh.py` with a minimal MH sampler + tests.
