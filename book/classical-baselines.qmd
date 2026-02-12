@@ -56,6 +56,137 @@ accept_rate, mean, std
 
 The acceptance rate depends strongly on the proposal scale; in 1D, a value around 20–60% is typical for a reasonable random-walk step size.
 
+## Minimal MH demo: infer only `beta` in the SEIR running example
+
+As a first epidemiological baseline, we infer **only the transmission rate** `beta`, keeping the remaining parameters fixed.
+This is intentionally a *small, well-posed* problem: a 1D posterior that still exercises the full simulation + observation likelihood.
+
+We will:
+
+- simulate a synthetic observed time series `y` from a known `beta_true`
+- define a log posterior in terms of `log_beta = log(beta)` (so proposals live on ℝ)
+- run random-walk MH and inspect the resulting posterior for `beta`
+
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+from diff_epi_inference import (
+    SEIRParams,
+    discrete_gamma_delay_pmf,
+    expected_reported_cases_delayed,
+    incidence_from_susceptibles,
+    nbinom_loglik,
+    sample_nbinom_reports,
+    simulate_seir_euler,
+)
+from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
+
+# --- Fixed settings (match the running example defaults) ---
+
+sigma_fixed = 1 / 5
+gamma_fixed = 1 / 7
+
+s0, e0, i0, r0 = 999.0, 0.0, 1.0, 0.0
+
+dt = 0.2
+steps = 200
+
+reporting_rate = 0.3
+w = discrete_gamma_delay_pmf(shape=2.0, scale=1.0, max_delay=20)
+dispersion = 20.0
+
+# --- Synthetic data ---
+
+beta_true = 0.6
+params_true = SEIRParams(beta=beta_true, sigma=sigma_fixed, gamma=gamma_fixed)
+
+out_true = simulate_seir_euler(
+    params=params_true,
+    s0=s0,
+    e0=e0,
+    i0=i0,
+    r0=r0,
+    dt=dt,
+    steps=steps,
+)
+
+inc_true = incidence_from_susceptibles(out_true["S"])
+mu_true = expected_reported_cases_delayed(
+    incidence=inc_true,
+    reporting_rate=reporting_rate,
+    delay_pmf=w,
+)
+
+rng = np.random.default_rng(0)
+y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
+
+# --- Log posterior for log(beta) ---
+
+logbeta_prior_mean = float(np.log(0.5))
+logbeta_prior_sd = 0.5
+
+
+def log_post_logbeta(x: np.ndarray) -> float:
+    logbeta = float(x[0])
+    beta = float(np.exp(logbeta))
+
+    # Log prior: log(beta) ~ Normal(mean, sd)  (constants dropped)
+    lp = -0.5 * ((logbeta - logbeta_prior_mean) / logbeta_prior_sd) ** 2
+
+    params = SEIRParams(beta=beta, sigma=sigma_fixed, gamma=gamma_fixed)
+    out = simulate_seir_euler(
+        params=params,
+        s0=s0,
+        e0=e0,
+        i0=i0,
+        r0=r0,
+        dt=dt,
+        steps=steps,
+    )
+
+    inc = incidence_from_susceptibles(out["S"])
+    mu = expected_reported_cases_delayed(
+        incidence=inc,
+        reporting_rate=reporting_rate,
+        delay_pmf=w,
+    )
+
+    ll = nbinom_loglik(y=y_obs, mu=mu, dispersion=dispersion)
+    return float(lp + ll)
+
+
+res = random_walk_metropolis_hastings(
+    log_post_logbeta,
+    x0=np.array([np.log(0.3)]),
+    proposal_std=0.10,
+    n_steps=3_000,
+    rng=np.random.default_rng(1),
+)
+
+beta_chain = np.exp(res.chain[:, 0])
+beta_chain = beta_chain[500:]  # crude burn-in for this demo
+
+accept_rate = res.accept_rate
+beta_mean = float(np.mean(beta_chain))
+beta_q05, beta_q95 = [float(q) for q in np.quantile(beta_chain, [0.05, 0.95])]
+
+accept_rate, beta_mean, beta_q05, beta_q95
+```
+
+A quick visual check:
+
+```{python}
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(beta_chain, lw=0.7)
+ax.axhline(beta_true, color="black", ls="--", label="beta_true")
+ax.set_xlabel("MH iteration")
+ax.set_ylabel("beta")
+ax.set_title("MH trace for beta (others fixed)")
+ax.legend()
+plt.show()
+```
+
 ### 2) Random-walk Metropolis–Hastings
 
 - Algorithm: Gaussian random-walk proposals in unconstrained space.
