@@ -20,3 +20,4 @@ Guidelines:
 - 2026-02-12: Added MH calibration smoke test to `book/classical-baselines.qmd` (20 synthetic datasets across a `beta_true` grid; reports approximate 90% interval coverage); ran `ruff check .` + `pytest` (all pass) and pushed.
 - 2026-02-12: Added matching HMC calibration smoke test to `book/classical-baselines.qmd` (same ~20 datasets; reports approximate 90% interval coverage); ran `ruff check .` + `pytest` (all pass) and pushed.
 - 2026-02-12: Added optional BlackJAX NUTS wrapper (`src/diff_epi_inference/mcmc/nuts_blackjax.py`) + skipped smoke test + tiny guarded demo snippet; ran `ruff check .` + `pytest` (all pass; NUTS test skipped without deps) and pushed.
+- 2026-02-12: Added an optional BlackJAX NUTS `beta`-only SEIR posterior demo (JAX reimplementation of the minimal model) + PPC in `book/classical-baselines.qmd`; ran `ruff check .` + `pytest` (all pass; NUTS optional) and pushed.

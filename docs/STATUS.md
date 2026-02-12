@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 9236a05525cb25f43c00f24d4c529d106823a413
+headSha: b998ca4d9a54e170f87a6f33d155a07e360f013f
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T11:09:26Z
-nextStep: Wire the new optional **BlackJAX NUTS** wrapper into the SEIR `beta`-only posterior demo (matching MH/HMC), and add the same PPC + quick calibration/coverage smoke test; keep runtime low.
+updatedAtUtc: 2026-02-12T11:29:51Z
+nextStep: Add a quick **calibration/coverage smoke test** for the optional BlackJAX NUTS `beta`-only SEIR posterior (matching MH/HMC style) while keeping runtime low; keep it optional/guarded when deps are missing.
 ```
 
 ## Notes
