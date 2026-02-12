@@ -52,3 +52,4 @@ Guidelines:
 - 2026-02-12: Updated `docs/STATUS.md` (headSha/updatedAtUtc) after the Quarto BUILD doc change.
 - 2026-02-12: Set `docs/STATUS.md` headSha to the last substantive commit (Quarto BUILD doc change) to avoid headSha churn from bookkeeping commits.
 - 2026-02-12: Made local Quarto download workflow lint-clean (exclude `.tools/` from ruff; ignore Quarto artefacts), fixed `grad_eps` math block rendering (use `$$...$$`), and sped up the HMC calibration smoke test so `quarto render` completes locally; ran `ruff` + `pytest` and pushed.
+- 2026-02-12: Confirmed GitHub Actions run for `d8fe651` completed successfully (success); updated `docs/STATUS.md` next step accordingly.

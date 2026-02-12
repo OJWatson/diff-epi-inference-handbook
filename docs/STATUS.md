@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: d8fe6518a74f30f14c761aa3073dbb7ddbef2b4c
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T19:27:16Z
-nextStep: Confirm the GitHub Actions run for `d8fe651` is green, then (optionally) document in `docs/BUILD.md` that local Quarto downloads create a `.tools/` directory which is intentionally ignored/excluded from lint.
+headSha: 3dca31414efe1381b98ee0fc2f0f7e365e9ad68c
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21961141640
+updatedAtUtc: 2026-02-12T19:37:52Z
+nextStep: Document in `docs/BUILD.md` that local Quarto downloads create a `.tools/` directory which is intentionally ignored/excluded from lint.
 ```
 
 ## Notes
