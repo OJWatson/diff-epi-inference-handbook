@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: c1a9c8c03dc31ea44dff806d36910cdf4ffea916
+headSha: 5b409451361fe997b765f152e089cf4273d45a16
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T13:31:30Z
-nextStep: Clean up the corrupted/duplicated entry in `docs/WORKLOG.md` (the stray truncated pytest output line) so the work log is readable again.
+updatedAtUtc: 2026-02-12T13:55:30Z
+nextStep: Confirm the GitHub Actions run for `5b40945` is green, then resume M2 by adding a short section on MCMC diagnostics (trace plots / ESS / R-hat pointers) to `book/classical-baselines.qmd`.
 ```
 
 ## Notes
