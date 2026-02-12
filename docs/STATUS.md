@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 922f7531ef4749d7c5218a57488f7e6b0371c43f
+headSha: 418f7d3f230820ce3ef532aa6dcc599ab9423128
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T17:50:40Z
-nextStep: Document MH proposal_std tuning guidance in book/classical-baselines.qmd (incl. typical target accept rates).
+updatedAtUtc: 2026-02-12T17:51:41Z
+nextStep: Add brief HMC tuning guidance in book/classical-baselines.qmd (step_size, n_leapfrog, target accept rates; mention divergences for NUTS).
 ```
 
 ## Notes

@@ -45,3 +45,4 @@ Guidelines:
 - 2026-02-12: Updated `docs/STATUS.md` headSha/updatedAtUtc after pushing the MH validation test.
 - 2026-02-12: Clarified `docs/STATUS.md` headSha to point at the substantive MH validation test commit (not the status bookkeeping commits).
 - 2026-02-12: Added MH input validation for `proposal_std` (finite, positive, broadcastable) + unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
+- 2026-02-12: Documented random-walk MH `proposal_std` tuning guidance (typical target acceptance rates + simple warmup workflow) in `book/classical-baselines.qmd`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
