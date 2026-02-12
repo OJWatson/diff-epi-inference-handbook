@@ -178,13 +178,14 @@ accept_rate, beta_mean, beta_q05, beta_q95
 A quick visual check:
 
 ```{python}
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(beta_chain, lw=0.7)
-ax.axhline(beta_true, color="black", ls="--", label="beta_true")
-ax.set_xlabel("MH iteration")
-ax.set_ylabel("beta")
-ax.set_title("MH trace for beta (others fixed)")
-ax.legend()
+from diff_epi_inference.plotting import plot_trace_and_acf
+
+fig, _ = plot_trace_and_acf(
+    beta_chain,
+    true_value=beta_true,
+    max_lag=60,
+    title="MH trace for beta (others fixed)",
+)
 plt.show()
 ```
 
@@ -305,13 +306,14 @@ accept_rate_hmc, beta_mean_hmc, beta_q05_hmc, beta_q95_hmc
 A quick trace plot:
 
 ```{python}
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(beta_chain_hmc, lw=0.7)
-ax.axhline(beta_true, color="black", ls="--", label="beta_true")
-ax.set_xlabel("HMC iteration")
-ax.set_ylabel("beta")
-ax.set_title("HMC trace for beta (finite-difference gradients; others fixed)")
-ax.legend()
+from diff_epi_inference.plotting import plot_trace_and_acf
+
+fig, _ = plot_trace_and_acf(
+    beta_chain_hmc,
+    true_value=beta_true,
+    max_lag=60,
+    title="HMC trace for beta (finite-difference gradients; others fixed)",
+)
 plt.show()
 ```
 
