@@ -64,6 +64,16 @@ def random_walk_metropolis_hastings(
 
     prop_std = np.asarray(proposal_std, dtype=float)
 
+    if not np.all(np.isfinite(prop_std)):
+        raise ValueError("proposal_std must be finite")
+    if np.any(prop_std <= 0):
+        raise ValueError("proposal_std must be positive")
+
+    try:
+        prop_std = np.broadcast_to(prop_std, x.shape)
+    except ValueError as e:
+        raise ValueError("proposal_std must be broadcastable to x0.shape") from e
+
     for t in range(n_steps):
         proposal = x + rng.normal(loc=0.0, scale=prop_std, size=x.shape)
         lp_prop = float(log_prob_fn(proposal))

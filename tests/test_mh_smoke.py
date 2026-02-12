@@ -48,6 +48,43 @@ def test_random_walk_mh_rejects_non_positive_n_steps() -> None:
         random_walk_metropolis_hastings(log_prob, x0, n_steps=-1)
 
 
+def test_random_walk_mh_rejects_invalid_proposal_std() -> None:
+    def log_prob(x: np.ndarray) -> float:
+        return float(-0.5 * np.sum(x**2))
+
+    x0 = np.array([0.0, 1.0])
+
+    with pytest.raises(ValueError, match="proposal_std must be positive"):
+        random_walk_metropolis_hastings(log_prob, x0, proposal_std=0.0, n_steps=1)
+
+    with pytest.raises(ValueError, match="proposal_std must be positive"):
+        random_walk_metropolis_hastings(log_prob, x0, proposal_std=-0.1, n_steps=1)
+
+    with pytest.raises(ValueError, match="proposal_std must be positive"):
+        random_walk_metropolis_hastings(
+            log_prob,
+            x0,
+            proposal_std=np.array([0.2, 0.0]),
+            n_steps=1,
+        )
+
+    with pytest.raises(ValueError, match="proposal_std must be finite"):
+        random_walk_metropolis_hastings(
+            log_prob,
+            x0,
+            proposal_std=np.array([0.2, np.nan]),
+            n_steps=1,
+        )
+
+    with pytest.raises(ValueError, match="proposal_std must be broadcastable"):
+        random_walk_metropolis_hastings(
+            log_prob,
+            x0,
+            proposal_std=np.array([0.2, 0.3, 0.4]),
+            n_steps=1,
+        )
+
+
 def test_random_walk_mh_standard_normal_smoke() -> None:
     rng = np.random.default_rng(0)
 
