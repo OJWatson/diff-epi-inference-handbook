@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: eaacf8e6c136d49f0ab5a811c9cbdd9b1a72c496
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21945763287
-updatedAtUtc: 2026-02-12T12:00:30Z
+headSha: dc92c57ab4adab8c043764063365b4ee807f1848
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
+updatedAtUtc: 2026-02-12T12:01:35Z
 nextStep: Add a short note to `book/classical-baselines.qmd` pointing readers to the new optional BlackJAX NUTS coverage smoke test (and consider refactoring the duplicated JAX SEIR log-posterior into a small helper).
 ```
 
