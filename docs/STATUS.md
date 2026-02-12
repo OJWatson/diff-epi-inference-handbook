@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: f3a575ece7a936ab5785660924d3e43a66cf8989
+headSha: 46d087b0b1a574f12a6cf2502e69ef3d1ae12e95
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T09:58:45Z
-nextStep: Add a minimal **posterior predictive check (PPC)** to the `beta`-only MH/HMC demos in `book/classical-baselines.qmd` (simulate trajectories from posterior draws and overlay against `y_obs`).
+updatedAtUtc: 2026-02-12T10:22:13Z
+nextStep: Add a minimal **calibration smoke test** to `book/classical-baselines.qmd`: simulate ~20 datasets at different `beta_true`, run short MH chains, and report approximate 90% interval coverage for `beta`.
 ```
 
 ## Notes
