@@ -187,6 +187,64 @@ ax.legend()
 plt.show()
 ```
 
+### Posterior predictive check (MH)
+
+A minimal posterior predictive check samples simulated observations from the posterior draws,
+then overlays predictive bands against the observed time series.
+
+```{python}
+def ppc_from_beta_draws(beta_draws: np.ndarray, rng: np.random.Generator, n_draws: int = 50):
+    beta_draws = np.asarray(beta_draws)
+    if beta_draws.ndim != 1:
+        raise ValueError("beta_draws must be 1D")
+
+    n_draws = int(min(n_draws, beta_draws.shape[0]))
+    idx = rng.choice(beta_draws.shape[0], size=n_draws, replace=False)
+
+    y_rep = []
+    for beta in beta_draws[idx]:
+        params = SEIRParams(beta=float(beta), sigma=sigma_fixed, gamma=gamma_fixed)
+        out = simulate_seir_euler(
+            params=params,
+            s0=s0,
+            e0=e0,
+            i0=i0,
+            r0=r0,
+            dt=dt,
+            steps=steps,
+        )
+        inc = incidence_from_susceptibles(out["S"])
+        mu = expected_reported_cases_delayed(
+            incidence=inc,
+            reporting_rate=reporting_rate,
+            delay_pmf=w,
+        )
+        y_rep.append(sample_nbinom_reports(expected=mu, dispersion=dispersion, rng=rng))
+
+    y_rep = np.asarray(y_rep)
+    q05, q50, q95 = np.quantile(y_rep, [0.05, 0.5, 0.95], axis=0)
+    return q05, q50, q95
+
+
+q05_mh, q50_mh, q95_mh = ppc_from_beta_draws(
+    beta_chain,
+    rng=np.random.default_rng(123),
+    n_draws=60,
+)
+
+t = np.arange(len(y_obs)) * dt
+
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.fill_between(t, q05_mh, q95_mh, alpha=0.25, label="posterior predictive 90%")
+ax.plot(t, q50_mh, lw=1.2, label="posterior predictive median")
+ax.plot(t, y_obs, lw=1.0, color="black", label="observed y")
+ax.set_xlabel("time")
+ax.set_ylabel("reported cases")
+ax.set_title("PPC (MH; beta only)")
+ax.legend(loc="upper right")
+plt.show()
+```
+
 ### 2) Random-walk Metropolis–Hastings
 
 - Algorithm: Gaussian random-walk proposals in unconstrained space.
@@ -253,6 +311,30 @@ ax.set_xlabel("HMC iteration")
 ax.set_ylabel("beta")
 ax.set_title("HMC trace for beta (finite-difference gradients; others fixed)")
 ax.legend()
+plt.show()
+```
+
+### Posterior predictive check (HMC)
+
+Using the same PPC helper as above:
+
+```{python}
+q05_hmc, q50_hmc, q95_hmc = ppc_from_beta_draws(
+    beta_chain_hmc,
+    rng=np.random.default_rng(456),
+    n_draws=60,
+)
+
+t = np.arange(len(y_obs)) * dt
+
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.fill_between(t, q05_hmc, q95_hmc, alpha=0.25, label="posterior predictive 90%")
+ax.plot(t, q50_hmc, lw=1.2, label="posterior predictive median")
+ax.plot(t, y_obs, lw=1.0, color="black", label="observed y")
+ax.set_xlabel("time")
+ax.set_ylabel("reported cases")
+ax.set_title("PPC (HMC; beta only)")
+ax.legend(loc="upper right")
 plt.show()
 ```
 
