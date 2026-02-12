@@ -346,6 +346,37 @@ plt.show()
   - Step size / tree depth (NUTS)
   - Divergences / energy diagnostics
 
+#### Optional: autodiff + NUTS via BlackJAX
+
+This repository keeps JAX/BlackJAX as an **optional dependency**. If installed (see
+`pyproject.toml` extra `nuts`), you can run a full NUTS baseline with window adaptation.
+
+Below is a minimal sanity check on a 1D standard normal target. When the optional
+dependencies are missing, the cell prints a message and continues.
+
+```{python}
+try:
+    import numpy as np
+    import jax.numpy as jnp
+
+    from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
+
+    def log_prob_standard_normal(x):
+        return -0.5 * jnp.sum(x**2)
+
+    res_nuts = run_blackjax_nuts(
+        log_prob_standard_normal,
+        x0=np.array([5.0]),
+        num_warmup=200,
+        num_samples=500,
+        seed=0,
+    )
+
+    float(res_nuts.accept_rate), float(np.mean(res_nuts.chain[:, 0])), float(np.std(res_nuts.chain[:, 0]))
+except ImportError as e:
+    print("Skipping BlackJAX NUTS demo (optional deps not installed):", e)
+```
+
 ### 4) Diagnostics
 
 - Trace plots for key parameters.

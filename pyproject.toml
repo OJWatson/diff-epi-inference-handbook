@@ -23,6 +23,12 @@ dev = [
   "pyyaml>=6.0",
 ]
 
+# Optional: autodiff + NUTS baseline (used in the M2 classical baselines chapter).
+nuts = [
+  "jax[cpu]>=0.4.28",
+  "blackjax>=1.2.0",
+]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
