@@ -22,3 +22,4 @@ Guidelines:
 - 2026-02-12: Added optional BlackJAX NUTS wrapper (`src/diff_epi_inference/mcmc/nuts_blackjax.py`) + skipped smoke test + tiny guarded demo snippet; ran `ruff check .` + `pytest` (all pass; NUTS test skipped without deps) and pushed.
 - 2026-02-12: Added an optional BlackJAX NUTS `beta`-only SEIR posterior demo (JAX reimplementation of the minimal model) + PPC in `book/classical-baselines.qmd`; ran `ruff check .` + `pytest` (all pass; NUTS optional) and pushed.
 - 2026-02-12: Added optional BlackJAX NUTS SEIR `beta`-only calibration/coverage smoke test (`tests/test_blackjax_nuts_seir_calibration_optional.py`); ran `ruff check .` + `pytest` (all pass; optional tests skipped without deps).
+- 2026-02-12: Fixed CI ruff failure (UP027) in optional BlackJAX calibration test; ran `ruff check .` + `pytest`, pushed; CI: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21945763287
