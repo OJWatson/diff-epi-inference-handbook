@@ -3,8 +3,8 @@ milestone: M2
 state: running
 headSha: 25441c4739b18438756c003b6e974ae1a7ec082b
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T11:30:54Z
-nextStep: Add a quick **calibration/coverage smoke test** for the optional BlackJAX NUTS `beta`-only SEIR posterior (matching MH/HMC style) while keeping runtime low; keep it optional/guarded when deps are missing.
+updatedAtUtc: 2026-02-12T11:50:08Z
+nextStep: Add a short note to `book/classical-baselines.qmd` pointing readers to the new optional BlackJAX NUTS coverage smoke test (and consider refactoring the duplicated JAX SEIR log-posterior into a small helper).
 ```
 
 ## Notes
