@@ -462,8 +462,65 @@ except NameError:
 
 ### 4) Diagnostics
 
-- Trace plots for key parameters.
-- Posterior predictive: simulate trajectories and compare to observed data.
+In this project we use a small “core” of diagnostics repeatedly:
+
+- **Trace plots** (and where helpful, autocorrelation) to catch obvious mixing / non-stationarity problems.
+- **R-hat** (split \hat{R}) and **ESS** as rough, chain-level summaries.
+- **Posterior predictive checks (PPC)** to ensure the fitted model can reproduce key features of the data.
+- **Calibration / coverage smoke tests** on synthetic data.
+
+#### Trace plots
+
+A trace plot is the cheapest sanity check: it should look like a stationary “hairy caterpillar” rather than a drifting trend.
+In the examples above we used a single chain and inspected the trace visually.
+
+#### ESS and R-hat (where available)
+
+Effective sample size (ESS) and split \hat{R} are most meaningful when you run **multiple independent chains**.
+This repo intentionally avoids hard dependencies on MCMC diagnostic libraries, but if you have
+[ArviZ](https://python.arviz.org/en/stable/) installed you can compute these summaries with a few lines.
+
+```{python}
+# Optional: compute R-hat / ESS for the MH beta-only demo using ArviZ.
+# This cell is safe to run even if ArviZ is not installed.
+try:
+    import numpy as np
+    import arviz as az
+
+    from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
+
+    n_chains = 4
+    n_steps = 2_000
+    burn = 500
+
+    chains = []
+    for seed in range(n_chains):
+        res_c = random_walk_metropolis_hastings(
+            log_post_logbeta,
+            x0=np.array([np.log(0.3)]),
+            proposal_std=0.10,
+            n_steps=n_steps,
+            rng=np.random.default_rng(100 + seed),
+        )
+        chains.append(np.exp(res_c.chain[burn:, 0]))
+
+    beta_chains = np.stack(chains, axis=0)  # (chain, draw)
+
+    # ArviZ expects an InferenceData or an array with chain/draw dims.
+    rhat = float(az.rhat(beta_chains))
+    ess = float(az.ess(beta_chains))
+
+    rhat, ess
+except ImportError as e:
+    print("Skipping ESS/R-hat (optional dependency not installed):", e)
+```
+
+Interpretation pointers (rules of thumb, not laws):
+
+- \hat{R} close to **1.00** (e.g. < 1.01–1.05 depending on context) suggests chains are mixing and agree.
+- Larger ESS is better; very small ESS indicates heavy autocorrelation and overconfident summaries.
+
+These summaries **do not replace** PPC / calibration: it is possible for chains to mix well while the model is wrong.
 
 #### Calibration smoke test (MH; `beta` only)
 
