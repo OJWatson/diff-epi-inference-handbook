@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M1
 state: running
-headSha: d1e3dbdae8adfe3bfd2bde30a2f79da9f4401eff
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21936886101
-updatedAtUtc: 2026-02-12T07:22:00Z
+headSha: 3f499165f8eadf0b56950c10edf1220dd6a3e07e
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
+updatedAtUtc: 2026-02-12T07:46:19Z
 ```
 
 ## Notes
@@ -15,7 +15,7 @@ updatedAtUtc: 2026-02-12T07:22:00Z
   - ✅ Repo hygiene: ignore generated datasets under `data/` (keep `data/README.md` committed).
 - ✅ GitHub Pages decision: add a Pages publish workflow (`.github/workflows/pages.yml`) that deploys the rendered HTML to `gh-pages`.
   - ✅ Auto-publish mode: enabled on version tags (`v*`) and added `docs/PAGES.md` with setup notes.
-  - ✅ Enabled publishing on every `push` to `main` (in `.github/workflows/pages.yml`).
+  - ✅ Decision: keep publishing **tag-only** (removed `push` to `main` trigger).
 - ✅ Reproducibility pinning: added `constraints-dev.txt` and use it in CI installs.
-- Next: decide whether to enable Pages publishing on every `push` to `main`, or keep tag-only publishing.
+- Next: confirm M1 DoD is satisfied and prep M1→M2 transition (baseline samplers chapter plan + STATUS milestone bump).
 - Consider further reproducibility pinning (e.g. a full lockfile for Python deps).
