@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 6814b6387a09933e77fece58e3b8846f584bafc9
+headSha: fa498b6df6610699c6f43fecab910295f16f6f63
 ciRunUrl: (pending)
-updatedAtUtc: 2026-02-12T21:00:33Z
+updatedAtUtc: 2026-02-12T21:01:10Z
 nextStep: Implement the first M3 baseline: add an `abc_rejection(...)` helper (with tests) and a small `beta`-only demo in `book/likelihood-free-baselines.qmd`.
 ```
 
