@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
 
@@ -32,6 +33,19 @@ def test_random_walk_mh_shapes_and_reproducible() -> None:
 
     np.testing.assert_allclose(res1.chain, res2.chain)
     np.testing.assert_array_equal(res1.accepted, res2.accepted)
+
+
+def test_random_walk_mh_rejects_non_positive_n_steps() -> None:
+    def log_prob(x: np.ndarray) -> float:
+        return float(-0.5 * np.sum(x**2))
+
+    x0 = np.array([0.0])
+
+    with pytest.raises(ValueError, match="n_steps must be positive"):
+        random_walk_metropolis_hastings(log_prob, x0, n_steps=0)
+
+    with pytest.raises(ValueError, match="n_steps must be positive"):
+        random_walk_metropolis_hastings(log_prob, x0, n_steps=-1)
 
 
 def test_random_walk_mh_standard_normal_smoke() -> None:
