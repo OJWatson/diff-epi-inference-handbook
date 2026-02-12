@@ -32,3 +32,4 @@ Guidelines:
 - 2026-02-12: Cleaned up corrupted/truncated pytest output accidentally pasted into `docs/WORKLOG.md`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-12: Added a short MCMC diagnostics note to `book/classical-baselines.qmd` with optional ArviZ ESS/R-hat snippet; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-12: Added lightweight MCMC trace + ACF plotting helpers (`diff_epi_inference.plotting`) and used them in `book/classical-baselines.qmd` for MH/HMC demos; ran `python3 -m ruff check .` + `python3 -m pytest` (19 pass, 2 skipped) and pushed.
+- 2026-02-12: Refactored `diff_epi_inference.plotting` into a package and moved chain diagnostics to `diff_epi_inference.plotting.mcmc`; updated `book/classical-baselines.qmd` imports; ran `python3 -m ruff check .` + `python3 -m pytest` (19 pass, 2 skipped) and pushed.
