@@ -3,8 +3,8 @@ milestone: M2
 state: running
 headSha: 5b370b637c91b2d0ce3a0ae520d252fa7784bf7f
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T12:53:28Z
-nextStep: Add a small unit test for `make_log_post_logbeta_numpy` (finite log posterior + shape validation) to prevent drift between the book and library helpers.
+updatedAtUtc: 2026-02-12T13:10:30Z
+nextStep: Add a brief section to `book/classical-baselines.qmd` clarifying the parameterisation and support of the `log_beta` prior (Gaussian on log(beta) ⇒ lognormal on beta) and why we drop the normalisation constant.
 ```
 
 ## Notes
