@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: a167e2d036c1ea0fc8b3c0be432cd40c3b5a0fdc
+headSha: 922f7531ef4749d7c5218a57488f7e6b0371c43f
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T17:29:52Z
-nextStep: Add MH input validation for proposal_std (must be positive) + unit tests.
+updatedAtUtc: 2026-02-12T17:50:40Z
+nextStep: Document MH proposal_std tuning guidance in book/classical-baselines.qmd (incl. typical target accept rates).
 ```
 
 ## Notes
