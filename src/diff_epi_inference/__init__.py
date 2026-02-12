@@ -12,11 +12,12 @@ from .observation import (
     sample_poisson_reports,
 )
 from .plotting import plot_timeseries
-from .seir import SEIRParams, simulate_seir_euler
+from .seir import SEIRParams, simulate_seir_euler, simulate_seir_stochastic_tau_leap
 
 __all__ = [
     "SEIRParams",
     "simulate_seir_euler",
+    "simulate_seir_stochastic_tau_leap",
     "incidence_from_susceptibles",
     "expected_reported_cases",
     "sample_poisson_reports",

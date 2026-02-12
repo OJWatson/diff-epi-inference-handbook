@@ -7,6 +7,7 @@ This page executes a minimal deterministic **SEIR + reporting** pipeline using t
 Scope (M1 slice):
 
 - Deterministic SEIR simulation (Euler discretisation).
+- A paired **stochastic** SEIR variant (tau-leaping; non-differentiable).
 - An observation model: incidence derived from the drop in susceptibles, then **reported cases** via under-reporting, a delay distribution, and NB noise.
 
 Assumptions / parameterisation:
