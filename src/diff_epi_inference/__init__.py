@@ -1,5 +1,6 @@
 """Minimal companion code for the Diff-Epi Inference Handbook."""
 
+from .dataset import TimeSeriesDataset, from_cases
 from .observation import (
     apply_delay,
     discrete_gamma_delay_pmf,
@@ -10,6 +11,7 @@ from .observation import (
     sample_nbinom_reports,
     sample_poisson_reports,
 )
+from .plotting import plot_timeseries
 from .seir import SEIRParams, simulate_seir_euler
 
 __all__ = [
@@ -23,4 +25,7 @@ __all__ = [
     "expected_reported_cases_delayed",
     "sample_nbinom_reports",
     "nbinom_loglik",
+    "TimeSeriesDataset",
+    "from_cases",
+    "plot_timeseries",
 ]
