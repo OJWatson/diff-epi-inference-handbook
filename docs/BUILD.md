@@ -40,6 +40,29 @@ python --version
 quarto --version
 ```
 
+### If `quarto` is not installed
+
+If you don’t have Quarto available on your PATH (e.g. `quarto: command not found`), you can download the pinned CI version **without** needing system-wide install:
+
+```bash
+QUARTO_VER=1.8.27
+ARCHIVE="quarto-${QUARTO_VER}-linux-amd64.tar.gz"
+URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VER}/${ARCHIVE}"
+
+mkdir -p .tools
+curl -fsSLo ".tools/${ARCHIVE}" "$URL"
+tar -xzf ".tools/${ARCHIVE}" -C .tools
+
+# Use the downloaded binary
+.tools/quarto-${QUARTO_VER}/bin/quarto --version
+```
+
+Then render with:
+
+```bash
+.tools/quarto-${QUARTO_VER}/bin/quarto render book --to html
+```
+
 ## Render the book
 
 ### HTML
