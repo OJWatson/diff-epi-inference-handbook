@@ -3,8 +3,8 @@ milestone: M2
 state: running
 headSha: dc92c57ab4adab8c043764063365b4ee807f1848
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T12:01:35Z
-nextStep: Add a short note to `book/classical-baselines.qmd` pointing readers to the new optional BlackJAX NUTS coverage smoke test (and consider refactoring the duplicated JAX SEIR log-posterior into a small helper).
+updatedAtUtc: 2026-02-12T12:23:04Z
+nextStep: Refactor the duplicated JAX SEIR `beta`-only log-posterior code (in the chapter + optional calibration test) into a small helper (e.g. under `src/diff_epi_inference/mcmc/` or `src/diff_epi_inference/models/`) to reduce drift.
 ```
 
 ## Notes
