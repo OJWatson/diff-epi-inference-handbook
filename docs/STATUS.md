@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 46d087b0b1a574f12a6cf2502e69ef3d1ae12e95
+headSha: 9236a05525cb25f43c00f24d4c529d106823a413
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T10:24:19Z
-nextStep: Add a matching **calibration smoke test for HMC** in `book/classical-baselines.qmd` (same ~20 datasets; report approximate 90% interval coverage for `beta`; keep runtime low).
+updatedAtUtc: 2026-02-12T10:45:58Z
+nextStep: Add an **autodiff + NUTS** baseline for the same `beta`-only posterior (e.g. NumPyro/BlackJAX), plus the same PPC + quick calibration/coverage smoke test; keep runtime low.
 ```
 
 ## Notes
