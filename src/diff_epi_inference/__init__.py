@@ -1,6 +1,7 @@
 """Minimal companion code for the Diff-Epi Inference Handbook."""
 
 from .dataset import TimeSeriesDataset, from_cases
+from .io import load_timeseries_npz, save_timeseries_npz
 from .observation import (
     apply_delay,
     discrete_gamma_delay_pmf,
@@ -34,6 +35,8 @@ __all__ = [
     "TimeSeriesDataset",
     "from_cases",
     "plot_timeseries",
+    "save_timeseries_npz",
+    "load_timeseries_npz",
     "reported_cases_dataset_from_S",
     "simulate_seir_and_report_deterministic",
     "simulate_seir_and_report_stochastic",
