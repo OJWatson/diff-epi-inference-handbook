@@ -197,9 +197,68 @@ plt.show()
   - Acceptance rate
   - Autocorrelation / effective sample size
 
-### 3) HMC / NUTS on the ODE model
+## Minimal HMC demo: infer only `beta` (finite-difference gradients)
 
-- Use autodiff through the ODE solver + observation model.
+For a first gradient-based baseline, we can run **HMC** on the same 1D posterior as above.
+In a production setting, you would normally use **autodiff + NUTS** (e.g. NumPyro/BlackJAX)
+so that gradients are exact (up to solver tolerance) and step sizes / trajectory lengths are
+adapted automatically.
+
+Here we use a deliberately minimal HMC implementation that estimates gradients by **central
+finite differences**.
+
+Limitations of this baseline (important):
+
+- **Computational cost:** finite-difference gradients require *2 evaluations per parameter*
+  *per leapfrog step*. Even in 1D this adds up; in higher dimensions it quickly becomes
+  impractical.
+- **Numerical sensitivity:** the finite-difference step size (`grad_eps`) must be tuned; too
+  small → cancellation / noise, too large → biased gradients.
+- **No adaptation / diagnostics:** this minimal HMC does not adapt step sizes or trajectory
+  lengths and does not report NUTS-style diagnostics (divergences, tree depth, energy).
+
+Despite these caveats, it is a useful pedagogical bridge between MH and a full autodiff + NUTS
+workflow.
+
+```{python}
+from diff_epi_inference.mcmc.hmc import hamiltonian_monte_carlo
+
+res_hmc = hamiltonian_monte_carlo(
+    log_post_logbeta,
+    x0=np.array([np.log(0.3)]),
+    n_steps=2_000,
+    step_size=0.02,
+    n_leapfrog=25,
+    grad_eps=1e-4,
+    rng=np.random.default_rng(2),
+)
+
+beta_chain_hmc = np.exp(res_hmc.chain[:, 0])
+beta_chain_hmc = beta_chain_hmc[500:]
+
+accept_rate_hmc = res_hmc.accept_rate
+beta_mean_hmc = float(np.mean(beta_chain_hmc))
+beta_q05_hmc, beta_q95_hmc = [float(q) for q in np.quantile(beta_chain_hmc, [0.05, 0.95])]
+
+accept_rate_hmc, beta_mean_hmc, beta_q05_hmc, beta_q95_hmc
+```
+
+A quick trace plot:
+
+```{python}
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(beta_chain_hmc, lw=0.7)
+ax.axhline(beta_true, color="black", ls="--", label="beta_true")
+ax.set_xlabel("HMC iteration")
+ax.set_ylabel("beta")
+ax.set_title("HMC trace for beta (finite-difference gradients; others fixed)")
+ax.legend()
+plt.show()
+```
+
+### 3) HMC / NUTS on the ODE model (recommended path)
+
+- Use **autodiff through the ODE solver + observation model**.
 - Start with a small, well-posed parameterisation (avoid pathological geometry).
 - Outputs:
   - Step size / tree depth (NUTS)
