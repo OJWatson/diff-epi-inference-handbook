@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 5b409451361fe997b765f152e089cf4273d45a16
+headSha: b6a116cb7fd367ea7d9ebe301e24bec89338cc73
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T13:55:30Z
-nextStep: Confirm the GitHub Actions run for `5b40945` is green, then resume M2 by adding a short section on MCMC diagnostics (trace plots / ESS / R-hat pointers) to `book/classical-baselines.qmd`.
+updatedAtUtc: 2026-02-12T13:56:45Z
+nextStep: Confirm the GitHub Actions run for `b6a116c` is green, then resume M2 by adding a short section on MCMC diagnostics (trace plots / ESS / R-hat pointers) to `book/classical-baselines.qmd`.
 ```
 
 ## Notes
