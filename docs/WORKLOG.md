@@ -13,3 +13,4 @@ Guidelines:
 - 2026-02-12: Started M2 (state=running); added `book/classical-baselines.qmd` chapter outline and linked it in `book/_quarto.yml`; ran `ruff check .` + `pytest` (all pass).
 - 2026-02-12: Implemented minimal random-walk Metropolis–Hastings sampler (`src/diff_epi_inference/mcmc/mh.py`) + standard-normal smoke test; ran `ruff check .` + `pytest` (all pass).
 - 2026-02-12: Added a minimal MH usage demo to `book/classical-baselines.qmd` (1D standard normal; reports acceptance rate/mean/std); ran `ruff check .` + `pytest` (all pass) and pushed.
+- 2026-02-12: Added MH baseline demo inferring only `beta` (via `log_beta`) in the SEIR running example likelihood in `book/classical-baselines.qmd`; ran `ruff check .` + `pytest` (all pass) and pushed.

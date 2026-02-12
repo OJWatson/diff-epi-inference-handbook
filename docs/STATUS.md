@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: cc734f06631e1d42d418172fccb9c22d72287c3f
+headSha: 4b2ff3f1612016b10c9a72c9ff384991f1338546
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T09:12:11Z
-nextStep: In `book/classical-baselines.qmd`, add an MH baseline on a *simple SEIR parameter subset* (e.g. infer only `beta` with others fixed) using the existing running-example likelihood.
+updatedAtUtc: 2026-02-12T09:33:41Z
+nextStep: Add a minimal **HMC/NUTS** baseline for the *ODE SEIR* likelihood (e.g. infer only `beta` in unconstrained `log_beta` space), ideally via a small wrapper around an existing library.
 ```
 
 ## Notes
