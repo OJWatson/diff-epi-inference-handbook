@@ -3,8 +3,8 @@ milestone: M2
 state: running
 headSha: 9236a05525cb25f43c00f24d4c529d106823a413
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T10:45:58Z
-nextStep: Add an **autodiff + NUTS** baseline for the same `beta`-only posterior (e.g. NumPyro/BlackJAX), plus the same PPC + quick calibration/coverage smoke test; keep runtime low.
+updatedAtUtc: 2026-02-12T11:09:26Z
+nextStep: Wire the new optional **BlackJAX NUTS** wrapper into the SEIR `beta`-only posterior demo (matching MH/HMC), and add the same PPC + quick calibration/coverage smoke test; keep runtime low.
 ```
 
 ## Notes
