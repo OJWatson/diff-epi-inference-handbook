@@ -22,6 +22,40 @@ These serve as anchors for later SBI/VI methods.
 - Define a log-likelihood `logp(y | theta)` (or unbiased estimate) plus `logp(theta)`.
 - Agree on what a “draw” contains (e.g. `theta`, latent trajectories optional, log joint).
 
+## Minimal MH demo: sampling a 1D Gaussian
+
+Before applying MH to the SEIR model, it helps to sanity-check the implementation on a distribution where we know the answer.
+Below we sample from a standard normal target density using a Gaussian random-walk proposal.
+
+```{python}
+import numpy as np
+
+from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
+
+
+def log_prob_standard_normal(x: np.ndarray) -> float:
+    # Up to an additive constant: log N(x; 0, 1)
+    return -0.5 * float(np.sum(x**2))
+
+
+rng = np.random.default_rng(0)
+res = random_walk_metropolis_hastings(
+    log_prob_standard_normal,
+    x0=np.array([5.0]),
+    proposal_std=1.0,
+    n_steps=5_000,
+    rng=rng,
+)
+
+accept_rate = res.accept_rate
+mean = float(np.mean(res.chain))
+std = float(np.std(res.chain))
+
+accept_rate, mean, std
+```
+
+The acceptance rate depends strongly on the proposal scale; in 1D, a value around 20–60% is typical for a reasonable random-walk step size.
+
 ### 2) Random-walk Metropolis–Hastings
 
 - Algorithm: Gaussian random-walk proposals in unconstrained space.
