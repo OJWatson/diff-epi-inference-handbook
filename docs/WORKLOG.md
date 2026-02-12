@@ -34,3 +34,4 @@ Guidelines:
 - 2026-02-12: Added lightweight MCMC trace + ACF plotting helpers (`diff_epi_inference.plotting`) and used them in `book/classical-baselines.qmd` for MH/HMC demos; ran `python3 -m ruff check .` + `python3 -m pytest` (19 pass, 2 skipped) and pushed.
 - 2026-02-12: Refactored `diff_epi_inference.plotting` into a package and moved chain diagnostics to `diff_epi_inference.plotting.mcmc`; updated `book/classical-baselines.qmd` imports; ran `python3 -m ruff check .` + `python3 -m pytest` (19 pass, 2 skipped) and pushed.
 - 2026-02-12: Added unit tests for `autocorr_1d` (input validation + alternating-series sanity check); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
+- 2026-02-12: Added unit test ensuring `plot_acf` raises on unknown `kind`; ran `python3 -m ruff check .` + `python3 -m pytest` (22 pass, 2 skipped) and pushed.
