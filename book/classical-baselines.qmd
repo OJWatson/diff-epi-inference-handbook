@@ -350,9 +350,130 @@ plt.show()
 
 - Trace plots for key parameters.
 - Posterior predictive: simulate trajectories and compare to observed data.
-- Calibration smoke test:
-  - Generate a small set of synthetic datasets from known parameters.
-  - Run inference and check nominal coverage for a few parameters.
+
+#### Calibration smoke test (MH; `beta` only)
+
+A minimal calibration check is to repeat the synthetic-data experiment many times and ask:
+
+> If we generate data at `beta_true`, does our nominal **90% posterior interval** contain `beta_true`
+> about **90% of the time**?
+
+This is not full simulation-based calibration (SBC), but it is a fast “is anything horribly wrong?”
+smoke test.
+
+```{python}
+from dataclasses import dataclass
+
+
+@dataclass
+class CoverageResult:
+    beta_true: float
+    contained: bool
+    q05: float
+    q95: float
+    accept_rate: float
+
+
+def make_log_post_logbeta_for_y(y_obs_local: np.ndarray):
+    def _log_post_logbeta(x: np.ndarray) -> float:
+        logbeta = float(x[0])
+        beta = float(np.exp(logbeta))
+
+        lp = -0.5 * ((logbeta - logbeta_prior_mean) / logbeta_prior_sd) ** 2
+
+        params = SEIRParams(beta=beta, sigma=sigma_fixed, gamma=gamma_fixed)
+        out = simulate_seir_euler(
+            params=params,
+            s0=s0,
+            e0=e0,
+            i0=i0,
+            r0=r0,
+            dt=dt,
+            steps=steps,
+        )
+
+        inc = incidence_from_susceptibles(out["S"])
+        mu = expected_reported_cases_delayed(
+            incidence=inc,
+            reporting_rate=reporting_rate,
+            delay_pmf=w,
+        )
+
+        ll = nbinom_loglik(y=y_obs_local, mu=mu, dispersion=dispersion)
+        return float(lp + ll)
+
+    return _log_post_logbeta
+
+
+rng = np.random.default_rng(2026)
+
+beta_grid = np.array([0.30, 0.40, 0.50, 0.60, 0.70])
+reps_per_beta = 4  # 5 * 4 = 20 datasets
+
+results: list[CoverageResult] = []
+
+for beta_true_i in beta_grid:
+    for _ in range(reps_per_beta):
+        params_true_i = SEIRParams(beta=float(beta_true_i), sigma=sigma_fixed, gamma=gamma_fixed)
+        out_true_i = simulate_seir_euler(
+            params=params_true_i,
+            s0=s0,
+            e0=e0,
+            i0=i0,
+            r0=r0,
+            dt=dt,
+            steps=steps,
+        )
+
+        inc_true_i = incidence_from_susceptibles(out_true_i["S"])
+        mu_true_i = expected_reported_cases_delayed(
+            incidence=inc_true_i,
+            reporting_rate=reporting_rate,
+            delay_pmf=w,
+        )
+
+        y_obs_i = sample_nbinom_reports(expected=mu_true_i, dispersion=dispersion, rng=rng)
+        log_post_i = make_log_post_logbeta_for_y(y_obs_i)
+
+        # Short chain: this is a smoke test, not a production run.
+        res_i = random_walk_metropolis_hastings(
+            log_post_i,
+            x0=np.array([np.log(0.5)]),
+            proposal_std=0.10,
+            n_steps=800,
+            rng=rng,
+        )
+
+        beta_chain_i = np.exp(res_i.chain[:, 0])[200:]
+        q05_i, q95_i = [float(q) for q in np.quantile(beta_chain_i, [0.05, 0.95])]
+        contained_i = (q05_i <= float(beta_true_i) <= q95_i)
+
+        results.append(
+            CoverageResult(
+                beta_true=float(beta_true_i),
+                contained=bool(contained_i),
+                q05=q05_i,
+                q95=q95_i,
+                accept_rate=float(res_i.accept_rate),
+            )
+        )
+
+coverage = float(np.mean([r.contained for r in results]))
+coverage
+```
+
+We can also break down coverage by `beta_true`:
+
+```{python}
+from collections import defaultdict
+
+by_beta = defaultdict(list)
+for r in results:
+    by_beta[r.beta_true].append(r.contained)
+
+coverage_by_beta = {beta: float(np.mean(v)) for beta, v in sorted(by_beta.items())}
+coverage_by_beta
+```
 
 ## Next coding tasks
 
