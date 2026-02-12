@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: fa498b6df6610699c6f43fecab910295f16f6f63
+headSha: 5377de74f1d9ca466679e6e6b79ab231e8e34db0
 ciRunUrl: (pending)
-updatedAtUtc: 2026-02-12T21:01:10Z
-nextStep: Implement the first M3 baseline: add an `abc_rejection(...)` helper (with tests) and a small `beta`-only demo in `book/likelihood-free-baselines.qmd`.
+updatedAtUtc: 2026-02-12T21:10:30Z
+nextStep: Add a small `beta`-only ABC rejection demo to `book/likelihood-free-baselines.qmd` using `diff_epi_inference.abc.abc_rejection`.
 ```
 
 ## Notes
