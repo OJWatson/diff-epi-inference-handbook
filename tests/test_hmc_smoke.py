@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from diff_epi_inference.mcmc.hmc import hamiltonian_monte_carlo
 
@@ -37,6 +38,32 @@ def test_hmc_shapes_and_reproducible() -> None:
 
     np.testing.assert_allclose(res1.chain, res2.chain)
     np.testing.assert_array_equal(res1.accepted, res2.accepted)
+
+
+def test_hmc_input_validation() -> None:
+    def log_prob(x: np.ndarray) -> float:
+        return float(-0.5 * np.sum(x**2))
+
+    x0 = np.array([0.0])
+
+    with pytest.raises(ValueError, match="n_steps must be positive"):
+        hamiltonian_monte_carlo(log_prob, x0, n_steps=0, step_size=0.1, n_leapfrog=1)
+
+    with pytest.raises(ValueError, match="step_size must be positive"):
+        hamiltonian_monte_carlo(log_prob, x0, n_steps=1, step_size=0.0, n_leapfrog=1)
+
+    with pytest.raises(ValueError, match="n_leapfrog must be positive"):
+        hamiltonian_monte_carlo(log_prob, x0, n_steps=1, step_size=0.1, n_leapfrog=0)
+
+    with pytest.raises(ValueError, match="grad_eps must be positive"):
+        hamiltonian_monte_carlo(
+            log_prob,
+            x0,
+            n_steps=1,
+            step_size=0.1,
+            n_leapfrog=1,
+            grad_eps=0.0,
+        )
 
 
 def test_hmc_standard_normal_smoke() -> None:
