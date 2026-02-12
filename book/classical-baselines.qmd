@@ -123,6 +123,17 @@ y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
 
 # --- Log posterior for log(beta) ---
 
+# Prior parameterisation note
+#
+# We place a Gaussian prior directly on log_beta = log(beta):
+#   log_beta ~ Normal(logbeta_prior_mean, logbeta_prior_sd)
+# This implies a lognormal prior on beta on its constrained (positive) support.
+# Because we sample in log space, we evaluate the prior density in terms of
+# log_beta, not beta; no extra Jacobian term is needed in the log posterior.
+#
+# In both MH and HMC, the algorithms only use *differences* in log density, so
+# we routinely drop additive normalisation constants.
+
 from diff_epi_inference.models.seir_numpy_beta_only import make_log_post_logbeta_numpy
 
 logbeta_prior_mean = float(np.log(0.5))
