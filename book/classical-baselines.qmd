@@ -299,9 +299,9 @@ Limitations of this baseline (important):
 
 `grad_eps` controls the central-difference approximation
 
-\[
+$$
 \nabla f(x) \approx \frac{f(x + \varepsilon) - f(x - \varepsilon)}{2\varepsilon}.
-\]
+$$
 
 A practical workflow:
 
@@ -644,7 +644,7 @@ def make_log_post_logbeta_for_y(y_obs_local: np.ndarray):
 rng = np.random.default_rng(2026)
 
 beta_grid = np.array([0.30, 0.40, 0.50, 0.60, 0.70])
-reps_per_beta = 4  # 5 * 4 = 20 datasets
+reps_per_beta = 2  # 5 * 2 = 10 datasets
 
 results: list[CoverageResult] = []
 
@@ -748,9 +748,9 @@ for beta_true_i in beta_grid:
         res_i = hamiltonian_monte_carlo(
             log_post_i,
             x0=np.array([np.log(0.5)]),
-            n_steps=400,
+            n_steps=200,
             step_size=0.02,
-            n_leapfrog=15,
+            n_leapfrog=10,
             grad_eps=1e-4,
             rng=rng,
         )

@@ -6,8 +6,13 @@ ruff_cache/
 
 # Quarto
 book/_book/
+book/_freeze/
 book/.quarto/
 book/.quarto_cache/
+**/*.quarto_ipynb
+
+# Local tool downloads
+.tools/
 
 # Misc
 .DS_Store
