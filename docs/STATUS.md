@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 2a30ab156a7ff49f8fd69b014cc2dc8a7c75ad9b
+headSha: f3a575ece7a936ab5785660924d3e43a66cf8989
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T09:38:08Z
-nextStep: Wire the new minimal **HMC** baseline into the *ODE SEIR* likelihood demo (infer only `beta` via `log_beta` in `book/classical-baselines.qmd`), and document its limitations vs autodiff + NUTS.
+updatedAtUtc: 2026-02-12T09:58:45Z
+nextStep: Add a minimal **posterior predictive check (PPC)** to the `beta`-only MH/HMC demos in `book/classical-baselines.qmd` (simulate trajectories from posterior draws and overlay against `y_obs`).
 ```
 
 ## Notes
