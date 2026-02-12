@@ -4,6 +4,12 @@ This subpackage contains small, dependency-light reference implementations of cl
 Markov chain Monte Carlo algorithms used as baselines in the handbook.
 """
 
+from .hmc import HMCResult, hamiltonian_monte_carlo
 from .mh import MHResult, random_walk_metropolis_hastings
 
-__all__ = ["MHResult", "random_walk_metropolis_hastings"]
+__all__ = [
+    "HMCResult",
+    "MHResult",
+    "hamiltonian_monte_carlo",
+    "random_walk_metropolis_hastings",
+]
