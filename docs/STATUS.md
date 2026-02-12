@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: c7ae8060cb2aa4e9ea6ef2a008e6b8f59ec57ed2
+headSha: d8402cd71d40d7c72784b8512c57b7248e4aa44b
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T16:26:30Z
-nextStep: Add a small unit test for the HMC sampler covering return shapes + reproducibility (fixed RNG seed).
+updatedAtUtc: 2026-02-12T16:45:46Z
+nextStep: Add unit tests for HMC input validation (n_steps/step_size/n_leapfrog/grad_eps must be positive).
 ```
 
 ## Notes
