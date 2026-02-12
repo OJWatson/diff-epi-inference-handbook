@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: ef456dbccae0cf3f3f3407d49d898161af625650
+headSha: eea5a2548b4cb03133d32f66e8a62590f54a56a5
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T14:59:13Z
-nextStep: Confirm the GitHub Actions run for `ef456db` is green, then add a minimal unit test for `plot_acf` kind validation (ensure it raises on unknown `kind`) in `tests/test_plotting_utils.py`.
+updatedAtUtc: 2026-02-12T15:00:12Z
+nextStep: Confirm the GitHub Actions run for `eea5a25` is green, then add a minimal unit test for `plot_acf` kind validation (ensure it raises on unknown `kind`) in `tests/test_plotting_utils.py`.
 ```
 
 ## Notes
