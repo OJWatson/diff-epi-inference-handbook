@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: d8402cd71d40d7c72784b8512c57b7248e4aa44b
+headSha: 63e1dc3aad3e4b57088f39057eb4e49b7f0b64b7
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T16:45:46Z
-nextStep: Add unit tests for HMC input validation (n_steps/step_size/n_leapfrog/grad_eps must be positive).
+updatedAtUtc: 2026-02-12T17:07:07Z
+nextStep: Add unit tests for MH input validation (n_steps must be positive).
 ```
 
 ## Notes
