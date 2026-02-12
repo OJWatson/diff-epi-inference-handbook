@@ -1,10 +1,10 @@
 ```pm-status
-milestone: M1
-state: complete
-headSha: 3f499165f8eadf0b56950c10edf1220dd6a3e07e
+milestone: M2
+state: running
+headSha: 4c0920420cc0f896b459bd87d7f2fbdf1d19522d
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T08:05:43Z
-nextStep: Bump STATUS to M2 and draft a minimal chapter plan for classical baselines (MH + HMC/NUTS) incl. required diagnostics.
+updatedAtUtc: 2026-02-12T08:27:30Z
+nextStep: Implement a minimal random-walk Metropolis–Hastings sampler (`src/.../mcmc/mh.py`) with one smoke test.
 ```
 
 ## Notes
