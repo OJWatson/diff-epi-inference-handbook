@@ -31,3 +31,4 @@ Guidelines:
 - 2026-02-12: Clarified the `log_beta` prior parameterisation in `book/classical-baselines.qmd` (Gaussian on log(beta) ⇒ lognormal on beta; constants dropped in log densities); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
 - 2026-02-12: Cleaned up corrupted/truncated pytest output accidentally pasted into `docs/WORKLOG.md`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-12: Added a short MCMC diagnostics note to `book/classical-baselines.qmd` with optional ArviZ ESS/R-hat snippet; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
+- 2026-02-12: Added lightweight MCMC trace + ACF plotting helpers (`diff_epi_inference.plotting`) and used them in `book/classical-baselines.qmd` for MH/HMC demos; ran `python3 -m ruff check .` + `python3 -m pytest` (19 pass, 2 skipped) and pushed.
