@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 4c0920420cc0f896b459bd87d7f2fbdf1d19522d
+headSha: e912cbdc10fc28662f19559a6f3e70649bde1082
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T08:27:30Z
+updatedAtUtc: 2026-02-12T08:28:00Z
 nextStep: Implement a minimal random-walk Metropolis–Hastings sampler (`src/.../mcmc/mh.py`) with one smoke test.
 ```
 
