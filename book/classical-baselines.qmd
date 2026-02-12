@@ -56,6 +56,24 @@ accept_rate, mean, std
 
 The acceptance rate depends strongly on the proposal scale; in 1D, a value around 20–60% is typical for a reasonable random-walk step size.
 
+### Tuning `proposal_std` (random-walk MH)
+
+For a Gaussian random-walk MH proposal, the proposal scale controls the trade-off between:
+
+- **Too small** `proposal_std` → very high acceptance but tiny moves (high autocorrelation).
+- **Too large** `proposal_std` → very low acceptance (many repeats).
+
+Practical tuning guidance:
+
+- In **1D**, an acceptance rate around **0.3–0.6** is often fine; the asymptotic optimum for a Gaussian target is about **0.44**.
+- In **higher dimensions**, the optimal random-walk acceptance rate tends to be lower (often quoted around **0.2–0.3**, with **~0.234** as a classical asymptotic result for i.i.d. Gaussian targets).
+- A simple workflow is:
+  1. Run a short warmup (e.g. 500–2,000 steps).
+  2. Adjust `proposal_std` up/down to hit a rough target acceptance.
+  3. **Freeze** the proposal scale for the main run (avoid adapting during sampling if you want a strictly Markov chain).
+
+In this chapter we keep tuning manual and lightweight; later chapters can revisit more systematic adaptation.
+
 ## Minimal MH demo: infer only `beta` in the SEIR running example
 
 As a first epidemiological baseline, we infer **only the transmission rate** `beta`, keeping the remaining parameters fixed.
