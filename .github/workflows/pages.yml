@@ -3,11 +3,9 @@ name: Publish (GitHub Pages)
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags:
       - 'v*'
-
-# Note: this workflow can publish automatically on version tags. To publish on
-# every push to main, change the trigger once repo Pages settings are confirmed.
 
 permissions:
   contents: write

@@ -3,7 +3,7 @@ milestone: M1
 state: running
 headSha: d1e3dbdae8adfe3bfd2bde30a2f79da9f4401eff
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21936886101
-updatedAtUtc: 2026-02-12T07:05:22Z
+updatedAtUtc: 2026-02-12T07:22:00Z
 ```
 
 ## Notes
@@ -15,7 +15,7 @@ updatedAtUtc: 2026-02-12T07:05:22Z
   - ✅ Repo hygiene: ignore generated datasets under `data/` (keep `data/README.md` committed).
 - ✅ GitHub Pages decision: add a Pages publish workflow (`.github/workflows/pages.yml`) that deploys the rendered HTML to `gh-pages`.
   - ✅ Auto-publish mode: enabled on version tags (`v*`) and added `docs/PAGES.md` with setup notes.
-  - Next: decide whether to enable publishing on every `push` to `main`.
+  - ✅ Enabled publishing on every `push` to `main` (in `.github/workflows/pages.yml`).
 - ✅ Reproducibility pinning: added `constraints-dev.txt` and use it in CI installs.
 - Next: decide whether to enable Pages publishing on every `push` to `main`, or keep tag-only publishing.
 - Consider further reproducibility pinning (e.g. a full lockfile for Python deps).
