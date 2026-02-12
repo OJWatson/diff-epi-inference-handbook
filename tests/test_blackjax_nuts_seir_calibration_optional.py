@@ -152,7 +152,7 @@ def test_blackjax_nuts_seir_beta_only_coverage_smoke():
         assert 0.2 < res.accept_rate < 1.0
 
         beta_draws = np.exp(res.chain[:, 0])
-        q05, q95 = [float(q) for q in np.quantile(beta_draws, [0.05, 0.95])]
+        q05, q95 = map(float, np.quantile(beta_draws, [0.05, 0.95]))
         contained.append(q05 <= beta_true <= q95)
 
     # A very loose, low-power sanity check: we should not be catastrophically miscalibrated.
