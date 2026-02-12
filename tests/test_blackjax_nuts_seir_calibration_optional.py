@@ -5,17 +5,13 @@ import pytest
 def test_blackjax_nuts_seir_beta_only_coverage_smoke():
     """Optional coverage smoke test for the BlackJAX NUTS SEIR beta-only posterior.
 
-    This is intentionally light-weight and only runs when optional deps exist.
+    This is intentionally lightweight and only runs when optional deps exist.
     It is *not* full SBC; it is a quick sanity check that nominal 90% intervals
     are not wildly miscalibrated.
     """
 
     pytest.importorskip("jax")
-    jnp = pytest.importorskip("jax.numpy")
     pytest.importorskip("blackjax")
-
-    import jax
-    from jax.scipy.special import gammaln
 
     from diff_epi_inference import (
         SEIRParams,
@@ -26,6 +22,7 @@ def test_blackjax_nuts_seir_beta_only_coverage_smoke():
         simulate_seir_euler,
     )
     from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
+    from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
 
     # --- Fixed settings (match the running example defaults used in the book) ---
     sigma_fixed = 1 / 5
@@ -44,75 +41,7 @@ def test_blackjax_nuts_seir_beta_only_coverage_smoke():
     logbeta_prior_mean = float(np.log(0.5))
     logbeta_prior_sd = 0.5
 
-    # JAX constants
-    w_jax = jnp.asarray(w, dtype=float)
-    w_jax = w_jax / jnp.sum(w_jax)
-
-    def simulate_seir_euler_jax(beta: jax.Array) -> jax.Array:
-        beta = jnp.asarray(beta)
-        sigma = jnp.asarray(sigma_fixed)
-        gamma = jnp.asarray(gamma_fixed)
-
-        dt_j = jnp.asarray(dt)
-        steps_j = int(steps)
-
-        def step_fn(state, _):
-            s, e, i, r = state
-            n = s + e + i + r
-            inf_flow = beta * s * i / n
-            inc_flow = sigma * e
-            rec_flow = gamma * i
-            s1 = s - dt_j * inf_flow
-            e1 = e + dt_j * (inf_flow - inc_flow)
-            i1 = i + dt_j * (inc_flow - rec_flow)
-            r1 = r + dt_j * rec_flow
-            return (s1, e1, i1, r1), s1
-
-        init = (jnp.asarray(s0), jnp.asarray(e0), jnp.asarray(i0), jnp.asarray(r0))
-        (_, _, _, _), s_hist = jax.lax.scan(step_fn, init, xs=None, length=steps_j)
-
-        # Prepend s0 so we have length steps+1 like the NumPy solver.
-        s_all = jnp.concatenate([jnp.asarray([s0]), s_hist], axis=0)
-        return s_all
-
-    def nbinom_logpmf_jax(k: jax.Array, mu: jax.Array, dispersion_: float) -> jax.Array:
-        r = jnp.asarray(float(dispersion_))
-        p = r / (r + mu)
-        logp = jnp.log(p)
-        log1mp = jnp.log1p(-p)
-        kf = k.astype(float)
-        out = (
-            gammaln(kf + r)
-            - gammaln(r)
-            - gammaln(kf + 1.0)
-            + r * logp
-            + kf * log1mp
-        )
-
-        zero_mu = mu == 0
-        out = jnp.where(zero_mu & (kf == 0), 0.0, out)
-        out = jnp.where(zero_mu & (kf > 0), -jnp.inf, out)
-        return out
-
-    def make_log_post_logbeta_jax(y_obs_local: np.ndarray):
-        y_obs_jax = jnp.asarray(y_obs_local)
-
-        def _log_post(position: jax.Array) -> jax.Array:
-            logbeta = position[0]
-            beta = jnp.exp(logbeta)
-
-            lp = -0.5 * ((logbeta - logbeta_prior_mean) / logbeta_prior_sd) ** 2
-
-            s_all = simulate_seir_euler_jax(beta)
-            inc = jnp.maximum(s_all[:-1] - s_all[1:], 0.0)
-
-            base = reporting_rate * inc
-            mu = jnp.convolve(base, w_jax, mode="full")[: base.shape[0]]
-
-            ll = jnp.sum(nbinom_logpmf_jax(y_obs_jax, mu, dispersion))
-            return lp + ll
-
-        return _log_post
+    # (JAX implementation lives in diff_epi_inference.models.seir_jax_beta_only)
 
     rng = np.random.default_rng(2026)
 
@@ -138,7 +67,22 @@ def test_blackjax_nuts_seir_beta_only_coverage_smoke():
         )
         y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
 
-        log_post = make_log_post_logbeta_jax(y_obs)
+        log_post = make_log_post_logbeta_jax(
+            y_obs=y_obs,
+            w_delay_pmf=w,
+            sigma=sigma_fixed,
+            gamma=gamma_fixed,
+            s0=s0,
+            e0=e0,
+            i0=i0,
+            r0=r0,
+            dt=dt,
+            steps=steps,
+            reporting_rate=reporting_rate,
+            dispersion=dispersion,
+            logbeta_prior_mean=logbeta_prior_mean,
+            logbeta_prior_sd=logbeta_prior_sd,
+        )
 
         res = run_blackjax_nuts(
             log_post,

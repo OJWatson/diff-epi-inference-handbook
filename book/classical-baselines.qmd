@@ -394,70 +394,27 @@ reimplementation).
 ```{python}
 try:
     import numpy as np
-    import jax
-    import jax.numpy as jnp
-    from jax.scipy.special import gammaln
 
     from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
 
-    y_obs_jax = jnp.asarray(y_obs)
-    w_jax = jnp.asarray(w, dtype=float)
-    w_jax = w_jax / jnp.sum(w_jax)
+    from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
 
-    def simulate_seir_euler_jax(beta: float):
-        beta = jnp.asarray(beta)
-        sigma = jnp.asarray(sigma_fixed)
-        gamma = jnp.asarray(gamma_fixed)
-
-        dt_j = jnp.asarray(dt)
-        steps_j = int(steps)
-
-        def step_fn(state, _):
-            s, e, i, r = state
-            n = s + e + i + r
-            inf_flow = beta * s * i / n
-            inc_flow = sigma * e
-            rec_flow = gamma * i
-            s1 = s - dt_j * inf_flow
-            e1 = e + dt_j * (inf_flow - inc_flow)
-            i1 = i + dt_j * (inc_flow - rec_flow)
-            r1 = r + dt_j * rec_flow
-            return (s1, e1, i1, r1), s1
-
-        init = (jnp.asarray(s0), jnp.asarray(e0), jnp.asarray(i0), jnp.asarray(r0))
-        (sT, eT, iT, rT), s_hist = jax.lax.scan(step_fn, init, xs=None, length=steps_j)
-
-        # Prepend s0 so we have length steps+1 like the NumPy solver.
-        s_all = jnp.concatenate([jnp.asarray([s0]), s_hist], axis=0)
-        return s_all
-
-    def nbinom_logpmf_jax(k: jax.Array, mu: jax.Array, dispersion: float) -> jax.Array:
-        r = jnp.asarray(float(dispersion))
-        p = r / (r + mu)
-        logp = jnp.log(p)
-        log1mp = jnp.log1p(-p)
-        kf = k.astype(float)
-        out = gammaln(kf + r) - gammaln(r) - gammaln(kf + 1.0) + r * logp + kf * log1mp
-
-        zero_mu = mu == 0
-        out = jnp.where(zero_mu & (kf == 0), 0.0, out)
-        out = jnp.where(zero_mu & (kf > 0), -jnp.inf, out)
-        return out
-
-    def log_post_logbeta_jax(position: jax.Array) -> jax.Array:
-        logbeta = position[0]
-        beta = jnp.exp(logbeta)
-
-        lp = -0.5 * ((logbeta - logbeta_prior_mean) / logbeta_prior_sd) ** 2
-
-        s_all = simulate_seir_euler_jax(beta)
-        inc = jnp.maximum(s_all[:-1] - s_all[1:], 0.0)
-
-        base = reporting_rate * inc
-        mu = jnp.convolve(base, w_jax, mode="full")[: base.shape[0]]
-
-        ll = jnp.sum(nbinom_logpmf_jax(y_obs_jax, mu, dispersion))
-        return lp + ll
+    log_post_logbeta_jax = make_log_post_logbeta_jax(
+        y_obs=np.asarray(y_obs),
+        w_delay_pmf=np.asarray(w, dtype=float),
+        sigma=float(sigma_fixed),
+        gamma=float(gamma_fixed),
+        s0=float(s0),
+        e0=float(e0),
+        i0=float(i0),
+        r0=float(r0),
+        dt=float(dt),
+        steps=int(steps),
+        reporting_rate=float(reporting_rate),
+        dispersion=float(dispersion),
+        logbeta_prior_mean=float(logbeta_prior_mean),
+        logbeta_prior_sd=float(logbeta_prior_sd),
+    )
 
     res_nuts_seir = run_blackjax_nuts(
         log_post_logbeta_jax,

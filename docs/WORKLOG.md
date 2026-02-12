@@ -24,3 +24,4 @@ Guidelines:
 - 2026-02-12: Added optional BlackJAX NUTS SEIR `beta`-only calibration/coverage smoke test (`tests/test_blackjax_nuts_seir_calibration_optional.py`); ran `ruff check .` + `pytest` (all pass; optional tests skipped without deps).
 - 2026-02-12: Fixed CI ruff failure (UP027) in optional BlackJAX calibration test; ran `ruff check .` + `pytest`, pushed; CI: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21945763287
 - 2026-02-12: Added a short note in `book/classical-baselines.qmd` pointing to the optional BlackJAX NUTS SEIR calibration/coverage smoke test; ran `ruff check .` + `pytest` (all pass; optional tests skipped without deps) and pushed.
+- 2026-02-12: Refactored the duplicated JAX SEIR beta-only log-posterior (book + optional BlackJAX calibration test) into `src/diff_epi_inference/models/seir_jax_beta_only.py`; ran `ruff` + `pytest` (pass) and will push.
