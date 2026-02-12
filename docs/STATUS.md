@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 418f7d3f230820ce3ef532aa6dcc599ab9423128
+headSha: 95d49a0947e3c80cee6788c15b36c9cf9fe895cc
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T17:53:25Z
-nextStep: Add brief HMC tuning guidance in book/classical-baselines.qmd (step_size, n_leapfrog, target accept rates; mention divergences for NUTS).
+updatedAtUtc: 2026-02-12T18:13:13Z
+nextStep: Add brief guidance on tuning finite-difference gradient step size (`grad_eps`) in the minimal HMC demo (and how to spot when it is too small/large).
 ```
 
 ## Notes
