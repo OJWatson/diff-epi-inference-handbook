@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: f0a92129ceac0b040285a9f30f2093342754b032
+headSha: 88e3f20c3e12c01781c54fd965659d28958d385b
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T15:21:09Z
-nextStep: Confirm the GitHub Actions run for `f0a9212` is green, then add a tiny unit test that `plot_acf(..., kind="bar")` returns `(fig, ax)` and plots `max_lag+1` bars.
+updatedAtUtc: 2026-02-12T15:41:48Z
+nextStep: Confirm the GitHub Actions run for `88e3f20` is green.
 ```
 
 ## Notes
