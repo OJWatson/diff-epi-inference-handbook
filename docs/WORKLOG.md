@@ -42,3 +42,4 @@ Guidelines:
 - 2026-02-12: Added HMC unit test covering output shapes + deterministic reproducibility with a fixed NumPy RNG seed; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-12: Added unit tests for HMC input validation (n_steps/step_size/n_leapfrog/grad_eps positive); ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-12: Added unit test for MH input validation (`n_steps` must be positive); ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
+- 2026-02-12: Updated `docs/STATUS.md` headSha/updatedAtUtc after pushing the MH validation test.
