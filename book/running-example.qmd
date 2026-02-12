@@ -9,6 +9,7 @@ Scope (M1 slice):
 - Deterministic SEIR simulation (Euler discretisation).
 - A paired **stochastic** SEIR variant (tau-leaping; non-differentiable).
 - An observation model: incidence derived from the drop in susceptibles, then **reported cases** via under-reporting, a delay distribution, and NB noise.
+- A tiny paired pipeline that produces `TimeSeriesDataset` objects for both deterministic and stochastic simulations.
 
 Assumptions / parameterisation:
 
@@ -29,11 +30,14 @@ import matplotlib.pyplot as plt
 
 from diff_epi_inference import (
     SEIRParams,
+    TimeSeriesDataset,
     discrete_gamma_delay_pmf,
     expected_reported_cases_delayed,
     incidence_from_susceptibles,
     nbinom_loglik,
     sample_nbinom_reports,
+    simulate_seir_and_report_deterministic,
+    simulate_seir_and_report_stochastic,
     simulate_seir_euler,
 )
 
@@ -84,9 +88,11 @@ rng = np.random.default_rng(0)
 y = sample_nbinom_reports(expected=mu, dispersion=dispersion, rng=rng)
 ll = nbinom_loglik(y=y, mu=mu, dispersion=dispersion)
 
+ds_det = TimeSeriesDataset(t=t[1:], y=y, name="reported (deterministic)")
+
 fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(t[1:], mu, label="E[reported] (delay + rho)")
-ax.plot(t[1:], y, label="reported (NegBin)", alpha=0.7)
+ax.plot(ds_det.t, mu, label="E[reported] (delay + rho)")
+ax.plot(ds_det.t, ds_det.y, label=ds_det.name, alpha=0.7)
 ax.set_xlabel("time")
 ax.set_ylabel("cases / step")
 ax.set_title("Observation model")
@@ -94,5 +100,44 @@ ax.legend()
 plt.show()
 
 assert np.isfinite(ll)
-assert inc.shape == mu.shape == y.shape
+assert inc.shape == mu.shape == ds_det.y.shape
+
+# --- Paired deterministic vs stochastic pipelines ---
+
+ds_det2 = simulate_seir_and_report_deterministic(
+    params=params,
+    s0=999.0,
+    e0=0.0,
+    i0=1.0,
+    r0=0.0,
+    dt=0.2,
+    steps=200,
+    reporting_rate=rho,
+    rng=np.random.default_rng(1),
+    name="reported (det pipeline)",
+)
+
+ds_sto2 = simulate_seir_and_report_stochastic(
+    params=params,
+    s0=999,
+    e0=0,
+    i0=1,
+    r0=0,
+    dt=0.2,
+    steps=200,
+    reporting_rate=rho,
+    rng=np.random.default_rng(2),
+    name="reported (stoch pipeline)",
+)
+
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(ds_det2.t, ds_det2.y, label=ds_det2.name)
+ax.plot(ds_sto2.t, ds_sto2.y, label=ds_sto2.name, alpha=0.8)
+ax.set_xlabel("time")
+ax.set_ylabel("cases / step")
+ax.set_title("Paired deterministic vs stochastic reported cases")
+ax.legend()
+plt.show()
+
+assert ds_det2.t.shape == ds_det2.y.shape == ds_sto2.t.shape == ds_sto2.y.shape
 ```
