@@ -377,6 +377,126 @@ except ImportError as e:
     print("Skipping BlackJAX NUTS demo (optional deps not installed):", e)
 ```
 
+#### Optional: NUTS for the SEIR `beta`-only posterior (JAX reimplementation)
+
+To use NUTS on the SEIR running example, the log posterior must be **JAX-traceable**.
+The core simulator in this repo is NumPy-based, so below we re-implement the *minimal*
+`beta`-only likelihood in `jax.numpy` (Euler step + delay convolution + NB likelihood).
+
+This is intentionally scoped to the `beta`-only demo so we can keep the optional path
+self-contained.
+
+```{python}
+try:
+    import numpy as np
+    import jax
+    import jax.numpy as jnp
+    from jax.scipy.special import gammaln
+
+    from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
+
+    y_obs_jax = jnp.asarray(y_obs)
+    w_jax = jnp.asarray(w, dtype=float)
+    w_jax = w_jax / jnp.sum(w_jax)
+
+    def simulate_seir_euler_jax(beta: float):
+        beta = jnp.asarray(beta)
+        sigma = jnp.asarray(sigma_fixed)
+        gamma = jnp.asarray(gamma_fixed)
+
+        dt_j = jnp.asarray(dt)
+        steps_j = int(steps)
+
+        def step_fn(state, _):
+            s, e, i, r = state
+            n = s + e + i + r
+            inf_flow = beta * s * i / n
+            inc_flow = sigma * e
+            rec_flow = gamma * i
+            s1 = s - dt_j * inf_flow
+            e1 = e + dt_j * (inf_flow - inc_flow)
+            i1 = i + dt_j * (inc_flow - rec_flow)
+            r1 = r + dt_j * rec_flow
+            return (s1, e1, i1, r1), s1
+
+        init = (jnp.asarray(s0), jnp.asarray(e0), jnp.asarray(i0), jnp.asarray(r0))
+        (sT, eT, iT, rT), s_hist = jax.lax.scan(step_fn, init, xs=None, length=steps_j)
+
+        # Prepend s0 so we have length steps+1 like the NumPy solver.
+        s_all = jnp.concatenate([jnp.asarray([s0]), s_hist], axis=0)
+        return s_all
+
+    def nbinom_logpmf_jax(k: jax.Array, mu: jax.Array, dispersion: float) -> jax.Array:
+        r = jnp.asarray(float(dispersion))
+        p = r / (r + mu)
+        logp = jnp.log(p)
+        log1mp = jnp.log1p(-p)
+        kf = k.astype(float)
+        out = gammaln(kf + r) - gammaln(r) - gammaln(kf + 1.0) + r * logp + kf * log1mp
+
+        zero_mu = mu == 0
+        out = jnp.where(zero_mu & (kf == 0), 0.0, out)
+        out = jnp.where(zero_mu & (kf > 0), -jnp.inf, out)
+        return out
+
+    def log_post_logbeta_jax(position: jax.Array) -> jax.Array:
+        logbeta = position[0]
+        beta = jnp.exp(logbeta)
+
+        lp = -0.5 * ((logbeta - logbeta_prior_mean) / logbeta_prior_sd) ** 2
+
+        s_all = simulate_seir_euler_jax(beta)
+        inc = jnp.maximum(s_all[:-1] - s_all[1:], 0.0)
+
+        base = reporting_rate * inc
+        mu = jnp.convolve(base, w_jax, mode="full")[: base.shape[0]]
+
+        ll = jnp.sum(nbinom_logpmf_jax(y_obs_jax, mu, dispersion))
+        return lp + ll
+
+    res_nuts_seir = run_blackjax_nuts(
+        log_post_logbeta_jax,
+        x0=np.array([np.log(0.3)]),
+        num_warmup=400,
+        num_samples=800,
+        seed=3,
+    )
+
+    beta_chain_nuts = np.exp(res_nuts_seir.chain[:, 0])
+    accept_rate_nuts = float(res_nuts_seir.accept_rate)
+    beta_mean_nuts = float(np.mean(beta_chain_nuts))
+    beta_q05_nuts, beta_q95_nuts = [float(q) for q in np.quantile(beta_chain_nuts, [0.05, 0.95])]
+
+    accept_rate_nuts, beta_mean_nuts, beta_q05_nuts, beta_q95_nuts
+except ImportError as e:
+    print("Skipping BlackJAX NUTS SEIR demo (optional deps not installed):", e)
+```
+
+A quick posterior predictive check (if NUTS ran):
+
+```{python}
+try:
+    q05_nuts, q50_nuts, q95_nuts = ppc_from_beta_draws(
+        beta_chain_nuts,
+        rng=np.random.default_rng(789),
+        n_draws=60,
+    )
+
+    t = np.arange(len(y_obs)) * dt
+
+    fig, ax = plt.subplots(figsize=(7, 3))
+    ax.fill_between(t, q05_nuts, q95_nuts, alpha=0.25, label="posterior predictive 90%")
+    ax.plot(t, q50_nuts, lw=1.2, label="posterior predictive median")
+    ax.plot(t, y_obs, lw=1.0, color="black", label="observed y")
+    ax.set_xlabel("time")
+    ax.set_ylabel("reported cases")
+    ax.set_title("PPC (NUTS via BlackJAX; beta only)")
+    ax.legend(loc="upper right")
+    plt.show()
+except NameError:
+    print("Skipping NUTS PPC (NUTS SEIR demo did not run)")
+```
+
 ### 4) Diagnostics
 
 - Trace plots for key parameters.
