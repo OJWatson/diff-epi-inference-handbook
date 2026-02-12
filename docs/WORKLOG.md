@@ -26,14 +26,6 @@ Guidelines:
 - 2026-02-12: Added a short note in `book/classical-baselines.qmd` pointing to the optional BlackJAX NUTS SEIR calibration/coverage smoke test; ran `ruff check .` + `pytest` (all pass; optional tests skipped without deps) and pushed.
 - 2026-02-12: Refactored the duplicated JAX SEIR beta-only log-posterior (book + optional BlackJAX calibration test) into `src/diff_epi_inference/models/seir_jax_beta_only.py`; ran `ruff` + `pytest` (pass) and will push.
 
-- 2026-02-12: Extracted NumPy SEIR beta-only log posterior into  and updated  to use it; ran  + ============================= test session starts ==============================
-platform linux -- Python 3.10.12, pytest-9.0.2, pluggy-1.6.0
-rootdir: /home/kana/git/diff-epi-inference-handbook
-configfile: pyproject.toml
-testpaths: tests
-plugins: anyio-4.12.1
-collected 17 items
-
-tests/test_blackjax_nuts_optional.py s                                   [  5- 2026-02-12: Extracted NumPy SEIR beta-only log posterior into `make_log_post_logbeta_numpy` and updated `book/classical-baselines.qmd` to use it; ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
+- 2026-02-12: Extracted NumPy SEIR beta-only log posterior into `make_log_post_logbeta_numpy` and updated `book/classical-baselines.qmd` to use it; ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
 - 2026-02-12: Added unit tests for `make_log_post_logbeta_numpy` (finite scalar output + position shape validation); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
 - 2026-02-12: Clarified the `log_beta` prior parameterisation in `book/classical-baselines.qmd` (Gaussian on log(beta) ⇒ lognormal on beta; constants dropped in log densities); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
