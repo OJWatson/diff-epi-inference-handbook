@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 88e3f20c3e12c01781c54fd965659d28958d385b
+headSha: f2dfdc17a29ec319e29ec3b3d5b002d8b5b9fdde
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T15:41:48Z
-nextStep: Confirm the GitHub Actions run for `88e3f20` is green.
+updatedAtUtc: 2026-02-12T16:03:45Z
+nextStep: Add a small unit test for the MH sampler covering return shapes + reproducibility (fixed RNG seed).
 ```
 
 ## Notes

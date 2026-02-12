@@ -36,3 +36,4 @@ Guidelines:
 - 2026-02-12: Added unit tests for `autocorr_1d` (input validation + alternating-series sanity check); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
 - 2026-02-12: Added unit test ensuring `plot_acf` raises on unknown `kind`; ran `python3 -m ruff check .` + `python3 -m pytest` (22 pass, 2 skipped) and pushed.
 - 2026-02-12: Added unit test for `plot_acf(..., kind="bar")` (returns `(fig, ax)` and draws `max_lag+1` bars); ran `python3 -m ruff check .` + `python3 -m pytest` (23 pass, 2 skipped) and pushed.
+- 2026-02-12: Confirmed GitHub Actions run for `88e3f20` completed successfully; bumped `docs/STATUS.md` headSha + next step.
