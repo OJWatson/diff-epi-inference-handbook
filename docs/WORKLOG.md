@@ -38,3 +38,4 @@ Guidelines:
 - 2026-02-12: Added unit test for `plot_acf(..., kind="bar")` (returns `(fig, ax)` and draws `max_lag+1` bars); ran `python3 -m ruff check .` + `python3 -m pytest` (23 pass, 2 skipped) and pushed.
 - 2026-02-12: Confirmed GitHub Actions run for `88e3f20` completed successfully; bumped `docs/STATUS.md` headSha + next step.
 - 2026-02-12: Updated `docs/STATUS.md` headSha after pushing the CI-gated status update commit.
+- 2026-02-12: Added MH unit test covering output shapes + deterministic reproducibility with a fixed NumPy RNG seed; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
