@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M1
 state: running
-headSha: 99bf572d693cb0809dce830f706c485c9ab8a374
+headSha: e9727ba72a8c6342ed31065257140cbbca684364
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21936176632
-updatedAtUtc: 2026-02-12T06:57:25Z
+updatedAtUtc: 2026-02-12T07:00:38Z
 ```
 
 ## Notes
@@ -12,7 +12,8 @@ updatedAtUtc: 2026-02-12T06:57:25Z
 ## Next steps (M1)
 - ✅ Tiny paired example added: deterministic + stochastic SEIR feed the same observation model and return `TimeSeriesDataset` objects.
 - ✅ Added `scripts/make_synthetic_dataset.py` to write paired synthetic SEIR datasets to disk via `save_timeseries_npz`; documented `.npz` layout in `docs/DATASETS.md`.
-- ✅ GitHub Pages decision: add a manual Pages publish workflow (`.github/workflows/pages.yml`) that deploys the rendered HTML to `gh-pages`.
-  - Next: decide whether to enable automatic publishing on `push` to `main` (and configure repo Pages settings).
+- ✅ GitHub Pages decision: add a Pages publish workflow (`.github/workflows/pages.yml`) that deploys the rendered HTML to `gh-pages`.
+  - ✅ Auto-publish mode: enabled on version tags (`v*`) and added `docs/PAGES.md` with setup notes.
+  - Next: decide whether to enable publishing on every `push` to `main`.
 - ✅ Reproducibility pinning: added `constraints-dev.txt` and use it in CI installs.
 - Consider further reproducibility pinning (e.g. a full lockfile for Python deps).
