@@ -123,37 +123,27 @@ y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
 
 # --- Log posterior for log(beta) ---
 
+from diff_epi_inference.models.seir_numpy_beta_only import make_log_post_logbeta_numpy
+
 logbeta_prior_mean = float(np.log(0.5))
 logbeta_prior_sd = 0.5
 
-
-def log_post_logbeta(x: np.ndarray) -> float:
-    logbeta = float(x[0])
-    beta = float(np.exp(logbeta))
-
-    # Log prior: log(beta) ~ Normal(mean, sd)  (constants dropped)
-    lp = -0.5 * ((logbeta - logbeta_prior_mean) / logbeta_prior_sd) ** 2
-
-    params = SEIRParams(beta=beta, sigma=sigma_fixed, gamma=gamma_fixed)
-    out = simulate_seir_euler(
-        params=params,
-        s0=s0,
-        e0=e0,
-        i0=i0,
-        r0=r0,
-        dt=dt,
-        steps=steps,
-    )
-
-    inc = incidence_from_susceptibles(out["S"])
-    mu = expected_reported_cases_delayed(
-        incidence=inc,
-        reporting_rate=reporting_rate,
-        delay_pmf=w,
-    )
-
-    ll = nbinom_loglik(y=y_obs, mu=mu, dispersion=dispersion)
-    return float(lp + ll)
+log_post_logbeta = make_log_post_logbeta_numpy(
+    y_obs=y_obs,
+    w_delay_pmf=w,
+    sigma=sigma_fixed,
+    gamma=gamma_fixed,
+    s0=s0,
+    e0=e0,
+    i0=i0,
+    r0=r0,
+    dt=dt,
+    steps=steps,
+    reporting_rate=reporting_rate,
+    dispersion=dispersion,
+    logbeta_prior_mean=logbeta_prior_mean,
+    logbeta_prior_sd=logbeta_prior_sd,
+)
 
 
 res = random_walk_metropolis_hastings(
@@ -477,6 +467,8 @@ smoke test.
 ```{python}
 from dataclasses import dataclass
 
+from diff_epi_inference.models.seir_numpy_beta_only import make_log_post_logbeta_numpy
+
 
 @dataclass
 class CoverageResult:
@@ -488,34 +480,22 @@ class CoverageResult:
 
 
 def make_log_post_logbeta_for_y(y_obs_local: np.ndarray):
-    def _log_post_logbeta(x: np.ndarray) -> float:
-        logbeta = float(x[0])
-        beta = float(np.exp(logbeta))
-
-        lp = -0.5 * ((logbeta - logbeta_prior_mean) / logbeta_prior_sd) ** 2
-
-        params = SEIRParams(beta=beta, sigma=sigma_fixed, gamma=gamma_fixed)
-        out = simulate_seir_euler(
-            params=params,
-            s0=s0,
-            e0=e0,
-            i0=i0,
-            r0=r0,
-            dt=dt,
-            steps=steps,
-        )
-
-        inc = incidence_from_susceptibles(out["S"])
-        mu = expected_reported_cases_delayed(
-            incidence=inc,
-            reporting_rate=reporting_rate,
-            delay_pmf=w,
-        )
-
-        ll = nbinom_loglik(y=y_obs_local, mu=mu, dispersion=dispersion)
-        return float(lp + ll)
-
-    return _log_post_logbeta
+    return make_log_post_logbeta_numpy(
+        y_obs=y_obs_local,
+        w_delay_pmf=w,
+        sigma=sigma_fixed,
+        gamma=gamma_fixed,
+        s0=s0,
+        e0=e0,
+        i0=i0,
+        r0=r0,
+        dt=dt,
+        steps=steps,
+        reporting_rate=reporting_rate,
+        dispersion=dispersion,
+        logbeta_prior_mean=logbeta_prior_mean,
+        logbeta_prior_sd=logbeta_prior_sd,
+    )
 
 
 rng = np.random.default_rng(2026)
