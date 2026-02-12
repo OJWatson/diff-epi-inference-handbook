@@ -9,6 +9,7 @@ book:
   chapters:
     - index.qmd
     - running-example.qmd
+    - classical-baselines.qmd
 
 format:
   html:

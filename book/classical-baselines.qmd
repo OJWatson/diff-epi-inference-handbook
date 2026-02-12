@@ -1,0 +1,55 @@
+---
+title: "Classical baselines"
+---
+
+This chapter introduces *amortisation-free* inference baselines for the SEIR running example.
+These serve as anchors for later SBI/VI methods.
+
+## Goals (M2)
+
+- Provide a **Metropolis–Hastings (MH)** baseline on the (possibly) non-differentiable simulator / likelihood.
+- Provide a **gradient-based HMC/NUTS** baseline on the differentiable ODE likelihood.
+- Include a minimal set of **diagnostics** that we will reuse throughout the book:
+  - Trace / mixing diagnostics (R-hat, ESS where available)
+  - Posterior predictive checks (PPC)
+  - Basic calibration checks (e.g. coverage on simulated datasets)
+
+## Plan
+
+### 1) Common interface
+
+- Define a parameter vector and priors consistent with the running example.
+- Define a log-likelihood `logp(y | theta)` (or unbiased estimate) plus `logp(theta)`.
+- Agree on what a “draw” contains (e.g. `theta`, latent trajectories optional, log joint).
+
+### 2) Random-walk Metropolis–Hastings
+
+- Algorithm: Gaussian random-walk proposals in unconstrained space.
+- Implementation notes:
+  - Transform constrained parameters (positivity, simplex) to ℝ.
+  - Adapt proposal scale during warmup only; then fix.
+- Outputs:
+  - Acceptance rate
+  - Autocorrelation / effective sample size
+
+### 3) HMC / NUTS on the ODE model
+
+- Use autodiff through the ODE solver + observation model.
+- Start with a small, well-posed parameterisation (avoid pathological geometry).
+- Outputs:
+  - Step size / tree depth (NUTS)
+  - Divergences / energy diagnostics
+
+### 4) Diagnostics
+
+- Trace plots for key parameters.
+- Posterior predictive: simulate trajectories and compare to observed data.
+- Calibration smoke test:
+  - Generate a small set of synthetic datasets from known parameters.
+  - Run inference and check nominal coverage for a few parameters.
+
+## Next coding tasks
+
+- Add `src/diff_epi_inference/mcmc/mh.py` with a minimal MH sampler + tests.
+- Add `src/diff_epi_inference/mcmc/nuts.py` (or wrapper around an existing library) + tests.
+- Add plotting helpers for chains + PPC.
