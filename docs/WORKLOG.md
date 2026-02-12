@@ -36,3 +36,4 @@ collected 17 items
 
 tests/test_blackjax_nuts_optional.py s                                   [  5- 2026-02-12: Extracted NumPy SEIR beta-only log posterior into `make_log_post_logbeta_numpy` and updated `book/classical-baselines.qmd` to use it; ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
 - 2026-02-12: Added unit tests for `make_log_post_logbeta_numpy` (finite scalar output + position shape validation); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
+- 2026-02-12: Clarified the `log_beta` prior parameterisation in `book/classical-baselines.qmd` (Gaussian on log(beta) ⇒ lognormal on beta; constants dropped in log densities); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.

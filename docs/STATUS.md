@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 5b370b637c91b2d0ce3a0ae520d252fa7784bf7f
+headSha: c1a9c8c03dc31ea44dff806d36910cdf4ffea916
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T13:10:30Z
-nextStep: Add a brief section to `book/classical-baselines.qmd` clarifying the parameterisation and support of the `log_beta` prior (Gaussian on log(beta) ⇒ lognormal on beta) and why we drop the normalisation constant.
+updatedAtUtc: 2026-02-12T13:31:30Z
+nextStep: Clean up the corrupted/duplicated entry in `docs/WORKLOG.md` (the stray truncated pytest output line) so the work log is readable again.
 ```
 
 ## Notes
