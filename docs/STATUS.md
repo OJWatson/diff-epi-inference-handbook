@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 4b2ff3f1612016b10c9a72c9ff384991f1338546
+headSha: 2a30ab156a7ff49f8fd69b014cc2dc8a7c75ad9b
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T09:33:41Z
-nextStep: Add a minimal **HMC/NUTS** baseline for the *ODE SEIR* likelihood (e.g. infer only `beta` in unconstrained `log_beta` space), ideally via a small wrapper around an existing library.
+updatedAtUtc: 2026-02-12T09:38:08Z
+nextStep: Wire the new minimal **HMC** baseline into the *ODE SEIR* likelihood demo (infer only `beta` via `log_beta` in `book/classical-baselines.qmd`), and document its limitations vs autodiff + NUTS.
 ```
 
 ## Notes
