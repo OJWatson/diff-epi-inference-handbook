@@ -386,6 +386,11 @@ The core simulator in this repo is NumPy-based, so below we re-implement the *mi
 This is intentionally scoped to the `beta`-only demo so we can keep the optional path
 self-contained.
 
+**Note:** there is also an optional *calibration/coverage smoke test* for this NUTS path in
+`tests/test_blackjax_nuts_seir_calibration_optional.py`. It is skipped unless the
+`nuts` extra is installed (and is meant to catch obvious regressions in the JAX
+reimplementation).
+
 ```{python}
 try:
     import numpy as np
