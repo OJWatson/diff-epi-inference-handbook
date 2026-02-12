@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: b6a116cb7fd367ea7d9ebe301e24bec89338cc73
+headSha: aa4a67fb95ca33b9d0747cc81946551d4583611b
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T13:56:45Z
-nextStep: Confirm the GitHub Actions run for `b6a116c` is green, then resume M2 by adding a short section on MCMC diagnostics (trace plots / ESS / R-hat pointers) to `book/classical-baselines.qmd`.
+updatedAtUtc: 2026-02-12T14:14:37Z
+nextStep: Confirm the GitHub Actions run for `aa4a67f` is green, then continue M2 by adding a small chain-plot helper (trace + ACF) under `src/diff_epi_inference/plotting/mcmc.py` and use it in `book/classical-baselines.qmd`. 
 ```
 
 ## Notes

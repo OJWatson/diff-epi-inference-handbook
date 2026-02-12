@@ -30,3 +30,4 @@ Guidelines:
 - 2026-02-12: Added unit tests for `make_log_post_logbeta_numpy` (finite scalar output + position shape validation); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
 - 2026-02-12: Clarified the `log_beta` prior parameterisation in `book/classical-baselines.qmd` (Gaussian on log(beta) ⇒ lognormal on beta; constants dropped in log densities); ran `python3 -m ruff check .` + `python3 -m pytest` (all pass) and pushed.
 - 2026-02-12: Cleaned up corrupted/truncated pytest output accidentally pasted into `docs/WORKLOG.md`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
+- 2026-02-12: Added a short MCMC diagnostics note to `book/classical-baselines.qmd` with optional ArviZ ESS/R-hat snippet; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
