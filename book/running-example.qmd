@@ -19,10 +19,10 @@ Assumptions / parameterisation:
 
 Observation model (per time step):
 
-- Incidence: \(i_t = \max(S_t - S_{t+1}, 0)\)
-- Under-reporting: \(\tilde{i}_t = \rho\, i_t\)
-- Delay: \(\mu_t = \sum_{d\ge 0} \tilde{i}_{t-d} w_d\), where \(w_d\) is a discrete delay PMF.
-- Noise: \(y_t \sim \text{NegBin}(\mu_t, \kappa)\) with \(\mathrm{Var}(y_t)=\mu_t + \mu_t^2/\kappa\).
+- Incidence: $i_t = \max(S_t - S_{t+1}, 0)$
+- Under-reporting: $\tilde{i}_t = \rho\, i_t$
+- Delay: $\mu_t = \sum_{d\ge 0} \tilde{i}_{t-d} w_d$, where $w_d$ is a discrete delay PMF.
+- Noise: $y_t \sim \text{NegBin}(\mu_t, \kappa)$ with $\mathrm{Var}(y_t)=\mu_t + \mu_t^2/\kappa$.
 
 ```{python}
 import numpy as np
