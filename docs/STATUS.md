@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: c0f283b31434256925a72ac54002a2ed6a37cecd
+headSha: 6d6ea38e373d04d14e08d6cb3676c2972b138b2e
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T14:38:25Z
-nextStep: Confirm the GitHub Actions run for `c0f283b` is green, then add minimal unit tests for the new MCMC diagnostics helpers (`autocorr_1d` input validation + a simple known-series sanity check) in `tests/test_plotting_utils.py`. 
+updatedAtUtc: 2026-02-12T14:39:14Z
+nextStep: Confirm the GitHub Actions run for `6d6ea38` is green, then add minimal unit tests for the new MCMC diagnostics helpers (`autocorr_1d` input validation + a simple known-series sanity check) in `tests/test_plotting_utils.py`. 
 ```
 
 ## Notes
