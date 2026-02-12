@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: da45e761801c5f3d15f9f4534bf42c54dc9dec32
+headSha: 5b370b637c91b2d0ce3a0ae520d252fa7784bf7f
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T12:52:34Z
+updatedAtUtc: 2026-02-12T12:53:28Z
 nextStep: Add a small unit test for `make_log_post_logbeta_numpy` (finite log posterior + shape validation) to prevent drift between the book and library helpers.
 ```
 
