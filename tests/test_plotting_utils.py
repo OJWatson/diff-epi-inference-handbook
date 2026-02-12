@@ -1,6 +1,8 @@
 import numpy as np
+import pytest
 
 from diff_epi_inference import TimeSeriesDataset, plot_timeseries
+from diff_epi_inference.plotting.mcmc import autocorr_1d
 
 
 def test_plot_timeseries_returns_fig_ax():
@@ -15,3 +17,30 @@ def test_plot_timeseries_returns_fig_ax():
 
     # Avoid GUI resource warnings in test runners
     fig.clf()
+
+
+def test_autocorr_1d_validates_inputs():
+    with pytest.raises(ValueError, match="x must be 1D"):
+        autocorr_1d(np.zeros((2, 2)), max_lag=1)
+
+    with pytest.raises(ValueError, match="max_lag must be >= 0"):
+        autocorr_1d(np.zeros(3), max_lag=-1)
+
+    with pytest.raises(ValueError, match="x must be non-empty"):
+        autocorr_1d(np.array([]), max_lag=0)
+
+
+def test_autocorr_1d_known_series_sanity():
+    # Alternating +/-1 has a known biased ACF when mean is exactly 0 (even length).
+    x = np.tile([1.0, -1.0], 50)  # N=100
+    n = x.size
+
+    acf = autocorr_1d(x, max_lag=2)
+    assert acf.shape == (3,)
+    assert np.isclose(acf[0], 1.0)
+    assert np.isclose(acf[1], -(n - 1) / n)
+    assert np.isclose(acf[2], (n - 2) / n)
+
+    # Constant series => zero variance after centering; defined here as all ones.
+    acf_const = autocorr_1d(np.ones(10), max_lag=3)
+    assert np.allclose(acf_const, np.ones(4))
