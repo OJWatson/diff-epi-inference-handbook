@@ -54,3 +54,4 @@ Guidelines:
 - 2026-02-12: Made local Quarto download workflow lint-clean (exclude `.tools/` from ruff; ignore Quarto artefacts), fixed `grad_eps` math block rendering (use `$$...$$`), and sped up the HMC calibration smoke test so `quarto render` completes locally; ran `ruff` + `pytest` and pushed.
 - 2026-02-12: Confirmed GitHub Actions run for `d8fe651` completed successfully (success); updated `docs/STATUS.md` next step accordingly.
 - 2026-02-12: Documented in `docs/BUILD.md` that the local Quarto download workflow uses a `.tools/` directory which is gitignored and excluded from lint; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`50733a3`).
+- 2026-02-12: Confirmed CI for `50733a3` is green (Actions run 21962166993); updated `docs/STATUS.md` `ciRunUrl` accordingly; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.

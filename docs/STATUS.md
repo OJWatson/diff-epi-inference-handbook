@@ -3,7 +3,7 @@ milestone: M2
 state: running
 headSha: 50733a393d08ce9010e37e2797da4047de053df0
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21962166993
-updatedAtUtc: 2026-02-12T20:40:40Z
+updatedAtUtc: 2026-02-12T20:41:45Z
 nextStep: Confirm CI for current `main` HEAD is green and update `headSha` + `ciRunUrl` in this file accordingly.
 ```
 
