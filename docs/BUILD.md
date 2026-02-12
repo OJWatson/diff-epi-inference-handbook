@@ -42,7 +42,9 @@ quarto --version
 
 ### If `quarto` is not installed
 
-If you don’t have Quarto available on your PATH (e.g. `quarto: command not found`), you can download the pinned CI version **without** needing system-wide install:
+If you don’t have Quarto available on your PATH (e.g. `quarto: command not found`), you can download the pinned CI version **without** needing system-wide install.
+
+Note: this workflow downloads Quarto into a local `.tools/` directory. `.tools/` is intentionally **gitignored** and **excluded from linting** (e.g. `ruff`) because it is a local build artefact.
 
 ```bash
 QUARTO_VER=1.8.27
