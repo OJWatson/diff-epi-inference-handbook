@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: b56059c1d50ca2726b2ca3ec9179a35a4605f1cd
+headSha: 7c4d4dc167c23bbef8348c46b79e96812d514c0c
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T19:01:46Z
+updatedAtUtc: 2026-02-12T19:02:19Z
 nextStep: Using the Quarto download fallback documented in `docs/BUILD.md`, run a local `quarto render book --to html` and confirm the `grad_eps` guidance math block renders and `classical-baselines.qmd` executes end-to-end.
 ```
 

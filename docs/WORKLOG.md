@@ -50,3 +50,4 @@ Guidelines:
 - 2026-02-12: Added guidance on tuning finite-difference `grad_eps` (with signs it is too small/large) in the minimal HMC demo; ran `python3 -m ruff check .` + `python3 -m pytest` (28 pass, 2 skipped) and pushed.
 - 2026-02-12: Documented a no-sudo Quarto 1.8.27 download fallback in `docs/BUILD.md` for local rendering; ran `python3 -m ruff check .` + `python3 -m pytest` (28 pass, 2 skipped) and pushed.
 - 2026-02-12: Updated `docs/STATUS.md` (headSha/updatedAtUtc) after the Quarto BUILD doc change.
+- 2026-02-12: Set `docs/STATUS.md` headSha to the last substantive commit (Quarto BUILD doc change) to avoid headSha churn from bookkeeping commits.
