@@ -295,6 +295,32 @@ Limitations of this baseline (important):
 - **No adaptation / diagnostics:** this minimal HMC does not adapt step sizes or trajectory
   lengths and does not report NUTS-style diagnostics (divergences, tree depth, energy).
 
+### Tuning `grad_eps` (finite-difference gradient step size)
+
+`grad_eps` controls the central-difference approximation
+
+\[
+\nabla f(x) \approx \frac{f(x + \varepsilon) - f(x - \varepsilon)}{2\varepsilon}.
+\]
+
+A practical workflow:
+
+1. Work in **unconstrained** parameter space (we do: `x = log_beta`). `grad_eps` is measured in
+   that space.
+2. Start with a conservative default like `1e-4` to `1e-3`.
+3. Sanity-check sensitivity by rerunning a short chain with `grad_eps` scaled by 10× (e.g.
+   `1e-5`, `1e-4`, `1e-3`) and verifying that **posterior summaries** (mean/interval) and
+   **acceptance rate** are broadly stable.
+
+How to spot problems:
+
+- **Too small:** gradients become dominated by numerical cancellation/roundoff. You may see
+  very noisy acceptance rates, sticky chains, or you need an implausibly tiny `step_size` to
+  avoid rejections.
+- **Too large:** gradients are biased (you are differentiating a smoothed/linearised version of
+  the log density). Chains may mix but settle on the *wrong* posterior (summaries shift
+  noticeably as you change `grad_eps`).
+
 Despite these caveats, it is a useful pedagogical bridge between MH and a full autodiff + NUTS
 workflow.
 
