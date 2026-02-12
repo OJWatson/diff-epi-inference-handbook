@@ -1,14 +1,15 @@
 ```pm-status
-milestone: M2
+milestone: M3
 state: running
-headSha: 7d5c59d0e1795230eb5784bf2da43b39ae755248
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21963765754
-updatedAtUtc: 2026-02-12T20:53:05Z
-nextStep: Review the M2 DoD against the current `book/classical-baselines.qmd`; if satisfied, mark M2 complete and start M3 by adding an ABC chapter outline linked in `book/_quarto.yml`.
+headSha: 6814b6387a09933e77fece58e3b8846f584bafc9
+ciRunUrl: (pending)
+updatedAtUtc: 2026-02-12T21:00:33Z
+nextStep: Implement the first M3 baseline: add an `abc_rejection(...)` helper (with tests) and a small `beta`-only demo in `book/likelihood-free-baselines.qmd`.
 ```
 
 ## Notes
 - **M0 complete**: CI builds (lint+tests, HTML render, optional PDF render) are green; running-example executes; build docs exist; Quarto version is pinned in CI.
+- **M2 complete**: `book/classical-baselines.qmd` includes MH + HMC baselines (plus optional NUTS via BlackJAX), PPC overlays, and lightweight calibration/coverage smoke tests.
 
 ## M1 DoD checklist (verified)
 - ✅ Differentiable ODE SEIR + observation model.

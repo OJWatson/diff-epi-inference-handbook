@@ -10,6 +10,7 @@ book:
     - index.qmd
     - running-example.qmd
     - classical-baselines.qmd
+    - likelihood-free-baselines.qmd
 
 format:
   html:

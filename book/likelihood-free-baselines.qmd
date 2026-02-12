@@ -1,0 +1,48 @@
+---
+title: "Likelihood-free baselines"
+---
+
+This chapter introduces likelihood-free baselines for the running example.
+These methods are useful when the simulator is non-differentiable and/or when a tractable likelihood is unavailable.
+
+## Goals (M3)
+
+- Implement and demonstrate **ABC rejection** as a minimal, robust baseline.
+- (Optional) extend to **SMC-ABC** for better efficiency.
+- Introduce **synthetic likelihood** / likelihood-on-summaries as a bridge between ABC and modern SBI.
+
+## Outline
+
+### 1) Setup: summaries and distances
+
+- Choose summary statistics $s(y)$ for the observed time series (e.g. peak size/time, total cases, early growth rate).
+- Define a distance $d(s(y), s(y_{\mathrm{sim}}))$.
+- Discuss the trade-off between informativeness and dimensionality.
+
+### 2) ABC rejection
+
+- Sample $\theta \sim p(\theta)$.
+- Simulate $y_{\mathrm{sim}} \sim p(\cdot \mid \theta)$.
+- Accept if $d(s(y), s(y_{\mathrm{sim}})) \leq \varepsilon$.
+
+Deliverables:
+
+- A reusable `abc_rejection(...)` helper in `diff_epi_inference.abc`.
+- A small demo on the running example (start with `beta`-only, then expand).
+
+### 3) (Optional) SMC-ABC
+
+- Sequence of tolerances $\varepsilon_1 > \varepsilon_2 > \cdots$.
+- Reweight/resample/perturb particles.
+- Monitor acceptance rates and particle degeneracy.
+
+### 4) Synthetic likelihood (on summaries)
+
+- Assume $s(y) \mid \theta \approx \mathcal{N}(\mu_\theta, \Sigma_\theta)$.
+- Estimate $(\mu_\theta, \Sigma_\theta)$ via repeated simulations at fixed $\theta$.
+- Use the resulting approximate likelihood inside MH/HMC.
+
+## Notes
+
+- These baselines are intentionally simple and prioritise clarity over efficiency.
+- Later chapters will revisit summary selection, amortisation, and calibration at scale.
