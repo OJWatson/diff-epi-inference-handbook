@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 95d49a0947e3c80cee6788c15b36c9cf9fe895cc
+headSha: 5dd1c3b669b0f0b089e00841ba66282b008a5f62
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T18:13:13Z
-nextStep: Add brief guidance on tuning finite-difference gradient step size (`grad_eps`) in the minimal HMC demo (and how to spot when it is too small/large).
+updatedAtUtc: 2026-02-12T18:34:39Z
+nextStep: Run a local `quarto render` of the book to confirm the new `grad_eps` guidance (math block) renders correctly and the chapter still executes end-to-end.
 ```
 
 ## Notes
