@@ -3,8 +3,8 @@ milestone: M2
 state: running
 headSha: 46d087b0b1a574f12a6cf2502e69ef3d1ae12e95
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T10:22:13Z
-nextStep: Add a minimal **calibration smoke test** to `book/classical-baselines.qmd`: simulate ~20 datasets at different `beta_true`, run short MH chains, and report approximate 90% interval coverage for `beta`.
+updatedAtUtc: 2026-02-12T10:24:19Z
+nextStep: Add a matching **calibration smoke test for HMC** in `book/classical-baselines.qmd` (same ~20 datasets; report approximate 90% interval coverage for `beta`; keep runtime low).
 ```
 
 ## Notes

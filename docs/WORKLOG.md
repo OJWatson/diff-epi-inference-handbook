@@ -17,3 +17,4 @@ Guidelines:
 - 2026-02-12: Added a minimal HMC sampler baseline (`src/diff_epi_inference/mcmc/hmc.py`) using finite-difference gradients + smoke test; ran `ruff check .` + `pytest` (all pass) and pushed.
 - 2026-02-12: Wired the minimal HMC baseline into the SEIR `beta`-only likelihood demo in `book/classical-baselines.qmd` and documented finite-difference limitations vs autodiff+NUTS; ran `ruff check .` + `pytest` (all pass) and pushed.
 - 2026-02-12: Added minimal posterior predictive checks (simulate `y_rep` from posterior `beta` draws; overlay 90% bands vs `y_obs`) for both MH and HMC demos in `book/classical-baselines.qmd`; ran `ruff check .` + `pytest` (all pass) and pushed.
+- 2026-02-12: Added MH calibration smoke test to `book/classical-baselines.qmd` (20 synthetic datasets across a `beta_true` grid; reports approximate 90% interval coverage); ran `ruff check .` + `pytest` (all pass) and pushed.
