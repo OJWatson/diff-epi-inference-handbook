@@ -3,8 +3,8 @@ milestone: M2
 state: running
 headSha: cc734f06631e1d42d418172fccb9c22d72287c3f
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T08:48:59Z
-nextStep: Add a short MH usage demo to `book/classical-baselines.qmd` (run MH on a 1D Gaussian; report accept rate).
+updatedAtUtc: 2026-02-12T09:12:11Z
+nextStep: In `book/classical-baselines.qmd`, add an MH baseline on a *simple SEIR parameter subset* (e.g. infer only `beta` with others fixed) using the existing running-example likelihood.
 ```
 
 ## Notes
