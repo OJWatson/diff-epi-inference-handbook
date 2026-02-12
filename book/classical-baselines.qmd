@@ -298,6 +298,35 @@ Limitations of this baseline (important):
 Despite these caveats, it is a useful pedagogical bridge between MH and a full autodiff + NUTS
 workflow.
 
+### Tuning `step_size` and `n_leapfrog` (HMC)
+
+HMC performance is controlled mainly by two hyperparameters:
+
+- `step_size` ("epsilon"): the size of each leapfrog integrator step.
+- `n_leapfrog` ("L"): the number of leapfrog steps per proposal (trajectory length is roughly
+  `step_size * n_leapfrog`).
+
+A lightweight manual tuning workflow:
+
+1. Start with a **short warmup** (e.g. 200–1,000 iterations).
+2. Adjust `step_size` to hit a reasonable **acceptance rate**.
+   - In practice, a target around **0.6–0.9** is common for HMC.
+   - Too low → reduce `step_size` (integration error is too large).
+   - Too high with slow exploration → increase `step_size` slightly or increase `n_leapfrog`.
+3. Set `n_leapfrog` to get proposals that move across the posterior without "U-turning" too
+   quickly. Very large `n_leapfrog` increases compute cost and can lead to wasted looping.
+
+For **NUTS**, you typically target an acceptance probability (often called `target_accept`)
+around **0.8** by default, and rely on adaptation to set step sizes.
+
+#### Divergences (NUTS-specific warning sign)
+
+When using NUTS implementations (e.g. NumPyro/Stan/BlackJAX), always check for
+**divergences**. Divergences indicate that the integrator is failing in parts of the posterior
+(geometry is too sharp / step size too large), and the resulting draws may be biased.
+A common first response is to increase `target_accept` (smaller step sizes) and/or
+reparameterise.
+
 ```{python}
 from diff_epi_inference.mcmc.hmc import hamiltonian_monte_carlo
 
