@@ -54,3 +54,15 @@ def test_plot_acf_validates_kind():
             plot_acf(np.arange(10.0), ax=ax, kind="nope")  # type: ignore[arg-type]
     finally:
         fig.clf()
+
+
+def test_plot_acf_bar_returns_fig_ax_and_plots_expected_bars():
+    max_lag = 7
+    fig, ax = plot_acf(np.arange(100.0), max_lag=max_lag, kind="bar")
+
+    assert fig is ax.figure
+    # Matplotlib `bar` draws one Rectangle patch per bar.
+    assert len(ax.patches) == max_lag + 1
+
+    # Avoid GUI resource warnings in test runners
+    fig.clf()
