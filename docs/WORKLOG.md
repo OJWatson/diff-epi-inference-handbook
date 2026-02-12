@@ -51,3 +51,4 @@ Guidelines:
 - 2026-02-12: Documented a no-sudo Quarto 1.8.27 download fallback in `docs/BUILD.md` for local rendering; ran `python3 -m ruff check .` + `python3 -m pytest` (28 pass, 2 skipped) and pushed.
 - 2026-02-12: Updated `docs/STATUS.md` (headSha/updatedAtUtc) after the Quarto BUILD doc change.
 - 2026-02-12: Set `docs/STATUS.md` headSha to the last substantive commit (Quarto BUILD doc change) to avoid headSha churn from bookkeeping commits.
+- 2026-02-12: Made local Quarto download workflow lint-clean (exclude `.tools/` from ruff; ignore Quarto artefacts), fixed `grad_eps` math block rendering (use `$$...$$`), and sped up the HMC calibration smoke test so `quarto render` completes locally; ran `ruff` + `pytest` and pushed.
