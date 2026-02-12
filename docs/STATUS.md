@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 20bda42f0ef59efd678cba7bf7b202f552d3dee9
+headSha: da45e761801c5f3d15f9f4534bf42c54dc9dec32
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions
-updatedAtUtc: 2026-02-12T12:48:45Z
-nextStep: Consider extracting the duplicated NumPy SEIR `beta`-only log-posterior builder used in the MH/HMC demos (chapter cells + any related tests) into a small helper to keep the book and tests in sync.
+updatedAtUtc: 2026-02-12T12:52:34Z
+nextStep: Add a small unit test for `make_log_post_logbeta_numpy` (finite log posterior + shape validation) to prevent drift between the book and library helpers.
 ```
 
 ## Notes
