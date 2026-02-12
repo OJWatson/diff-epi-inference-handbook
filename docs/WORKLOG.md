@@ -57,3 +57,4 @@ Guidelines:
 - 2026-02-12: Confirmed CI for `50733a3` is green (Actions run 21962166993); updated `docs/STATUS.md` `ciRunUrl` accordingly; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-12: Confirmed GitHub Actions CI for `54dd2fd` succeeded; updated `docs/STATUS.md` headSha/ciRunUrl/updatedAtUtc and advanced the next step.
 - 2026-02-12: Fixed CI PDF build failure (LaTeX "Missing $ inserted" from SEIR incidence bullet) by switching inline math in `book/running-example.qmd` from `\(...\)` to `$...$`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
+- 2026-02-12: Confirmed GitHub Actions CI for `7d5c59d` succeeded; updated `docs/STATUS.md` headSha/ciRunUrl/updatedAtUtc.

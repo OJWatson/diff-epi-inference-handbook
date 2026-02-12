@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M2
 state: running
-headSha: 54dd2fd80a5a9083f39a477728f5ed1ec2c20adb
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21963516533
-updatedAtUtc: 2026-02-12T20:44:53Z
+headSha: 7d5c59d0e1795230eb5784bf2da43b39ae755248
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21963765754
+updatedAtUtc: 2026-02-12T20:53:05Z
 nextStep: Review the M2 DoD against the current `book/classical-baselines.qmd`; if satisfied, mark M2 complete and start M3 by adding an ABC chapter outline linked in `book/_quarto.yml`.
 ```
 
