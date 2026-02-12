@@ -1,8 +1,9 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 from diff_epi_inference import TimeSeriesDataset, plot_timeseries
-from diff_epi_inference.plotting.mcmc import autocorr_1d
+from diff_epi_inference.plotting.mcmc import autocorr_1d, plot_acf
 
 
 def test_plot_timeseries_returns_fig_ax():
@@ -44,3 +45,12 @@ def test_autocorr_1d_known_series_sanity():
     # Constant series => zero variance after centering; defined here as all ones.
     acf_const = autocorr_1d(np.ones(10), max_lag=3)
     assert np.allclose(acf_const, np.ones(4))
+
+
+def test_plot_acf_validates_kind():
+    fig, ax = plt.subplots(figsize=(4, 2))
+    try:
+        with pytest.raises(ValueError, match="kind must be 'stem' or 'bar'"):
+            plot_acf(np.arange(10.0), ax=ax, kind="nope")  # type: ignore[arg-type]
+    finally:
+        fig.clf()
