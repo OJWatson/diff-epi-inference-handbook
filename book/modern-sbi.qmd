@@ -34,6 +34,161 @@ Deliverables:
 
 - A tiny flow-based density example (toy 1D/2D) to make the mechanics concrete.
 
+#### A tiny flow “from scratch” (1D + 2D)
+
+A *normalising flow* builds a flexible density by transforming a simple base random variable
+$z \sim p_Z(z)$ (often standard normal) through an invertible map:
+
+$$x = f_\phi(z), \qquad z = f_\phi^{-1}(x).$$
+
+The change-of-variables formula gives
+
+$$\log p_X(x) = \log p_Z\bigl(f_\phi^{-1}(x)\bigr) + \log\left|\det \nabla_x f_\phi^{-1}(x)\right|.$$
+
+Below we implement two tiny examples in pure NumPy:
+
+1) **1D affine flow** (shift + scale), which is “just” a learned Gaussian.
+2) **2D coupling flow** (RealNVP-style), which introduces non-trivial dependencies.
+
+::: {.callout-note}
+These are deliberately minimal and not meant to be a performant flow library.
+The point is to make the *invertibility* and *log-determinant Jacobian* bookkeeping concrete.
+:::
+
+```{python}
+import numpy as np
+
+rng = np.random.default_rng(0)
+```
+
+##### 1D affine flow
+
+```{python}
+def stdnorm_logpdf(z: np.ndarray) -> np.ndarray:
+    return -0.5 * (z**2 + np.log(2 * np.pi))
+
+
+def affine_forward(z: np.ndarray, mu: float, log_sigma: float) -> np.ndarray:
+    """x = mu + exp(log_sigma) * z"""
+    return mu + np.exp(log_sigma) * z
+
+
+def affine_inverse(x: np.ndarray, mu: float, log_sigma: float) -> np.ndarray:
+    """z = (x - mu) / exp(log_sigma)"""
+    return (x - mu) * np.exp(-log_sigma)
+
+
+def affine_log_prob(x: np.ndarray, mu: float, log_sigma: float) -> np.ndarray:
+    """log p_X(x) induced by z~N(0,1), x = mu + sigma z."""
+    z = affine_inverse(x, mu=mu, log_sigma=log_sigma)
+    # For 1D: log|det d/dx f^{-1}(x)| = log(1/sigma) = -log_sigma
+    return stdnorm_logpdf(z) - log_sigma
+
+
+# Toy data: non-standard normal
+x_data = rng.normal(loc=2.0, scale=0.7, size=2_000)
+
+# MLE for Gaussian = match sample mean/std.
+mu_hat = float(x_data.mean())
+log_sigma_hat = float(np.log(x_data.std(ddof=0)))
+
+nll = lambda mu, ls: float(-affine_log_prob(x_data, mu=mu, log_sigma=ls).mean())
+
+print({
+    "mu_hat": mu_hat,
+    "sigma_hat": float(np.exp(log_sigma_hat)),
+    "NLL(base std normal)": nll(mu=0.0, ls=0.0),
+    "NLL(fitted affine flow)": nll(mu=mu_hat, ls=log_sigma_hat),
+})
+```
+
+##### 2D coupling flow (one coupling layer)
+
+A classic *coupling layer* keeps part of the vector unchanged and uses it to scale/shift the rest.
+For $x=(x_1,x_2)$, one simple form is
+
+$$y_1 = x_1, \qquad y_2 = x_2\,\exp(s(x_1)) + t(x_1).$$
+
+This is always invertible as long as $\exp(s(x_1))>0$, and its Jacobian determinant is cheap:
+
+$$\log |\det \nabla_x f(x)| = s(x_1).$$
+
+```{python}
+def coupling_forward(x: np.ndarray, a: float, b: float) -> tuple[np.ndarray, np.ndarray]:
+    """One 2D coupling layer.
+
+    y1 = x1
+    y2 = x2 * exp(a*x1) + b*x1
+
+    Returns: (y, log_det_J) where log_det_J is per-sample.
+    """
+    x1 = x[:, 0]
+    x2 = x[:, 1]
+    s = a * x1
+    t = b * x1
+    y1 = x1
+    y2 = x2 * np.exp(s) + t
+    y = np.stack([y1, y2], axis=1)
+    log_det = s  # per-sample
+    return y, log_det
+
+
+def coupling_inverse(y: np.ndarray, a: float, b: float) -> tuple[np.ndarray, np.ndarray]:
+    """Inverse of coupling_forward.
+
+    x1 = y1
+    x2 = (y2 - b*x1) * exp(-a*x1)
+
+    Returns: (x, log_det_J_inv) where log_det_J_inv is per-sample.
+    """
+    y1 = y[:, 0]
+    y2 = y[:, 1]
+    s = a * y1
+    t = b * y1
+    x1 = y1
+    x2 = (y2 - t) * np.exp(-s)
+    x = np.stack([x1, x2], axis=1)
+    log_det_inv = -s
+    return x, log_det_inv
+
+
+def stdnorm2_logpdf(z: np.ndarray) -> np.ndarray:
+    return -0.5 * (np.sum(z**2, axis=1) + 2 * np.log(2 * np.pi))
+
+
+def coupling_flow_log_prob(y: np.ndarray, a: float, b: float) -> np.ndarray:
+    # y = f(x), with base density on x ~ N(0, I)
+    x, log_det_inv = coupling_inverse(y, a=a, b=b)
+    return stdnorm2_logpdf(x) + log_det_inv
+
+
+# Draw samples by pushing base samples through the coupling layer
+z = rng.normal(size=(5_000, 2))
+flow_samples, log_det = coupling_forward(z, a=0.8, b=0.5)
+
+print({
+    "samples_mean": flow_samples.mean(axis=0).round(3).tolist(),
+    "samples_cov": np.cov(flow_samples.T).round(3).tolist(),
+    "avg_log_det": float(log_det.mean()),
+})
+```
+
+```{python}
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(4, 4))
+ax.scatter(flow_samples[::10, 0], flow_samples[::10, 1], s=5, alpha=0.3)
+ax.set_title("Samples from a tiny 2D coupling flow")
+ax.set_xlabel("x1")
+ax.set_ylabel("x2")
+ax.set_aspect("equal")
+plt.show()
+```
+
+In practice, *learned* coupling flows use neural nets to represent $s(\cdot)$ and $t(\cdot)$
+(and stack many layers, alternating which coordinates are transformed), but the bookkeeping is
+the same.
+
 ### 3) NPE pipeline (end-to-end)
 
 - Generate training pairs $(\theta_i, y_i)$ from the simulator + prior.
