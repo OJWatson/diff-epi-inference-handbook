@@ -69,3 +69,4 @@ Guidelines:
 - 2026-02-13: Implemented a minimal SMC-ABC sampler (`diff_epi_inference.abc.smc_abc`) with proper importance reweighting + systematic resampling, and added toy-model unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`5ff1c77`).
 - 2026-02-13: Added a tiny `beta`-only SMC-ABC demo section to `book/likelihood-free-baselines.qmd` (reuses same summaries/distance as ABC rejection + simple Gaussian perturb kernel); ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`d2a2d30`).
 - 2026-02-13: Confirmed CI is green for `42e7c39` (Actions run 21974819260) and updated `docs/STATUS.md` accordingly.
+- 2026-02-13: Reviewed M3 DoD vs `book/likelihood-free-baselines.qmd` and marked M3 complete in `docs/STATUS.md`.

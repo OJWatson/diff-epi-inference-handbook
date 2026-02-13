@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
-state: running
+state: complete
 headSha: 42e7c39eb5ff7062aa6b0c3226347f576ef0aafb
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21974819260
-updatedAtUtc: 2026-02-13T04:56:54Z
-nextStep: Review M3 DoD vs `book/likelihood-free-baselines.qmd` and (if satisfied) mark M3 complete in `docs/STATUS.md`.
+updatedAtUtc: 2026-02-13T05:23:24Z
+nextStep: Start M4 by adding `book/modern-sbi.qmd` (chapter outline) and linking it from `book/_quarto.yml`.
 ```
 
 ## Notes
