@@ -30,6 +30,119 @@ Deliverables:
 - A reusable `abc_rejection(...)` helper in `diff_epi_inference.abc`.
 - A small demo on the running example (start with `beta`-only, then expand).
 
+#### Demo: `beta`-only ABC on the stochastic simulator
+
+Below we infer only $\beta$ (holding the other SEIR parameters fixed) using the **stochastic** simulator and a very small set of summary statistics.
+This is intentionally minimal: the goal is to show the ABC control flow and get a rough posterior-like set of accepted $\beta$ values.
+
+```{python}
+#| echo: true
+#| warning: false
+
+import numpy as np
+
+from diff_epi_inference import SEIRParams
+from diff_epi_inference.abc import abc_rejection
+from diff_epi_inference.pipeline import simulate_seir_and_report_stochastic
+
+rng = np.random.default_rng(0)
+
+# --- "Observed" data (synthetic) ---
+beta_true = 0.35
+params_true = SEIRParams(beta=beta_true, sigma=1 / 4.0, gamma=1 / 6.0)
+
+steps = 80
+
+ds_obs = simulate_seir_and_report_stochastic(
+    params=params_true,
+    s0=10_000,
+    e0=3,
+    i0=2,
+    r0=0,
+    dt=1.0,
+    steps=steps,
+    reporting_rate=0.25,
+    rng=rng,
+)
+
+y_obs = ds_obs.y.astype(float)
+
+
+# --- Prior and simulator ---
+# We sample log(beta) ~ Normal, then exponentiate.
+logbeta_prior_mean = float(np.log(0.3))
+logbeta_prior_sd = 0.35
+
+
+def prior_sample(rng: np.random.Generator) -> np.ndarray:
+    logbeta = rng.normal(loc=logbeta_prior_mean, scale=logbeta_prior_sd)
+    return np.array([logbeta], dtype=float)
+
+
+def simulate(theta: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    (logbeta,) = np.asarray(theta, dtype=float)
+    beta = float(np.exp(logbeta))
+
+    params = SEIRParams(beta=beta, sigma=params_true.sigma, gamma=params_true.gamma)
+    ds = simulate_seir_and_report_stochastic(
+        params=params,
+        s0=10_000,
+        e0=3,
+        i0=2,
+        r0=0,
+        dt=1.0,
+        steps=steps,
+        reporting_rate=0.25,
+        rng=rng,
+    )
+    return ds.y.astype(float)
+
+
+# --- Summaries and distance ---
+# Keep summaries low-dimensional: (total cases, peak size, peak time).
+
+def summary(y: np.ndarray) -> np.ndarray:
+    y = np.asarray(y, dtype=float)
+    peak_t = int(np.argmax(y))
+    return np.array([np.sum(y), np.max(y), peak_t], dtype=float)
+
+
+def distance(s_sim: np.ndarray, s_obs: np.ndarray) -> float:
+    s_sim = np.asarray(s_sim, dtype=float)
+    s_obs = np.asarray(s_obs, dtype=float)
+    # Rough scaling so "time" doesn't dominate.
+    scale = np.array([1000.0, 50.0, 5.0])
+    return float(np.linalg.norm((s_sim - s_obs) / scale))
+
+
+res = abc_rejection(
+    prior_sample=prior_sample,
+    simulate=simulate,
+    distance=distance,
+    y_obs=y_obs,
+    summary=summary,
+    epsilon=1.5,
+    n_accept=200,
+    max_trials=50_000,
+    rng=rng,
+)
+
+beta_accept = np.exp(res.thetas[:, 0])
+
+print(f"ABC trials: {res.n_trials}  (accept rate ~ {len(beta_accept)/res.n_trials:.3f})")
+print(f"beta_true: {beta_true:.3f}")
+print(
+    "accepted beta: "
+    f"mean={np.mean(beta_accept):.3f}, sd={np.std(beta_accept):.3f}, "
+    f"q10={np.quantile(beta_accept, 0.1):.3f}, q90={np.quantile(beta_accept, 0.9):.3f}"
+)
+```
+
+Notes:
+
+- The choice of summaries and scaling in the distance is ad hoc; later sections will discuss more principled summary selection.
+- As written, ABC rejection can be inefficient: if the tolerance `epsilon` is too small, you may need a very large `max_trials`.
+
 ### 3) (Optional) SMC-ABC
 
 - Sequence of tolerances $\varepsilon_1 > \varepsilon_2 > \cdots$.
