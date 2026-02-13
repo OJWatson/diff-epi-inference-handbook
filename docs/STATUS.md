@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 27250b46dc70dbbce0b3629507eb9595c07a7885
+headSha: 5ff1c770c1a607ec8c9d68a4b985429656add356
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21973243748
-updatedAtUtc: 2026-02-13T03:57:38Z
-nextStep: Implement the actual SMC-ABC loop (reweight → systematic_resample → perturb) using the new `systematic_resample` helper; add unit tests and a tiny demo section to `book/likelihood-free-baselines.qmd`.
+updatedAtUtc: 2026-02-13T04:33:53Z
+nextStep: Add a tiny SMC-ABC demo section to `book/likelihood-free-baselines.qmd` using `diff_epi_inference.abc.smc_abc` (beta-only stochastic SEIR + the same summaries as ABC rejection / synthetic likelihood).
 ```
 
 ## Notes

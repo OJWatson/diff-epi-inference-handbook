@@ -66,3 +66,4 @@ Guidelines:
 - 2026-02-13: Confirmed CI is green on `345b175` (Actions run 21973243748); updated `docs/STATUS.md` with headSha + ciRunUrl.
 - 2026-02-13: Extracted synthetic-likelihood helpers into `diff_epi_inference.synthetic_likelihood` (`estimate_summary_gaussian` + `mvn_logpdf`), updated the book demo to use them, and added unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`8172c73`).
 - 2026-02-13: Added `systematic_resample` utility under `diff_epi_inference.abc.smc` (for upcoming SMC-ABC baseline) + unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`27250b4`).
+- 2026-02-13: Implemented a minimal SMC-ABC sampler (`diff_epi_inference.abc.smc_abc`) with proper importance reweighting + systematic resampling, and added toy-model unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`5ff1c77`).
