@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 5ddea7dfb0a4ddf12702a703d81cd064464b6362
+headSha: 00154335c82dcd3d0b2af369d4d5e3ae0d9f6d93
 ciRunUrl: (pending)
-updatedAtUtc: 2026-02-13T03:03:10Z
+updatedAtUtc: 2026-02-13T03:13:58Z
 nextStep: Extract the synthetic-likelihood utilities (estimate Gaussian on summaries + MVN logpdf) into a small reusable helper under `src/diff_epi_inference/` and add unit tests.
 ```
 
