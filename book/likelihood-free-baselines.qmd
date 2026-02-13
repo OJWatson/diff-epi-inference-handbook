@@ -173,6 +173,7 @@ import numpy as np
 from diff_epi_inference import SEIRParams
 from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
 from diff_epi_inference.pipeline import simulate_seir_and_report_stochastic
+from diff_epi_inference.synthetic_likelihood import estimate_summary_gaussian, mvn_logpdf
 
 # Reuse the observed data / params from the ABC block above.
 # (Quarto executes code blocks in order, so y_obs and params_true exist here.)
@@ -180,7 +181,24 @@ from diff_epi_inference.pipeline import simulate_seir_and_report_stochastic
 s_obs = summary(y_obs)
 
 
-def estimate_summary_gaussian(
+def simulate_summary_once(logbeta: float, *, rng: np.random.Generator) -> np.ndarray:
+    beta = float(np.exp(logbeta))
+    params = SEIRParams(beta=beta, sigma=params_true.sigma, gamma=params_true.gamma)
+    ds = simulate_seir_and_report_stochastic(
+        params=params,
+        s0=10_000,
+        e0=3,
+        i0=2,
+        r0=0,
+        dt=1.0,
+        steps=steps,
+        reporting_rate=0.25,
+        rng=rng,
+    )
+    return summary(ds.y.astype(float))
+
+
+def estimate_mu_cov(
     logbeta: float,
     *,
     rng: np.random.Generator,
@@ -188,48 +206,12 @@ def estimate_summary_gaussian(
     cov_jitter: float = 1e-6,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Estimate (mu, cov) of summaries s(y) at fixed logbeta via repeated sims."""
-    sims = []
-    for _ in range(n_sims):
-        beta = float(np.exp(logbeta))
-        params = SEIRParams(beta=beta, sigma=params_true.sigma, gamma=params_true.gamma)
-        ds = simulate_seir_and_report_stochastic(
-            params=params,
-            s0=10_000,
-            e0=3,
-            i0=2,
-            r0=0,
-            dt=1.0,
-            steps=steps,
-            reporting_rate=0.25,
-            rng=rng,
-        )
-        sims.append(summary(ds.y.astype(float)))
-
-    sims = np.asarray(sims, dtype=float)  # (n_sims, d)
-    mu = np.mean(sims, axis=0)
-    cov = np.cov(sims, rowvar=False)
-    cov = np.atleast_2d(cov)
-    cov = cov + cov_jitter * np.eye(cov.shape[0])
-    return mu, cov
-
-
-def mvn_logpdf(x: np.ndarray, mean: np.ndarray, cov: np.ndarray) -> float:
-    """Log N(x | mean, cov) with a stable solve + logdet."""
-    x = np.asarray(x, dtype=float)
-    mean = np.asarray(mean, dtype=float)
-    cov = np.asarray(cov, dtype=float)
-
-    d = x.size
-    diff = x - mean
-
-    sign, logdet = np.linalg.slogdet(cov)
-    if sign <= 0:
-        return -np.inf
-
-    sol = np.linalg.solve(cov, diff)
-    quad = float(diff @ sol)
-
-    return -0.5 * (d * np.log(2 * np.pi) + logdet + quad)
+    return estimate_summary_gaussian(
+        lambda r: simulate_summary_once(logbeta, rng=r),
+        n_sims=n_sims,
+        rng=rng,
+        cov_jitter=cov_jitter,
+    )
 
 
 rng = np.random.default_rng(1)
@@ -243,7 +225,7 @@ def log_prior(theta: np.ndarray) -> float:
 
 def log_synth_lik(theta: np.ndarray, rng: np.random.Generator) -> float:
     (logbeta,) = np.asarray(theta, dtype=float)
-    mu, cov = estimate_summary_gaussian(float(logbeta), rng=rng)
+    mu, cov = estimate_mu_cov(float(logbeta), rng=rng)
     return mvn_logpdf(s_obs, mu, cov)
 
 
