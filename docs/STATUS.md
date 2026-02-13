@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 5ff1c770c1a607ec8c9d68a4b985429656add356
+headSha: d2a2d302a01bea805b8427847b880bd6d6f1bf6d
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21973243748
-updatedAtUtc: 2026-02-13T04:33:53Z
-nextStep: Add a tiny SMC-ABC demo section to `book/likelihood-free-baselines.qmd` using `diff_epi_inference.abc.smc_abc` (beta-only stochastic SEIR + the same summaries as ABC rejection / synthetic likelihood).
+updatedAtUtc: 2026-02-13T04:39:52Z
+nextStep: Confirm CI is green for `d2a2d30` and update `docs/STATUS.md` with the new Actions run URL.
 ```
 
 ## Notes
