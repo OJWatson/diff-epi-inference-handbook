@@ -200,6 +200,188 @@ Deliverables:
 
 - Minimal `train_npe(...)` / `sample_posterior_npe(...)` helpers (or a single notebook-style implementation in this chapter, if we keep code local).
 
+#### Demo: beta-only “NPE” with a conditional Gaussian (no deep learning)
+
+Before we use a full conditional flow, it helps to see the basic **NPE loop** in the simplest possible form.
+We will:
+
+1. Sample $\theta_i = \log \beta_i$ from a prior.
+2. Simulate a stochastic SEIR observation $y_i$.
+3. Compress $y_i$ to a low-dimensional summary vector $s_i$.
+4. Fit a conditional density model
+   $$q_\phi(\log \beta \mid s) = \mathcal{N}(\mu_\phi(s),\,\sigma_\phi(s)^2).$$
+
+Here $\mu_\phi(s)$ is just a linear regression and $\sigma_\phi$ is a single global scale.
+This is not a powerful model, but it is a runnable baseline with exactly the same control flow as neural NPE.
+
+```{python}
+#| echo: true
+#| warning: false
+
+import numpy as np
+
+from diff_epi_inference import SEIRParams
+from diff_epi_inference.pipeline import simulate_seir_and_report_stochastic
+
+rng = np.random.default_rng(0)
+
+# --- Synthetic "observed" dataset ---
+beta_true = 0.35
+params_true = SEIRParams(beta=beta_true, sigma=1 / 4.0, gamma=1 / 6.0)
+steps = 80
+
+ds_obs = simulate_seir_and_report_stochastic(
+    params=params_true,
+    s0=10_000,
+    e0=3,
+    i0=2,
+    r0=0,
+    dt=1.0,
+    steps=steps,
+    reporting_rate=0.25,
+    rng=rng,
+)
+
+y_obs = ds_obs.y.astype(float)
+
+
+def summary(y: np.ndarray) -> np.ndarray:
+    """A tiny hand-crafted encoder for a reported-incidence time series."""
+    y = np.asarray(y, dtype=float)
+    peak_t = int(np.argmax(y))
+    return np.array([np.sum(y), np.max(y), peak_t], dtype=float)
+
+
+s_obs = summary(y_obs)
+print({"beta_true": beta_true, "s_obs": s_obs.round(3).tolist()})
+```
+
+```{python}
+#| echo: true
+#| warning: false
+
+# --- Prior over log(beta) ---
+logbeta_prior_mean = float(np.log(0.3))
+logbeta_prior_sd = 0.35
+
+
+def prior_sample_logbeta(rng: np.random.Generator) -> float:
+    return float(rng.normal(loc=logbeta_prior_mean, scale=logbeta_prior_sd))
+
+
+def simulate_y_from_logbeta(logbeta: float, *, rng: np.random.Generator) -> np.ndarray:
+    beta = float(np.exp(logbeta))
+    params = SEIRParams(beta=beta, sigma=params_true.sigma, gamma=params_true.gamma)
+    ds = simulate_seir_and_report_stochastic(
+        params=params,
+        s0=10_000,
+        e0=3,
+        i0=2,
+        r0=0,
+        dt=1.0,
+        steps=steps,
+        reporting_rate=0.25,
+        rng=rng,
+    )
+    return ds.y.astype(float)
+
+
+def make_training_data(n_sims: int, *, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+    """Return (S, logbeta) with S shape (n_sims, d)."""
+    S = np.zeros((n_sims, 3), dtype=float)
+    logb = np.zeros((n_sims,), dtype=float)
+    for i in range(n_sims):
+        lb = prior_sample_logbeta(rng)
+        y = simulate_y_from_logbeta(lb, rng=rng)
+        S[i] = summary(y)
+        logb[i] = lb
+    return S, logb
+
+
+S_train, logb_train = make_training_data(800, rng=np.random.default_rng(1))
+S_test, logb_test = make_training_data(200, rng=np.random.default_rng(2))
+
+print({"S_train_shape": S_train.shape, "logb_train_mean": float(logb_train.mean())})
+```
+
+```{python}
+#| echo: true
+#| warning: false
+
+def fit_conditional_gaussian(
+    S: np.ndarray, logb: np.ndarray
+) -> dict[str, np.ndarray | float]:
+    """Fit q(logbeta | s) = Normal(mu(s), sigma^2) with mu(s)=w^T z + b.
+
+    We standardise features z = (s - mean) / std and solve least squares.
+    """
+    S = np.asarray(S, dtype=float)
+    logb = np.asarray(logb, dtype=float)
+
+    s_mean = S.mean(axis=0)
+    s_std = S.std(axis=0)
+    s_std = np.where(s_std > 0, s_std, 1.0)
+    Z = (S - s_mean) / s_std
+
+    # Design matrix with intercept.
+    X = np.column_stack([np.ones(len(Z)), Z])
+    w_hat, *_ = np.linalg.lstsq(X, logb, rcond=None)
+
+    mu_hat = X @ w_hat
+    resid = logb - mu_hat
+    sigma_hat = float(np.sqrt(np.mean(resid**2)))
+    sigma_hat = max(sigma_hat, 1e-3)
+
+    return {"w": w_hat, "s_mean": s_mean, "s_std": s_std, "sigma": sigma_hat}
+
+
+def predict_mu(model: dict[str, np.ndarray | float], s: np.ndarray) -> float:
+    s = np.asarray(s, dtype=float)
+    z = (s - model["s_mean"]) / model["s_std"]
+    x = np.concatenate([[1.0], z])
+    return float(x @ model["w"])
+
+
+model = fit_conditional_gaussian(S_train, logb_train)
+
+mu_test = np.array([predict_mu(model, s) for s in S_test])
+rmse = float(np.sqrt(np.mean((mu_test - logb_test) ** 2)))
+
+print({"sigma_hat": float(model["sigma"]), "test_RMSE_logbeta": rmse})
+```
+
+```{python}
+#| echo: true
+#| warning: false
+
+def sample_posterior_logbeta(
+    model: dict[str, np.ndarray | float],
+    s_obs: np.ndarray,
+    n: int,
+    *,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    mu = predict_mu(model, s_obs)
+    sigma = float(model["sigma"])
+    return rng.normal(loc=mu, scale=sigma, size=n)
+
+
+logb_post = sample_posterior_logbeta(model, s_obs, 5_000, rng=np.random.default_rng(3))
+beta_post = np.exp(logb_post)
+
+print(
+    {
+        "beta_true": beta_true,
+        "beta_post_mean": float(np.mean(beta_post)),
+        "beta_post_q10": float(np.quantile(beta_post, 0.1)),
+        "beta_post_q90": float(np.quantile(beta_post, 0.9)),
+    }
+)
+```
+
+This model is intentionally crude: the posterior width here is driven mostly by the regression residuals.
+In the next step we will replace this conditional Gaussian with a **conditional flow** so the learned posterior can be non-Gaussian and multi-modal.
+
 ### 4) Diagnostics and calibration
 
 - Posterior predictive checks (PPC).

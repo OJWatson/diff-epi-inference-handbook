@@ -3,8 +3,8 @@ milestone: M4
 state: running
 headSha: 8ae09674bba095543e7a1b5e36e7c8d94ff15c73
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21974819260
-updatedAtUtc: 2026-02-13T06:07:12Z
-nextStep: Add the smallest runnable beta-only NPE “from scratch” pipeline to `book/modern-sbi.qmd` (dependency-light; no torch). Start with linear/Gaussian conditionals on simple summaries, then upgrade to a minimal conditional flow.
+updatedAtUtc: 2026-02-13T06:28:29Z
+nextStep: Upgrade the beta-only NPE demo in `book/modern-sbi.qmd` from a conditional Gaussian to a minimal conditional flow (still dependency-light; no torch).
 ```
 
 ## Notes
