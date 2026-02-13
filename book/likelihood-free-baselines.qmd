@@ -155,6 +155,130 @@ Notes:
 - Estimate $(\mu_\theta, \Sigma_\theta)$ via repeated simulations at fixed $\theta$.
 - Use the resulting approximate likelihood inside MH/HMC.
 
+#### Demo: `beta`-only synthetic likelihood on the same summaries
+
+This is a tiny “likelihood-on-summaries” baseline:
+
+1. For a proposed $\theta$ (here $\theta = \log \beta$), run the stochastic simulator multiple times.
+2. Compute the same summary vector $s(y)$ used in the ABC demo.
+3. Fit a Gaussian $\mathcal{N}(\mu_\theta, \Sigma_\theta)$ to the simulated summaries.
+4. Use the resulting *synthetic likelihood* $p(s(y_{\mathrm{obs}}) \mid \theta)$ inside random-walk MH.
+
+```{python}
+#| echo: true
+#| warning: false
+
+import numpy as np
+
+from diff_epi_inference import SEIRParams
+from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
+from diff_epi_inference.pipeline import simulate_seir_and_report_stochastic
+
+# Reuse the observed data / params from the ABC block above.
+# (Quarto executes code blocks in order, so y_obs and params_true exist here.)
+
+s_obs = summary(y_obs)
+
+
+def estimate_summary_gaussian(
+    logbeta: float,
+    *,
+    rng: np.random.Generator,
+    n_sims: int = 12,
+    cov_jitter: float = 1e-6,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Estimate (mu, cov) of summaries s(y) at fixed logbeta via repeated sims."""
+    sims = []
+    for _ in range(n_sims):
+        beta = float(np.exp(logbeta))
+        params = SEIRParams(beta=beta, sigma=params_true.sigma, gamma=params_true.gamma)
+        ds = simulate_seir_and_report_stochastic(
+            params=params,
+            s0=10_000,
+            e0=3,
+            i0=2,
+            r0=0,
+            dt=1.0,
+            steps=steps,
+            reporting_rate=0.25,
+            rng=rng,
+        )
+        sims.append(summary(ds.y.astype(float)))
+
+    sims = np.asarray(sims, dtype=float)  # (n_sims, d)
+    mu = np.mean(sims, axis=0)
+    cov = np.cov(sims, rowvar=False)
+    cov = np.atleast_2d(cov)
+    cov = cov + cov_jitter * np.eye(cov.shape[0])
+    return mu, cov
+
+
+def mvn_logpdf(x: np.ndarray, mean: np.ndarray, cov: np.ndarray) -> float:
+    """Log N(x | mean, cov) with a stable solve + logdet."""
+    x = np.asarray(x, dtype=float)
+    mean = np.asarray(mean, dtype=float)
+    cov = np.asarray(cov, dtype=float)
+
+    d = x.size
+    diff = x - mean
+
+    sign, logdet = np.linalg.slogdet(cov)
+    if sign <= 0:
+        return -np.inf
+
+    sol = np.linalg.solve(cov, diff)
+    quad = float(diff @ sol)
+
+    return -0.5 * (d * np.log(2 * np.pi) + logdet + quad)
+
+
+rng = np.random.default_rng(1)
+
+
+def log_prior(theta: np.ndarray) -> float:
+    (logbeta,) = np.asarray(theta, dtype=float)
+    z = (logbeta - logbeta_prior_mean) / logbeta_prior_sd
+    return float(-0.5 * z**2)  # (drop constants)
+
+
+def log_synth_lik(theta: np.ndarray, rng: np.random.Generator) -> float:
+    (logbeta,) = np.asarray(theta, dtype=float)
+    mu, cov = estimate_summary_gaussian(float(logbeta), rng=rng)
+    return mvn_logpdf(s_obs, mu, cov)
+
+
+def log_posterior(theta: np.ndarray, rng: np.random.Generator) -> float:
+    lp = log_prior(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    ll = log_synth_lik(theta, rng)
+    return lp + ll
+
+
+# A very small chain for demonstration (synthetic likelihood is expensive per step).
+chain = random_walk_metropolis_hastings(
+    log_prob=log_posterior,
+    init=np.array([logbeta_prior_mean], dtype=float),
+    n_steps=500,
+    proposal_std=np.array([0.15], dtype=float),
+    rng=rng,
+)
+
+beta_chain = np.exp(chain.xs[100:, 0])
+
+print(f"MH accept rate: {chain.accept_rate:.3f}")
+print(
+    "synthetic-lik beta: "
+    f"mean={np.mean(beta_chain):.3f}, sd={np.std(beta_chain):.3f}, "
+    f"q10={np.quantile(beta_chain, 0.1):.3f}, q90={np.quantile(beta_chain, 0.9):.3f}"
+)
+```
+
+Notes:
+
+- This is conceptually simple but **computationally heavy**: each MH step requires multiple simulator runs.
+- In practice you would typically (i) use common random numbers, (ii) reuse simulations across nearby $\theta$, or (iii) move to more modern amortised SBI methods.
+
 ## Notes
 
 - These baselines are intentionally simple and prioritise clarity over efficiency.
