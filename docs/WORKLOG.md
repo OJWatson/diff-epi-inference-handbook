@@ -72,3 +72,4 @@ Guidelines:
 - 2026-02-13: Reviewed M3 DoD vs `book/likelihood-free-baselines.qmd` and marked M3 complete in `docs/STATUS.md`.
 - 2026-02-13: Updated `docs/STATUS.md` headSha/updatedAtUtc after the M3 completion status commit.
 - 2026-02-13: Started M4 by adding `book/modern-sbi.qmd` chapter outline and linking it in `book/_quarto.yml`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and will push.
+- 2026-02-13: Added minimal runnable normalising-flow toy demos (pure NumPy): 1D affine flow + 2D RealNVP-style coupling layer (with explicit log-det Jacobians) in `book/modern-sbi.qmd`; ran `python3 -m ruff check .` + `python3 -m pytest` (49 pass, 2 skipped) and pushed (`8ae0967`).
