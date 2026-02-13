@@ -65,3 +65,4 @@ Guidelines:
 - 2026-02-13: Fixed CI Quarto render failure in the synthetic-likelihood demo by updating the MH call to match `random_walk_metropolis_hastings(log_prob_fn=..., x0=...)` and using `MHResult.chain`/`MHResult.accepted`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-13: Confirmed CI is green on `345b175` (Actions run 21973243748); updated `docs/STATUS.md` with headSha + ciRunUrl.
 - 2026-02-13: Extracted synthetic-likelihood helpers into `diff_epi_inference.synthetic_likelihood` (`estimate_summary_gaussian` + `mvn_logpdf`), updated the book demo to use them, and added unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`8172c73`).
+- 2026-02-13: Added `systematic_resample` utility under `diff_epi_inference.abc.smc` (for upcoming SMC-ABC baseline) + unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`27250b4`).
