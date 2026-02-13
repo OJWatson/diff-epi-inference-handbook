@@ -1,10 +1,10 @@
 ```pm-status
-milestone: M3
-state: complete
-headSha: 432644561751c4f13faac050f857ac75929e37f9
+milestone: M4
+state: running
+headSha: 493ec59480d56aee6aa52d0c991b76c2c6b049a3
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21974819260
-updatedAtUtc: 2026-02-13T05:24:07Z
-nextStep: Start M4 by adding `book/modern-sbi.qmd` (chapter outline) and linking it from `book/_quarto.yml`.
+updatedAtUtc: 2026-02-13T05:44:59Z
+nextStep: Add the smallest runnable "flows 101" toy demo (1D/2D) to `book/modern-sbi.qmd` (no new deps), then follow with a minimal beta-only NPE pipeline.
 ```
 
 ## Notes

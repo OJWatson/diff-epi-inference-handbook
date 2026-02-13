@@ -71,3 +71,4 @@ Guidelines:
 - 2026-02-13: Confirmed CI is green for `42e7c39` (Actions run 21974819260) and updated `docs/STATUS.md` accordingly.
 - 2026-02-13: Reviewed M3 DoD vs `book/likelihood-free-baselines.qmd` and marked M3 complete in `docs/STATUS.md`.
 - 2026-02-13: Updated `docs/STATUS.md` headSha/updatedAtUtc after the M3 completion status commit.
+- 2026-02-13: Started M4 by adding `book/modern-sbi.qmd` chapter outline and linking it in `book/_quarto.yml`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and will push.
