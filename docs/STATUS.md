@@ -1,15 +1,16 @@
 ```pm-status
 milestone: M4
 state: running
-headSha: 1245c56f8247a1d6a2062d7b240e49a622311b64
+headSha: a052dccdab657aa3feadf32b82cce24423389aee
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21974819260
-updatedAtUtc: 2026-02-13T06:28:29Z
-nextStep: Upgrade the beta-only NPE demo in `book/modern-sbi.qmd` from a conditional Gaussian to a minimal conditional flow (still dependency-light; no torch).
+updatedAtUtc: 2026-02-13T20:04:15Z
+nextStep: M4.0 — Decide dependency strategy for modern SBI (introduce a JAX extra + update CI/book build to execute conditional-flow NPE).
 ```
 
 ## Notes
 - **M0 complete**: CI builds (lint+tests, HTML render, optional PDF render) are green; running-example executes; build docs exist; Quarto version is pinned in CI.
 - **M2 complete**: `book/classical-baselines.qmd` includes MH + HMC baselines (plus optional NUTS via BlackJAX), PPC overlays, and lightweight calibration/coverage smoke tests.
+- **M3 complete**: `book/likelihood-free-baselines.qmd` includes ABC rejection + SMC-ABC + synthetic likelihood baselines, each with at least one minimal diagnostic.
 
 ## M1 DoD checklist (verified)
 - ✅ Differentiable ODE SEIR + observation model.

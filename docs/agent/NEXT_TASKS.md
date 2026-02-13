@@ -1,3 +1,3 @@
-Now: M3.3 — Update STATUS.md and mark M3 complete
+Now: M4.0 — Decide dependency strategy for modern SBI (JAX extra + CI update)
 Next:
-  - M4.0 — Decide dependency strategy for modern SBI (JAX extra + CI update)
+  - M4.1 — Implement a minimal conditional flow in the package
