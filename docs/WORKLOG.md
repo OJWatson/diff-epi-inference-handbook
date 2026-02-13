@@ -70,3 +70,4 @@ Guidelines:
 - 2026-02-13: Added a tiny `beta`-only SMC-ABC demo section to `book/likelihood-free-baselines.qmd` (reuses same summaries/distance as ABC rejection + simple Gaussian perturb kernel); ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed (`d2a2d30`).
 - 2026-02-13: Confirmed CI is green for `42e7c39` (Actions run 21974819260) and updated `docs/STATUS.md` accordingly.
 - 2026-02-13: Reviewed M3 DoD vs `book/likelihood-free-baselines.qmd` and marked M3 complete in `docs/STATUS.md`.
+- 2026-02-13: Updated `docs/STATUS.md` headSha/updatedAtUtc after the M3 completion status commit.

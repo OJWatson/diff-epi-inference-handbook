@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M3
 state: complete
-headSha: 42e7c39eb5ff7062aa6b0c3226347f576ef0aafb
+headSha: 432644561751c4f13faac050f857ac75929e37f9
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21974819260
-updatedAtUtc: 2026-02-13T05:23:24Z
+updatedAtUtc: 2026-02-13T05:24:07Z
 nextStep: Start M4 by adding `book/modern-sbi.qmd` (chapter outline) and linking it from `book/_quarto.yml`.
 ```
 
