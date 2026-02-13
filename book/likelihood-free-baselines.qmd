@@ -138,6 +138,23 @@ print(
 )
 ```
 
+```{python}
+#| echo: true
+#| warning: false
+#| fig-cap: "ABC rejection: histogram of accepted $\\beta$ values (dashed line = $\\beta_{true}$)."
+
+from diff_epi_inference.plotting import plot_hist_1d
+
+fig, ax = plot_hist_1d(
+    beta_accept,
+    true_value=beta_true,
+    bins=30,
+    title="ABC rejection posterior (accepted β)",
+    xlabel="β",
+)
+fig
+```
+
 Notes:
 
 - The choice of summaries and scaling in the distance is ad hoc; later sections will discuss more principled summary selection.
@@ -235,6 +252,24 @@ print(
     f"q10={weighted_quantile(beta_final, w_final, 0.1):.3f}, "
     f"q90={weighted_quantile(beta_final, w_final, 0.9):.3f}"
 )
+```
+
+```{python}
+#| echo: true
+#| warning: false
+#| fig-cap: "SMC-ABC: final-round weighted histogram for $\\beta$ (dashed line = $\\beta_{true}$)."
+
+from diff_epi_inference.plotting import plot_hist_1d
+
+fig, ax = plot_hist_1d(
+    beta_final,
+    weights=w_final,
+    true_value=beta_true,
+    bins=30,
+    title=f"SMC-ABC posterior (final round), ESS={ess(w_final):.1f}/{len(w_final)}",
+    xlabel="β",
+)
+fig
 ```
 
 Notes:
@@ -348,6 +383,61 @@ print(
     f"mean={np.mean(beta_chain):.3f}, sd={np.std(beta_chain):.3f}, "
     f"q10={np.quantile(beta_chain, 0.1):.3f}, q90={np.quantile(beta_chain, 0.9):.3f}"
 )
+```
+
+```{python}
+#| echo: true
+#| warning: false
+#| fig-cap: "Synthetic likelihood: MH trace for $\\beta$ (post burn-in)."
+
+from diff_epi_inference.plotting import plot_trace
+
+fig, ax = plot_trace(
+    beta_chain,
+    true_value=beta_true,
+    title="Synthetic likelihood MH trace (β)",
+)
+fig
+```
+
+```{python}
+#| echo: true
+#| warning: false
+#| fig-cap: "Synthetic likelihood: posterior predictive overlay (a few draws)."
+
+import matplotlib.pyplot as plt
+
+rng_ppc = np.random.default_rng(123)
+
+# Draw a few posterior samples of logbeta (post burn-in) for posterior predictive checks.
+post_logbeta = chain.chain[100:, 0]
+idx = rng_ppc.choice(post_logbeta.size, size=12, replace=False)
+logbeta_draws = post_logbeta[idx]
+
+# Simulate trajectories and overlay them.
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(np.arange(steps), y_obs, color="black", lw=2.0, label="observed")
+
+for logb in logbeta_draws:
+    params = SEIRParams(beta=float(np.exp(logb)), sigma=params_true.sigma, gamma=params_true.gamma)
+    ds = simulate_seir_and_report_stochastic(
+        params=params,
+        s0=10_000,
+        e0=3,
+        i0=2,
+        r0=0,
+        dt=1.0,
+        steps=steps,
+        reporting_rate=0.25,
+        rng=rng_ppc,
+    )
+    ax.plot(np.arange(steps), ds.y.astype(float), color="C0", alpha=0.25, lw=1.0)
+
+ax.set_xlabel("time")
+ax.set_ylabel("reported cases")
+ax.set_title("Posterior predictive overlay")
+ax.legend()
+fig
 ```
 
 Notes:
