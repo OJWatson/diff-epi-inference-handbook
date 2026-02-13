@@ -62,4 +62,5 @@ Guidelines:
 - 2026-02-12: Added a minimal ABC rejection sampler (`diff_epi_inference.abc.abc_rejection`) + unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (33 pass, 2 skipped) and pushed.
 - 2026-02-13: Added a small `beta`-only ABC rejection demo (stochastic SEIR simulator + simple summaries) to `book/likelihood-free-baselines.qmd`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-13: Added a tiny `beta`-only synthetic likelihood (Gaussian-on-summaries) demo to `book/likelihood-free-baselines.qmd` using the same summaries as the ABC section; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
-- 2026-02-13: Fixed CI Quarto render failure in the synthetic-likelihood demo by updating the MH call to match `random_walk_metropolis_hastings(log_prob_fn=..., x0=...)` and using `MHResult.chain`/`MHResult.accepted`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and will push.
+- 2026-02-13: Fixed CI Quarto render failure in the synthetic-likelihood demo by updating the MH call to match `random_walk_metropolis_hastings(log_prob_fn=..., x0=...)` and using `MHResult.chain`/`MHResult.accepted`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
+- 2026-02-13: Confirmed CI is green on `345b175` (Actions run 21973243748); updated `docs/STATUS.md` with headSha + ciRunUrl.

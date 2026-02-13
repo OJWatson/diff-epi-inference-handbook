@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 00154335c82dcd3d0b2af369d4d5e3ae0d9f6d93
-ciRunUrl: (pending)
-updatedAtUtc: 2026-02-13T03:13:58Z
+headSha: 345b17549d0f507f69b2fe7c253010b06b4ef8c1
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21973243748
+updatedAtUtc: 2026-02-13T03:16:50Z
 nextStep: Extract the synthetic-likelihood utilities (estimate Gaussian on summaries + MVN logpdf) into a small reusable helper under `src/diff_epi_inference/` and add unit tests.
 ```
 
