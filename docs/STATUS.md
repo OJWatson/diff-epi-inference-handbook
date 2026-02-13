@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 345b17549d0f507f69b2fe7c253010b06b4ef8c1
+headSha: 8172c73bbb182ac115ca7a5a5d647781646163b1
 ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21973243748
-updatedAtUtc: 2026-02-13T03:16:50Z
-nextStep: Extract the synthetic-likelihood utilities (estimate Gaussian on summaries + MVN logpdf) into a small reusable helper under `src/diff_epi_inference/` and add unit tests.
+updatedAtUtc: 2026-02-13T03:37:20Z
+nextStep: Implement an (optional) SMC-ABC baseline under `src/diff_epi_inference/abc/` (reweight/resample/perturb) with unit tests, and add a tiny demo section to `book/likelihood-free-baselines.qmd`.
 ```
 
 ## Notes
