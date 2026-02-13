@@ -1,0 +1,63 @@
+---
+title: "Modern simulation-based inference"
+---
+
+This chapter starts the **modern SBI** track: amortised neural posterior / likelihood / ratio estimation and conditional density models.
+
+The goal in M4 is to provide a minimal, runnable baseline pipeline and show how to evaluate it (calibration, posterior predictive checks, and diagnostics).
+
+## Goals (M4)
+
+- Introduce **normalising flows** (incl. conditional flows) as flexible density models.
+- Implement a small **NPE** (neural posterior estimation) pipeline.
+- Compare **amortised** vs **local** training on the running example.
+- Include at least one simple **calibration diagnostic**.
+
+## Outline
+
+### 1) SBI landscape (where flows fit)
+
+- Likelihood-free inference setting: simulator $y \sim p(\cdot\mid\theta)$.
+- Key families:
+  - **NPE**: learn $q_\phi(\theta\mid y)$.
+  - **NLE**: learn $q_\phi(y\mid\theta)$ then use MCMC.
+  - **NRE**: learn likelihood-to-evidence ratios / classifiers.
+- When to choose which (diff vs non-diff simulator, dimensionality, need for amortisation).
+
+### 2) Normalising flows (minimal tutorial)
+
+- Change of variables, log-determinant Jacobian.
+- Invertibility constraints.
+- Conditional flows: conditioning on summary features or raw time series embeddings.
+
+Deliverables:
+
+- A tiny flow-based density example (toy 1D/2D) to make the mechanics concrete.
+
+### 3) NPE pipeline (end-to-end)
+
+- Generate training pairs $(\theta_i, y_i)$ from the simulator + prior.
+- Choose an encoder for time series $y$ (summaries first; later a small neural encoder).
+- Train a conditional density model for $\theta\mid y$.
+- Evaluate on held-out simulations.
+
+Deliverables:
+
+- Minimal `train_npe(...)` / `sample_posterior_npe(...)` helpers (or a single notebook-style implementation in this chapter, if we keep code local).
+
+### 4) Diagnostics and calibration
+
+- Posterior predictive checks (PPC).
+- Coverage / calibration checks (small SBC-style smoke test).
+- Failure modes: misspecification, simulation budget, overconfident posteriors.
+
+### 5) Amortised vs local inference
+
+- Amortised: train once, reuse across observations.
+- Local / sequential: focus simulation budget around one observation.
+- Trade-offs: compute, memory, accuracy, and robustness.
+
+## Notes
+
+- We will start with the **beta-only** running example (as in earlier chapters) and then expand the parameter set once the pipeline is stable.
+- We will prioritise a small, dependency-light implementation; optional integrations (e.g. `sbi` library) can be added behind extras.

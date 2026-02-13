@@ -11,6 +11,7 @@ book:
     - running-example.qmd
     - classical-baselines.qmd
     - likelihood-free-baselines.qmd
+    - modern-sbi.qmd
 
 format:
   html:
