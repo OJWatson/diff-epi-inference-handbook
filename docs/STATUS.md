@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 6605ae4ff6ce1ba0eadc3252502720321762abb0
+headSha: 5ddea7dfb0a4ddf12702a703d81cd064464b6362
 ciRunUrl: (pending)
-updatedAtUtc: 2026-02-13T02:58:42Z
-nextStep: Add a tiny synthetic-likelihood-on-summaries demo for `beta`-only to `book/likelihood-free-baselines.qmd` (use the same summaries as the ABC section).
+updatedAtUtc: 2026-02-13T03:03:10Z
+nextStep: Extract the synthetic-likelihood utilities (estimate Gaussian on summaries + MVN logpdf) into a small reusable helper under `src/diff_epi_inference/` and add unit tests.
 ```
 
 ## Notes
