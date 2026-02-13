@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: d2a2d302a01bea805b8427847b880bd6d6f1bf6d
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21973243748
-updatedAtUtc: 2026-02-13T04:39:52Z
-nextStep: Confirm CI is green for `d2a2d30` and update `docs/STATUS.md` with the new Actions run URL.
+headSha: 42e7c39eb5ff7062aa6b0c3226347f576ef0aafb
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21974819260
+updatedAtUtc: 2026-02-13T04:56:54Z
+nextStep: Review M3 DoD vs `book/likelihood-free-baselines.qmd` and (if satisfied) mark M3 complete in `docs/STATUS.md`.
 ```
 
 ## Notes
