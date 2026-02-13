@@ -257,16 +257,17 @@ def log_posterior(theta: np.ndarray, rng: np.random.Generator) -> float:
 
 # A very small chain for demonstration (synthetic likelihood is expensive per step).
 chain = random_walk_metropolis_hastings(
-    log_prob=log_posterior,
-    init=np.array([logbeta_prior_mean], dtype=float),
+    log_prob_fn=lambda theta: log_posterior(theta, rng),
+    x0=np.array([logbeta_prior_mean], dtype=float),
     n_steps=500,
     proposal_std=np.array([0.15], dtype=float),
     rng=rng,
 )
 
-beta_chain = np.exp(chain.xs[100:, 0])
+beta_chain = np.exp(chain.chain[100:, 0])
 
-print(f"MH accept rate: {chain.accept_rate:.3f}")
+accept_rate = float(np.mean(chain.accepted))
+print(f"MH accept rate: {accept_rate:.3f}")
 print(
     "synthetic-lik beta: "
     f"mean={np.mean(beta_chain):.3f}, sd={np.std(beta_chain):.3f}, "
