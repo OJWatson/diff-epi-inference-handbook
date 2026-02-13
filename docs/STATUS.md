@@ -1,10 +1,10 @@
 ```pm-status
 milestone: M3
 state: running
-headSha: 5377de74f1d9ca466679e6e6b79ab231e8e34db0
+headSha: 6605ae4ff6ce1ba0eadc3252502720321762abb0
 ciRunUrl: (pending)
-updatedAtUtc: 2026-02-12T21:10:30Z
-nextStep: Add a small `beta`-only ABC rejection demo to `book/likelihood-free-baselines.qmd` using `diff_epi_inference.abc.abc_rejection`.
+updatedAtUtc: 2026-02-13T02:58:42Z
+nextStep: Add a tiny synthetic-likelihood-on-summaries demo for `beta`-only to `book/likelihood-free-baselines.qmd` (use the same summaries as the ABC section).
 ```
 
 ## Notes

@@ -60,3 +60,4 @@ Guidelines:
 - 2026-02-12: Confirmed GitHub Actions CI for `7d5c59d` succeeded; updated `docs/STATUS.md` headSha/ciRunUrl/updatedAtUtc.
 - 2026-02-12: Marked M2 complete in `docs/STATUS.md` and started M3 by adding `book/likelihood-free-baselines.qmd` chapter outline and linking it in `book/_quarto.yml`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
 - 2026-02-12: Added a minimal ABC rejection sampler (`diff_epi_inference.abc.abc_rejection`) + unit tests; ran `python3 -m ruff check .` + `python3 -m pytest` (33 pass, 2 skipped) and pushed.
+- 2026-02-13: Added a small `beta`-only ABC rejection demo (stochastic SEIR simulator + simple summaries) to `book/likelihood-free-baselines.qmd`; ran `python3 -m ruff check .` + `python3 -m pytest` (pass) and pushed.
