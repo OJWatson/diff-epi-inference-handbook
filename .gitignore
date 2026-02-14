@@ -25,3 +25,6 @@ data/*
 
 # Packaging
 *.egg-info/
+
+# uv
+uv.lock

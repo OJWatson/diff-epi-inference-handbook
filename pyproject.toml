@@ -15,6 +15,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Dev tools used in CI + for rendering executable Quarto code blocks.
 dev = [
   "pytest>=8",
   "ruff>=0.4",
@@ -23,10 +24,32 @@ dev = [
   "pyyaml>=6.0",
 ]
 
+# Optional: JAX runtime (CPU wheels).
+#
+# Kept as an extra so the core package stays lightweight and NumPy-only.
+jax = [
+  "jax[cpu]>=0.4.28",
+]
+
 # Optional: autodiff + NUTS baseline (used in the M2 classical baselines chapter).
+#
+# This is a small, well-scoped optional path; tests using it are skipped unless the
+# extra is installed.
 nuts = [
   "jax[cpu]>=0.4.28",
   "blackjax>=1.2.0",
+]
+
+# Optional: "modern SBI" stack (JAX + lightweight NN/optimiser/dists building blocks).
+#
+# This is intended for M4+ chapters (conditional flows, amortised inference). We keep
+# it behind an extra so users who only want the classical/ABC content don't have to
+# pull in JAX or ML dependencies.
+modern-sbi = [
+  "jax[cpu]>=0.4.28",
+  "equinox>=0.11.0",
+  "optax>=0.2.2",
+  "distrax>=0.1.5",
 ]
 
 [tool.setuptools]

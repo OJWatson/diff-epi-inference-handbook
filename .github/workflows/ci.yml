@@ -13,15 +13,34 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
       - name: Install
         run: |
-          python -m pip install -U pip
-          pip install -c constraints-dev.txt -e '.[dev]'
+          uv pip install -c constraints-dev.txt -e '.[dev]'
       - name: Lint (ruff)
-        run: ruff check .
+        run: uv run ruff check .
       - name: Tests (pytest)
-        run: pytest
+        run: uv run pytest -q
+
+  test-optional-nuts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Install (dev + optional nuts)
+        run: |
+          uv pip install -c constraints-dev.txt -e '.[dev,nuts]'
+      - name: Tests (pytest incl. optional BlackJAX path)
+        run: uv run pytest -q
 
   build-html:
     runs-on: ubuntu-latest
@@ -30,12 +49,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
       - name: Install Python deps
         run: |
-          python -m pip install -U pip
-          pip install -c constraints-dev.txt -e '.[dev]'
-          python -m pip check
+          uv pip install -c constraints-dev.txt -e '.[dev]'
+          uv pip check
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
@@ -53,12 +74,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
       - name: Install Python deps
         run: |
-          python -m pip install -U pip
-          pip install -c constraints-dev.txt -e '.[dev]'
-          python -m pip check
+          uv pip install -c constraints-dev.txt -e '.[dev]'
+          uv pip check
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
