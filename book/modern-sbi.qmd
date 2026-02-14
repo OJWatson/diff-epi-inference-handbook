@@ -458,6 +458,65 @@ if _HAVE_MODERN_SBI:
     print({"final_train_NLL": final_nll})
 ```
 
+### 3b) NLE: neural likelihood estimation
+
+In **NLE** we learn an explicit surrogate for the likelihood,
+
+$$q_\phi(y\mid\theta) \approx p(y\mid\theta),$$
+
+typically using a conditional density model (often a conditional flow).
+Once we can evaluate $\log q_\phi(y_{\text{obs}}\mid\theta)$, we can do standard Bayesian inference with MCMC:
+
+$$\log p(\theta\mid y_{\text{obs}}) = \log p(\theta) + \log q_\phi(y_{\text{obs}}\mid\theta) + \text{const}.$$
+
+Practical notes:
+
+- In many problems, $y$ is high-dimensional; in that case NLE is often done on *summaries* $s(y)$,
+  learning $q_\phi(s\mid\theta)$.
+- Compared to NPE, NLE often makes it easier to reuse a learned likelihood across different priors
+  (since the likelihood itself is prior-independent).
+
+A minimal skeleton (pseudo-code) looks like:
+
+```python
+# Train on simulator output:
+#   (theta_i, y_i) ~ p(theta) p(y|theta)
+# Fit conditional density model q_phi(y|theta)
+
+def log_posterior(theta, y_obs):
+    return log_prior(theta) + flow_like.log_prob(y_obs, context=theta)
+
+# Then run any MCMC method (Metropolis, HMC, slice, ...)
+# targeting log_posterior(., y_obs).
+```
+
+This handbook currently focuses on NPE as the first runnable baseline; NLE is a natural next step once
+we have a comfortable conditional density model for the observation space (or summary space).
+
+### 3c) NRE: neural ratio estimation
+
+In **NRE** we learn the *likelihood-to-evidence ratio*
+
+$$r(\theta, y) = \frac{p(y\mid\theta)}{p(y)},$$
+
+usually by reducing ratio estimation to binary classification.
+A common construction is:
+
+- draw **joint** samples $(\theta, y) \sim p(\theta) p(y\mid\theta)$ and label them 1
+- draw **marginal/product** samples $(\theta, y') \sim p(\theta) p(y)$ (e.g. by shuffling $y$) and label them 0
+- train a classifier $d_\phi(\theta, y) \approx \Pr(\text{joint}=1\mid\theta, y)$
+
+Then the estimated ratio is
+
+$$\hat r_\phi(\theta, y) = \frac{d_\phi(\theta, y)}{1 - d_\phi(\theta, y)}.$$
+
+This gives a posterior via
+
+$$p(\theta\mid y_{\text{obs}}) \propto p(\theta)\,\hat r_\phi(\theta, y_{\text{obs}}).$$
+
+NRE is attractive when you want a flexible posterior but do not want to model a full conditional density.
+As with NLE, it is common to feed the classifier summaries $s(y)$ (or learned embeddings) rather than raw $y$.
+
 ### 4) Diagnostics and calibration
 
 - Posterior predictive checks (PPC).
