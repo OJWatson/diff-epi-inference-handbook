@@ -23,7 +23,7 @@ From the repo root:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U pip
+python3 -m pip install -U pip
 
 # Install the package + dev deps (includes Jupyter + PyYAML for Quarto execution)
 pip install -e '.[dev]'
@@ -36,9 +36,11 @@ pytest
 ## Verify tool versions
 
 ```bash
-python --version
+python3 --version
 quarto --version
 ```
+
+Note: some systems do not provide a `python` executable (only `python3`), so the docs use `python3` explicitly.
 
 ### If `quarto` is not installed
 
