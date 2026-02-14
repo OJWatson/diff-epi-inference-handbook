@@ -466,9 +466,120 @@ if _HAVE_MODERN_SBI:
 
 ### 5) Amortised vs local inference
 
-- Amortised: train once, reuse across observations.
-- Local / sequential: focus simulation budget around one observation.
-- Trade-offs: compute, memory, accuracy, and robustness.
+There are two common ways to spend a simulation budget when learning a conditional density model
+(e.g. an NPE-style estimator):
+
+- **Amortised**: train once on samples from the prior predictive, then reuse the trained model for
+  many observations.
+- **Local / sequential**: for a *single* observation, concentrate simulations around the region of
+  parameter space that seems plausible for that observation (often via rounds of proposals).
+
+Below is a tiny comparison on the beta-only running example, using the same simple conditional
+Gaussian model from the earlier section.
+
+The goal is not to claim strong performance, but to make the trade-off concrete:
+
+- amortised training uses a larger *up-front* simulation budget, but inference per new dataset is cheap
+- local training can use fewer simulations overall if you only care about one dataset, and can often be
+  more accurate for that dataset when the prior is broad
+
+```{python}
+#| echo: true
+#| warning: false
+
+import numpy as np
+
+from diff_epi_inference.flows import ConditionalAffineDiagNormal
+
+# Reuse from above: prior_sample_logbeta, simulate_y_from_logbeta, summary,
+# as well as the amortised `flow` trained on (S_train, logb_train).
+
+
+def fit_local_flow(
+    s_obs: np.ndarray,
+    *,
+    flow_init: ConditionalAffineDiagNormal,
+    n_local: int = 400,
+    proposal_sd: float = 0.15,
+    rng: np.random.Generator,
+) -> ConditionalAffineDiagNormal:
+    """Fit a *local* conditional model by simulating around an initial guess.
+
+    We use the amortised flow's posterior mean as a proposal centre, then draw
+    log(beta) ~ Normal(center, proposal_sd) and simulate y, returning summaries.
+
+    This is a very small stand-in for a sequential NPE scheme.
+    """
+    center = float(flow_init.mean(s_obs[None, :])[0, 0])
+
+    S = np.zeros((n_local, 3), dtype=float)
+    logb = np.zeros((n_local,), dtype=float)
+    for i in range(n_local):
+        lb = float(rng.normal(loc=center, scale=proposal_sd))
+        y = simulate_y_from_logbeta(lb, rng=rng)
+        S[i] = summary(y)
+        logb[i] = lb
+
+    return ConditionalAffineDiagNormal.fit_closed_form(contexts=S, thetas=logb[:, None])
+
+
+# Create a few synthetic "observations" with different true betas.
+K = 8
+rng_obs = np.random.default_rng(123)
+
+logb_true = np.array([prior_sample_logbeta(rng_obs) for _ in range(K)], dtype=float)
+beta_true_vec = np.exp(logb_true)
+
+s_obs_list: list[np.ndarray] = []
+for k in range(K):
+    yk = simulate_y_from_logbeta(float(logb_true[k]), rng=rng_obs)
+    s_obs_list.append(summary(yk))
+
+# Compare amortised vs local posterior mean estimates.
+rows = []
+for k, s_k in enumerate(s_obs_list):
+    # Amortised: just evaluate the pre-trained flow.
+    mu_am = float(flow.mean(s_k[None, :])[0, 0])
+    beta_hat_am = float(np.exp(mu_am))
+
+    # Local: refit around the amortised mean for this observation.
+    flow_loc = fit_local_flow(s_k, flow_init=flow, n_local=400, proposal_sd=0.15, rng=np.random.default_rng(10 + k))
+    mu_loc = float(flow_loc.mean(s_k[None, :])[0, 0])
+    beta_hat_loc = float(np.exp(mu_loc))
+
+    rows.append(
+        {
+            "k": k,
+            "beta_true": float(beta_true_vec[k]),
+            "beta_hat_am": beta_hat_am,
+            "abs_err_am": float(abs(beta_hat_am - beta_true_vec[k])),
+            "beta_hat_loc": beta_hat_loc,
+            "abs_err_loc": float(abs(beta_hat_loc - beta_true_vec[k])),
+        }
+    )
+
+# Print a small table (keep dependencies light; no pandas).
+print("k  beta_true  beta_hat(am)  |err|   beta_hat(local)  |err|")
+for r in rows:
+    print(
+        f"{r['k']:1d}  {r['beta_true']:.3f}     {r['beta_hat_am']:.3f}       {r['abs_err_am']:.3f}"
+        f"     {r['beta_hat_loc']:.3f}          {r['abs_err_loc']:.3f}"
+    )
+
+mean_err_am = float(np.mean([r["abs_err_am"] for r in rows]))
+mean_err_loc = float(np.mean([r["abs_err_loc"] for r in rows]))
+print({"mean_abs_err_amortised": mean_err_am, "mean_abs_err_local": mean_err_loc, "local_sims_per_obs": 400})
+```
+
+Interpretation (for this toy setup):
+
+- The **amortised** model pays an up-front simulation cost (here: `len(S_train)` sims) but is then
+  cheap to evaluate for each new observation.
+- The **local** model spends simulations per observation (here: 400 per observation) and can adapt
+  to a specific dataset by focusing the proposal region.
+
+In practice, sequential NPE schemes use *multiple rounds* and better proposal adaptation, and
+the comparison depends strongly on the dimensionality of $\theta$ and on how broad the prior is.
 
 ## Notes
 
