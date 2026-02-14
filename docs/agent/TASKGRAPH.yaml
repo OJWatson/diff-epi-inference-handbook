@@ -1,0 +1,30 @@
+defaults:
+  acceptance:
+  - uv run pytest -q
+  - quarto render book --to html
+project_id: diff-epi-inference-handbook
+tasks:
+- depends_on: []
+  id: M4.0
+  title: Make modern-sbi deps reproducible and run JAX cells in CI HTML build
+- depends_on:
+  - M4.0
+  id: M4.1
+  title: Add minimal conditional affine flow helper + tests
+- depends_on:
+  - M4.1
+  id: M4.2
+  title: Add tiny JAX-based training loop example (modern-sbi extra)
+- depends_on:
+  - M4.2
+  id: M4.3
+  title: Use ConditionalAffineDiagNormal helper in Modern SBI demo
+- depends_on:
+  - M4.3
+  id: M4.4
+  title: Add amortised vs local training comparison
+- depends_on:
+  - M4.4
+  id: M4.5
+  title: Add brief NLE and NRE sections
+version: 1
