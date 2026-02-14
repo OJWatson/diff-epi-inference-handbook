@@ -55,7 +55,7 @@ jobs:
           enable-cache: true
       - name: Install Python deps
         run: |
-          uv pip install -c constraints-dev.txt -e '.[dev]'
+          uv pip install -c constraints-dev.txt -e '.[dev,modern-sbi]'
           uv pip check
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -80,7 +80,7 @@ jobs:
           enable-cache: true
       - name: Install Python deps
         run: |
-          uv pip install -c constraints-dev.txt -e '.[dev]'
+          uv pip install -c constraints-dev.txt -e '.[dev,modern-sbi]'
           uv pip check
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2

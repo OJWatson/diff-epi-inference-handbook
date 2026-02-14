@@ -11,10 +11,10 @@ pyyaml==6.0.2
 
 # Optional extras (not installed in the default dev set, but pinned here so CI is reproducible
 # when we test optional JAX paths).
-#
-# jax==0.4.38
-# jaxlib==0.4.38
-# blackjax==1.2.5
-# equinox==0.11.12
-# optax==0.2.3
-# distrax==0.1.5
+
+jax==0.4.38
+jaxlib==0.4.38
+blackjax==1.2.5
+equinox==0.11.12
+optax==0.2.3
+distrax==0.1.5
