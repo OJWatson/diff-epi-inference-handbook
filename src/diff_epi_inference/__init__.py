@@ -1,6 +1,7 @@
 """Minimal companion code for the Diff-Epi Inference Handbook."""
 
 from .dataset import TimeSeriesDataset, from_cases
+from .flows import ConditionalAffineDiagNormal
 from .io import load_timeseries_npz, save_timeseries_npz
 from .observation import (
     apply_delay,
@@ -32,6 +33,7 @@ __all__ = [
     "expected_reported_cases_delayed",
     "sample_nbinom_reports",
     "nbinom_loglik",
+    "ConditionalAffineDiagNormal",
     "TimeSeriesDataset",
     "from_cases",
     "plot_timeseries",

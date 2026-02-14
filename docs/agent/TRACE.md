@@ -8,6 +8,10 @@ TRACE entry semantics (Portfolio OS):
   - `branch` + `commit_parent` + `timestamp` (all known before creating the task commit), and/or
   - `head_after` (the task commit hash, if recorded in a follow-up commit).
 
+- task_id=M4.1 branch=main commit_parent=89b492cb4bf86a035f392c0a19e9e27682891a61 timestamp=2026-02-14T06:54:37Z
+  - Summary: Add a minimal conditional affine flow (conditional diagonal Gaussian) with closed-form fit + tests
+  - Gates: `uv run pytest -q`; `quarto render book --to html`
+
 - task_id=M4.0 branch=main commit_parent=1ae4b9fe62260444e43a43873a5f4ba5b1473892 timestamp=2026-02-14T06:38:11Z head_after=5b84b4a
   - Summary: Decide modern-SBI dependency strategy: add optional JAX/modern-sbi extras; move CI to uv and add optional BlackJAX job
   - Gates: `uv run pytest -q`; `quarto render book --to html`
