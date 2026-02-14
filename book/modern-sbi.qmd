@@ -200,7 +200,7 @@ Deliverables:
 
 - Minimal `train_npe(...)` / `sample_posterior_npe(...)` helpers (or a single notebook-style implementation in this chapter, if we keep code local).
 
-#### Demo: beta-only “NPE” with a conditional Gaussian (no deep learning)
+#### Demo: beta-only “NPE” with the package conditional-flow helper (no deep learning)
 
 Before we use a full conditional flow, it helps to see the basic **NPE loop** in the simplest possible form.
 We will:
@@ -213,6 +213,8 @@ We will:
 
 Here $\mu_\phi(s)$ is just a linear regression and $\sigma_\phi$ is a single global scale.
 This is not a powerful model, but it is a runnable baseline with exactly the same control flow as neural NPE.
+
+In code, we will use the package's `ConditionalAffineDiagNormal` helper to fit this model in closed form.
 
 ```{python}
 #| echo: true
@@ -308,65 +310,28 @@ print({"S_train_shape": S_train.shape, "logb_train_mean": float(logb_train.mean(
 #| echo: true
 #| warning: false
 
-def fit_conditional_gaussian(
-    S: np.ndarray, logb: np.ndarray
-) -> dict[str, np.ndarray | float]:
-    """Fit q(logbeta | s) = Normal(mu(s), sigma^2) with mu(s)=w^T z + b.
+from diff_epi_inference.flows import ConditionalAffineDiagNormal
 
-    We standardise features z = (s - mean) / std and solve least squares.
-    """
-    S = np.asarray(S, dtype=float)
-    logb = np.asarray(logb, dtype=float)
+# Fit q(logbeta | s) as a *conditional affine flow* (a diagonal Gaussian)
+# in closed form.
+flow = ConditionalAffineDiagNormal.fit_closed_form(
+    contexts=S_train,
+    thetas=logb_train[:, None],
+)
 
-    s_mean = S.mean(axis=0)
-    s_std = S.std(axis=0)
-    s_std = np.where(s_std > 0, s_std, 1.0)
-    Z = (S - s_mean) / s_std
-
-    # Design matrix with intercept.
-    X = np.column_stack([np.ones(len(Z)), Z])
-    w_hat, *_ = np.linalg.lstsq(X, logb, rcond=None)
-
-    mu_hat = X @ w_hat
-    resid = logb - mu_hat
-    sigma_hat = float(np.sqrt(np.mean(resid**2)))
-    sigma_hat = max(sigma_hat, 1e-3)
-
-    return {"w": w_hat, "s_mean": s_mean, "s_std": s_std, "sigma": sigma_hat}
-
-
-def predict_mu(model: dict[str, np.ndarray | float], s: np.ndarray) -> float:
-    s = np.asarray(s, dtype=float)
-    z = (s - model["s_mean"]) / model["s_std"]
-    x = np.concatenate([[1.0], z])
-    return float(x @ model["w"])
-
-
-model = fit_conditional_gaussian(S_train, logb_train)
-
-mu_test = np.array([predict_mu(model, s) for s in S_test])
+# Predict mean log(beta) on a test set (for a sanity check).
+mu_test = flow.mean(S_test)[:, 0]
 rmse = float(np.sqrt(np.mean((mu_test - logb_test) ** 2)))
 
-print({"sigma_hat": float(model["sigma"]), "test_RMSE_logbeta": rmse})
+print({"sigma_hat": float(np.exp(flow.log_sigma[0])), "test_RMSE_logbeta": rmse})
 ```
 
 ```{python}
 #| echo: true
 #| warning: false
 
-def sample_posterior_logbeta(
-    model: dict[str, np.ndarray | float],
-    s_obs: np.ndarray,
-    n: int,
-    *,
-    rng: np.random.Generator,
-) -> np.ndarray:
-    mu = predict_mu(model, s_obs)
-    sigma = float(model["sigma"])
-    return rng.normal(loc=mu, scale=sigma, size=n)
-
-
-logb_post = sample_posterior_logbeta(model, s_obs, 5_000, rng=np.random.default_rng(3))
+# Sample from the learned posterior q(logbeta | s_obs).
+logb_post = flow.sample(s_obs, 5_000, rng=np.random.default_rng(3))[:, 0]
 beta_post = np.exp(logb_post)
 
 print(
@@ -380,7 +345,7 @@ print(
 ```
 
 This model is intentionally crude: the posterior width here is driven mostly by the regression residuals.
-In the next step we will replace this conditional Gaussian with a **conditional flow** so the learned posterior can be non-Gaussian and multi-modal.
+In the next step we will replace this simple conditional affine flow with a **more expressive conditional flow** so the learned posterior can be non-Gaussian and multi-modal.
 
 #### Tiny JAX training loop (behind `modern-sbi`)
 
