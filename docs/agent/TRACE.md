@@ -8,7 +8,7 @@ TRACE entry semantics (Portfolio OS):
   - `branch` + `commit_parent` + `timestamp` (all known before creating the task commit), and/or
   - `head_after` (the task commit hash, if recorded in a follow-up commit).
 
-- task_id=M4.1 branch=main commit_parent=89b492cb4bf86a035f392c0a19e9e27682891a61 timestamp=2026-02-14T06:54:37Z
+- task_id=M4.1 branch=main commit_parent=89b492cb4bf86a035f392c0a19e9e27682891a61 timestamp=2026-02-14T06:54:37Z head_after=29de81b
   - Summary: Add a minimal conditional affine flow (conditional diagonal Gaussian) with closed-form fit + tests
   - Gates: `uv run pytest -q`; `quarto render book --to html`
 
