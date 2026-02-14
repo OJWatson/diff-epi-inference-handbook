@@ -8,6 +8,14 @@ TRACE entry semantics (Portfolio OS):
   - `branch` + `commit_parent` + `timestamp` (all known before creating the task commit), and/or
   - `head_after` (the task commit hash, if recorded in a follow-up commit).
 
+- task_id=M4.3 branch=main commit_parent=84e4b7b5f37cdb2bbd5e1ce4c5f9eb4cb054a34d timestamp=2026-02-14T16:31:30Z head_after=4a19f36
+  - Summary: Replace the Modern SBI chapter’s conditional-Gaussian demo with the package flow helper
+  - Gates: `uv run pytest -q`; `quarto render book --to html`
+
+- task_id=M4.2 branch=main commit_parent=29de81b8b1d64f687bcb041c16b0d4f2a6be7a7f timestamp=2026-02-14T16:31:10Z head_after=84e4b7b
+  - Summary: Add a tiny JAX-based training loop example (behind `modern-sbi` extra)
+  - Gates: `uv run pytest -q`; `quarto render book --to html`
+
 - task_id=M4.1 branch=main commit_parent=89b492cb4bf86a035f392c0a19e9e27682891a61 timestamp=2026-02-14T06:54:37Z head_after=29de81b
   - Summary: Add a minimal conditional affine flow (conditional diagonal Gaussian) with closed-form fit + tests
   - Gates: `uv run pytest -q`; `quarto render book --to html`
