@@ -535,17 +535,53 @@ for k in range(K):
     yk = simulate_y_from_logbeta(float(logb_true[k]), rng=rng_obs)
     s_obs_list.append(summary(yk))
 
-# Compare amortised vs local posterior mean estimates.
+def lognormal_sd(*, mu: float, sigma: float) -> float:
+    """SD of exp(X) when X ~ Normal(mu, sigma^2)."""
+    v = float(sigma**2)
+    return float(np.sqrt((np.exp(v) - 1.0) * np.exp(2.0 * mu + v)))
+
+
+def ppc_summary_distance(
+    flow_model: ConditionalAffineDiagNormal,
+    s_obs: np.ndarray,
+    *,
+    n: int,
+    rng: np.random.Generator,
+) -> float:
+    """A tiny PPC score: mean L2 distance between simulated and observed summaries."""
+    logb_samp = flow_model.sample(s_obs, n=n, rng=rng)[:, 0]
+    dists = []
+    for lb in logb_samp:
+        y = simulate_y_from_logbeta(float(lb), rng=rng)
+        s = summary(y)
+        dists.append(float(np.linalg.norm(s - s_obs)))
+    return float(np.mean(dists))
+
+
+n_local = 400
+n_ppc = 120
+
+# Compare amortised vs local across: point estimate error, posterior width, and a PPC score.
 rows = []
 for k, s_k in enumerate(s_obs_list):
     # Amortised: just evaluate the pre-trained flow.
     mu_am = float(flow.mean(s_k[None, :])[0, 0])
     beta_hat_am = float(np.exp(mu_am))
+    sd_beta_am = lognormal_sd(mu=mu_am, sigma=float(np.exp(flow.log_sigma[0])))
+    ppc_am = ppc_summary_distance(flow, s_k, n=n_ppc, rng=np.random.default_rng(200 + k))
 
     # Local: refit around the amortised mean for this observation.
-    flow_loc = fit_local_flow(s_k, flow_init=flow, n_local=400, proposal_sd=0.15, rng=np.random.default_rng(10 + k))
+    flow_loc = fit_local_flow(
+        s_k,
+        flow_init=flow,
+        n_local=n_local,
+        proposal_sd=0.15,
+        rng=np.random.default_rng(10 + k),
+    )
     mu_loc = float(flow_loc.mean(s_k[None, :])[0, 0])
     beta_hat_loc = float(np.exp(mu_loc))
+    sd_beta_loc = lognormal_sd(mu=mu_loc, sigma=float(np.exp(flow_loc.log_sigma[0])))
+    ppc_loc = ppc_summary_distance(flow_loc, s_k, n=n_ppc, rng=np.random.default_rng(500 + k))
 
     rows.append(
         {
@@ -553,30 +589,52 @@ for k, s_k in enumerate(s_obs_list):
             "beta_true": float(beta_true_vec[k]),
             "beta_hat_am": beta_hat_am,
             "abs_err_am": float(abs(beta_hat_am - beta_true_vec[k])),
+            "sd_beta_am": sd_beta_am,
+            "ppc_dist_am": ppc_am,
             "beta_hat_loc": beta_hat_loc,
             "abs_err_loc": float(abs(beta_hat_loc - beta_true_vec[k])),
+            "sd_beta_loc": sd_beta_loc,
+            "ppc_dist_loc": ppc_loc,
         }
     )
 
 # Print a small table (keep dependencies light; no pandas).
-print("k  beta_true  beta_hat(am)  |err|   beta_hat(local)  |err|")
+print("k  beta_true  beta_hat(am)  |err|  sd_beta(am)  ppc  ||  beta_hat(local)  |err|  sd_beta(local)  ppc")
 for r in rows:
     print(
         f"{r['k']:1d}  {r['beta_true']:.3f}     {r['beta_hat_am']:.3f}       {r['abs_err_am']:.3f}"
-        f"     {r['beta_hat_loc']:.3f}          {r['abs_err_loc']:.3f}"
+        f"    {r['sd_beta_am']:.3f}      {r['ppc_dist_am']:.3f}"
+        f"   ||   {r['beta_hat_loc']:.3f}          {r['abs_err_loc']:.3f}"
+        f"    {r['sd_beta_loc']:.3f}         {r['ppc_dist_loc']:.3f}"
     )
 
 mean_err_am = float(np.mean([r["abs_err_am"] for r in rows]))
 mean_err_loc = float(np.mean([r["abs_err_loc"] for r in rows]))
-print({"mean_abs_err_amortised": mean_err_am, "mean_abs_err_local": mean_err_loc, "local_sims_per_obs": 400})
+mean_ppc_am = float(np.mean([r["ppc_dist_am"] for r in rows]))
+mean_ppc_loc = float(np.mean([r["ppc_dist_loc"] for r in rows]))
+
+# Simulation budgets (roughly): amortised sims once + local sims per observation.
+print(
+    {
+        "amortised_sims_total": int(len(S_train)),
+        "local_sims_per_obs": int(n_local),
+        "local_sims_total": int(n_local * K),
+        "mean_abs_err_amortised": mean_err_am,
+        "mean_abs_err_local": mean_err_loc,
+        "mean_ppc_dist_amortised": mean_ppc_am,
+        "mean_ppc_dist_local": mean_ppc_loc,
+    }
+)
 ```
 
 Interpretation (for this toy setup):
 
-- The **amortised** model pays an up-front simulation cost (here: `len(S_train)` sims) but is then
-  cheap to evaluate for each new observation.
-- The **local** model spends simulations per observation (here: 400 per observation) and can adapt
-  to a specific dataset by focusing the proposal region.
+- **Compute budget**: the amortised model pays an up-front simulation cost (here: `len(S_train)` sims),
+  while the local approach spends `n_local` simulations *per observation*.
+- **Posterior width**: we report an approximate posterior width via `sd_beta(·)` (treating
+  $\log\beta$ as Gaussian, so $\beta$ is log-normal).
+- **PPC score**: `ppc_dist(·)` is a tiny posterior predictive check score: simulate datasets from
+  posterior draws and report the mean L2 distance between simulated and observed summaries.
 
 In practice, sequential NPE schemes use *multiple rounds* and better proposal adaptation, and
 the comparison depends strongly on the dimensionality of $\theta$ and on how broad the prior is.
