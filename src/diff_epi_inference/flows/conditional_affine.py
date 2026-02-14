@@ -108,7 +108,7 @@ class ConditionalAffineDiagNormal:
         thetas: np.ndarray,
         ridge: float = 1e-8,
         min_sigma: float = 1e-6,
-    ) -> "ConditionalAffineDiagNormal":
+    ) -> ConditionalAffineDiagNormal:
         """Fit a conditional diagonal Gaussian with linear mean.
 
         We solve least squares for the mean parameters:
@@ -135,7 +135,6 @@ class ConditionalAffineDiagNormal:
             raise ValueError("contexts and thetas must have the same n")
 
         n, k = C.shape
-        d = X.shape[1]
 
         # Add intercept: [1, C]
         A = np.column_stack([np.ones(n), C])
