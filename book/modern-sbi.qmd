@@ -517,6 +517,26 @@ $$p(\theta\mid y_{\text{obs}}) \propto p(\theta)\,\hat r_\phi(\theta, y_{\text{o
 NRE is attractive when you want a flexible posterior but do not want to model a full conditional density.
 As with NLE, it is common to feed the classifier summaries $s(y)$ (or learned embeddings) rather than raw $y$.
 
+A minimal skeleton (pseudo-code) looks like:
+
+```python
+# Make training pairs for a joint-vs-product classifier.
+# Joint: (theta, y) ~ p(theta) p(y|theta)
+# Product: (theta, y') ~ p(theta) p(y)  (e.g. shuffle y within a batch)
+
+def log_ratio_hat(theta, y):
+    # d_phi(theta, y) is the classifier probability of "joint".
+    d = classifier.predict_proba(theta, y)
+    return np.log(d) - np.log1p(-d)  # logit(d)
+
+# Posterior (up to normalisation): log p(theta) + log r_hat(theta, y_obs)
+
+def log_posterior(theta, y_obs):
+    return log_prior(theta) + log_ratio_hat(theta, y_obs)
+
+# Then sample theta from log_posterior(., y_obs) using MCMC.
+```
+
 ### 4) Diagnostics and calibration
 
 - Posterior predictive checks (PPC).
