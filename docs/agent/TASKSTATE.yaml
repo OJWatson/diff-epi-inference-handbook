@@ -104,11 +104,11 @@ tasks:
   M5.4:
     last:
       commit: ''
-      log_path: ''
-      outcome: ''
-      pushed: null
-      reason: ''
-      tick_ts: ''
-    status: todo
-    updated_at_utc: ''
+      log_path: portfolio/reports/runs/20260215T143004Z/logs/diff-epi-inference-handbook.log
+      outcome: success
+      pushed: true
+      reason: mark_M5_complete_select_next_milestone_M6
+      tick_ts: 20260215T143004Z
+    status: done
+    updated_at_utc: '2026-02-15T14:33:00Z'
 version: 1

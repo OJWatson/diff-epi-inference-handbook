@@ -1,10 +1,10 @@
 ```pm-status
-milestone: M4
+milestone: M6
 state: running
-headSha: a052dccdab657aa3feadf32b82cce24423389aee
-ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/21974819260
-updatedAtUtc: 2026-02-13T20:04:15Z
-nextStep: M4.0 — Decide dependency strategy for modern SBI (introduce a JAX extra + update CI/book build to execute conditional-flow NPE).
+headSha: (pending)
+ciRunUrl: (see GitHub Actions)
+updatedAtUtc: 2026-02-15T14:33:00Z
+nextStep: M6.0 — Add two new Quarto chapters: autodiff basics + differentiability axis (with runnable demos).
 ```
 
 ## Notes
