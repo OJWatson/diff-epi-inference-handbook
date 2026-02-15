@@ -8,6 +8,10 @@ TRACE entry semantics (Portfolio OS):
   - `branch` + `commit_parent` + `timestamp` (all known before creating the task commit), and/or
   - `head_after` (the task commit hash, if recorded in a follow-up commit).
 
+- task_id=M4.0 branch=main commit_parent=9695de20bba1f7cc8cae1f199fb989dc8bf7c770 timestamp=2026-02-15T00:04:14Z
+  - Summary: Force CI HTML/PDF builds to execute (including JAX cells) via a Quarto `ci` profile; ignore Quarto *_files artifacts
+  - Gates: `uv run pytest -q`; `uv run quarto render book --to html --profile ci`
+
 - task_id=M4.3 branch=main commit_parent=84e4b7b5f37cdb2bbd5e1ce4c5f9eb4cb054a34d timestamp=2026-02-14T16:31:30Z head_after=4a19f36
   - Summary: Replace the Modern SBI chapter’s conditional-Gaussian demo with the package flow helper
   - Gates: `uv run pytest -q`; `quarto render book --to html`

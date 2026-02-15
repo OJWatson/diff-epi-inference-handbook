@@ -9,6 +9,7 @@ book/_book/
 book/_freeze/
 book/.quarto/
 book/.quarto_cache/
+book/*_files/
 **/*.quarto_ipynb
 
 # Local tool downloads

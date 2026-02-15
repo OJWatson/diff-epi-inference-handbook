@@ -62,9 +62,9 @@ jobs:
         with:
           # Pin for reproducibility (matches docs/BUILD.md)
           version: '1.8.27'
-      - name: Render book (HTML)
+      - name: Render book (HTML; execute JAX cells)
         run: |
-          uv run quarto render book --to html
+          uv run quarto render book --to html --profile ci
 
   build-pdf:
     runs-on: ubuntu-latest
@@ -89,6 +89,6 @@ jobs:
           version: '1.8.27'
       - name: Set up TinyTeX
         uses: r-lib/actions/setup-tinytex@v2
-      - name: Render book (PDF)
+      - name: Render book (PDF; execute JAX cells)
         run: |
-          uv run quarto render book --to pdf
+          uv run quarto render book --to pdf --profile ci
