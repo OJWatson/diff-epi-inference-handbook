@@ -817,6 +817,12 @@ Interpretation (for this toy setup):
 In practice, sequential NPE schemes use *multiple rounds* and better proposal adaptation, and
 the comparison depends strongly on the dimensionality of $\theta$ and on how broad the prior is.
 
+## End-to-end example (offline, deterministic)
+
+If you want a single self-contained template you can run without optional JAX dependencies, see:
+
+- [Modern SBI: an offline, deterministic end-to-end example](modern-sbi-end-to-end.qmd)
+
 ## Notes
 
 - We will start with the **beta-only** running example (as in earlier chapters) and then expand the parameter set once the pipeline is stable.

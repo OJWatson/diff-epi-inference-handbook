@@ -13,6 +13,7 @@ book:
     - variational-inference.qmd
     - likelihood-free-baselines.qmd
     - modern-sbi.qmd
+    - modern-sbi-end-to-end.qmd
 
 format:
   html:
