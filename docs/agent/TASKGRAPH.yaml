@@ -27,4 +27,24 @@ tasks:
   - M4.4
   id: M4.5
   title: Add brief NLE and NRE sections
+- depends_on:
+  - M4.5
+  id: M5.0
+  title: 'Modern SBI: add runnable end-to-end example notebook/section (offline, deterministic)'
+- depends_on:
+  - M5.0
+  id: M5.1
+  title: 'Modern SBI: add acceptance tests for example outputs (golden checks)'
+- depends_on:
+  - M5.1
+  id: M5.2
+  title: 'Docs: tighten installation/reproducibility (extras matrix + CPU/GPU notes)'
+- depends_on:
+  - M5.2
+  id: M5.3
+  title: 'CI: add optional job for modern-sbi example section (best-effort)'
+- depends_on:
+  - M5.3
+  id: M5.4
+  title: 'Chore: mark M5 complete and select next milestone'
 version: 1
