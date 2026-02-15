@@ -101,7 +101,16 @@ def run_blackjax_nuts(
         state, key = carry
         key, subkey = jax.random.split(key)
         state, info = kernel(subkey, state)
-        return (state, key), (state.position, info.acceptance_probability)
+
+        # BlackJAX changed this field name across versions.
+        # - older: acceptance_probability
+        # - newer: acceptance_rate
+        try:
+            acc = info.acceptance_probability
+        except AttributeError:  # pragma: no cover
+            acc = info.acceptance_rate
+
+        return (state, key), (state.position, acc)
 
     (state, _), (positions, acc_probs) = jax.lax.scan(
         one_step,
