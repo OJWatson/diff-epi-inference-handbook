@@ -83,14 +83,14 @@ tasks:
     updated_at_utc: '2026-02-15T12:04:18Z'
   M5.2:
     last:
-      commit: ''
-      log_path: ''
-      outcome: ''
-      pushed: null
-      reason: ''
-      tick_ts: ''
-    status: todo
-    updated_at_utc: ''
+      commit: 92833d8
+      log_path: portfolio/reports/runs/20260215T122653Z/logs/diff-epi-inference-handbook-M5.2.log
+      outcome: success
+      pushed: true
+      reason: docs_extras_matrix_and_jax_cpu_gpu_notes
+      tick_ts: 20260215T122653Z
+    status: done
+    updated_at_utc: '2026-02-15T12:32:29Z'
   M5.3:
     last:
       commit: ''
