@@ -152,8 +152,15 @@ tasks:
       reason: completed_before_taskgraph
       tick_ts: ''
   CI.FIX.M3:
-    status: todo
-    updated_at_utc: ''
+    status: done
+    updated_at_utc: '2026-02-15T21:33:00Z'
+    last:
+      commit: 917e3b6
+      log_path: portfolio/reports/runs/20260215T213003Z/logs/diff-epi-inference-handbook.log
+      outcome: success
+      pushed: true
+      reason: validated_ci_acceptance_locally
+      tick_ts: 20260215T213003Z
   M4.END:
     status: todo
     updated_at_utc: ''
