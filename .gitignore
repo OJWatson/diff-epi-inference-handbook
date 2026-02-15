@@ -28,4 +28,4 @@ data/*
 *.egg-info/
 
 # uv
-uv.lock
+# NOTE: uv.lock is committed to enable reproducible installs in CI.
