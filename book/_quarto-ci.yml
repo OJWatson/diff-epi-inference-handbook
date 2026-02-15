@@ -1,0 +1,7 @@
+# Quarto CI profile
+#
+# This profile forces execution of code cells even when frozen outputs exist.
+# Use via: `quarto render book --profile ci` (or QUARTO_PROFILE=ci).
+
+execute:
+  freeze: false
