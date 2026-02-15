@@ -117,7 +117,7 @@ gamma_fixed = 1 / 7
 s0, e0, i0, r0 = 999.0, 0.0, 1.0, 0.0
 
 dt = 0.2
-steps = 200
+steps = ci(200, 120)
 
 reporting_rate = 0.3
 w = discrete_gamma_delay_pmf(shape=2.0, scale=1.0, max_delay=20)
@@ -370,9 +370,9 @@ from diff_epi_inference.mcmc.hmc import hamiltonian_monte_carlo
 res_hmc = hamiltonian_monte_carlo(
     log_post_logbeta,
     x0=np.array([np.log(0.3)]),
-    n_steps=ci(2_000, 600),
+    n_steps=ci(2_000, 250),
     step_size=0.02,
-    n_leapfrog=25,
+    n_leapfrog=ci(25, 12),
     grad_eps=1e-4,
     rng=np.random.default_rng(2),
 )
