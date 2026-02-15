@@ -1,9 +1,9 @@
 ```pm-status
 milestone: M6
 state: running
-headSha: f2df79d
-ciRunUrl: (see GitHub Actions)
-updatedAtUtc: 2026-02-15T14:33:00Z
+headSha: c941320
+ciRunUrl: https://github.com/OJWatson/diff-epi-inference-handbook/actions/runs/22041370147
+updatedAtUtc: 2026-02-15T19:06:00Z
 nextStep: M6.0 — Add two new Quarto chapters: autodiff basics + differentiability axis (with runnable demos).
 ```
 
