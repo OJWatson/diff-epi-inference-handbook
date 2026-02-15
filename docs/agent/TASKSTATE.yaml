@@ -182,8 +182,15 @@ tasks:
       reason: validated_ci_acceptance_locally
       tick_ts: 20260215T223002Z
   M5.END:
-    status: todo
-    updated_at_utc: ''
+    status: done
+    updated_at_utc: '2026-02-15T23:36:05Z'
+    last:
+      commit: 33e3ab3
+      log_path: portfolio/reports/runs/20260215T233006Z/logs/diff-epi-inference-handbook.log
+      outcome: success
+      pushed: true
+      reason: milestone_end_m5_acceptance_gates_passed
+      tick_ts: 20260215T233006Z
   CI.FIX.M5:
     status: todo
     updated_at_utc: ''
