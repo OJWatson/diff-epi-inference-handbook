@@ -34,9 +34,9 @@ jobs:
         with:
           version: '1.8.27'
 
-      - name: Render book (HTML)
+      - name: Render book (HTML; CI profile for deterministic/fast execution)
         run: |
-          uv run quarto render book --to html
+          uv run quarto render book --to html --profile ci
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
