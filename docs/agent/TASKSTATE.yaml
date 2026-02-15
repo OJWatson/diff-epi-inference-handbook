@@ -103,7 +103,7 @@ tasks:
     updated_at_utc: '2026-02-15T14:05:00Z'
   M5.4:
     last:
-      commit: ''
+      commit: f2df79d
       log_path: portfolio/reports/runs/20260215T143004Z/logs/diff-epi-inference-handbook.log
       outcome: success
       pushed: true

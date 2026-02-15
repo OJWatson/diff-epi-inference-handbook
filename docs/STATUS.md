@@ -1,7 +1,7 @@
 ```pm-status
 milestone: M6
 state: running
-headSha: (pending)
+headSha: f2df79d
 ciRunUrl: (see GitHub Actions)
 updatedAtUtc: 2026-02-15T14:33:00Z
 nextStep: M6.0 — Add two new Quarto chapters: autodiff basics + differentiability axis (with runnable demos).
