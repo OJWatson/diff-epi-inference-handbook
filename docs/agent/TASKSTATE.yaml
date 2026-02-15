@@ -63,24 +63,24 @@ tasks:
     updated_at_utc: ''
   M5.0:
     last:
-      commit: ''
-      log_path: ''
-      outcome: ''
-      pushed: null
-      reason: ''
-      tick_ts: ''
-    status: todo
-    updated_at_utc: ''
+      commit: 6a72825
+      log_path: portfolio/reports/runs/20260215T113008Z/logs/M5.0.txt
+      outcome: success
+      pushed: true
+      reason: added_offline_deterministic_end_to_end_example_chapter
+      tick_ts: 20260215T113008Z
+    status: done
+    updated_at_utc: '2026-02-15T11:38:00Z'
   M5.1:
     last:
-      commit: ''
-      log_path: ''
-      outcome: ''
-      pushed: null
-      reason: ''
-      tick_ts: ''
-    status: todo
-    updated_at_utc: ''
+      commit: 3a03d45
+      log_path: portfolio/reports/runs/20260215T120006Z/logs/diff-epi-inference-handbook.log
+      outcome: success
+      pushed: true
+      reason: add_golden_acceptance_test_for_modern_sbi_end_to_end_outputs
+      tick_ts: 20260215T120006Z
+    status: done
+    updated_at_utc: '2026-02-15T12:04:18Z'
   M5.2:
     last:
       commit: ''
