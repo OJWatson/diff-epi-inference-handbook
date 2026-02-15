@@ -36,6 +36,46 @@ ruff check .
 pytest
 ```
 
+## Optional dependency extras ("extras matrix")
+
+This repo keeps the base install lightweight (NumPy-only). Extra functionality is exposed via
+Python *extras* in `pyproject.toml`.
+
+Install extras like:
+
+```bash
+pip install -e '.[dev]'
+pip install -e '.[modern-sbi]'
+```
+
+Available extras:
+
+- `dev`: tooling + runtime deps for running tests and executing Quarto code blocks.
+- `jax`: JAX runtime (CPU wheels).
+- `nuts`: NUTS baseline stack (JAX CPU + BlackJAX). Tests that require this are skipped unless
+  the extra is installed.
+- `modern-sbi`: "modern SBI" stack used by the JAX-based conditional density/flow examples.
+
+### CPU vs GPU notes for JAX
+
+The extras intentionally depend on **CPU** wheels via `jax[cpu]` to keep installs reproducible
+in CI.
+
+If you want **GPU** acceleration, install the appropriate CUDA-enabled JAX wheel for your
+platform *after* installing the repo extras, following the official JAX instructions:
+
+- https://jax.readthedocs.io/en/latest/installation.html
+
+For example (CUDA 12 on Linux; adjust for your setup):
+
+```bash
+# After installing one of the extras that pulls in jax[cpu]
+python -m pip install -U "jax[cuda12]" \
+  -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+```
+
+If you do this, it’s normal for `pip` to replace the CPU-only `jaxlib` wheel with a CUDA one.
+
 ## Verify tool versions
 
 ```bash
