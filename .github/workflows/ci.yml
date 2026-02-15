@@ -92,3 +92,27 @@ jobs:
       - name: Render book (PDF; execute JAX cells)
         run: |
           uv run quarto render book --to pdf --profile ci
+
+  modern-sbi-smoke:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Sync deps (locked; dev + modern-sbi)
+        run: |
+          uv sync --frozen --extra dev --extra modern-sbi
+          uv pip check
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: '1.8.27'
+      - name: Render modern-sbi chapter (best-effort)
+        run: |
+          uv run quarto render book/modern-sbi.qmd --to html --profile ci

@@ -147,7 +147,13 @@ def fit_meanfield_gaussian_vi_jax(
     def adam_init(mean: jax.Array, log_std: jax.Array) -> _OptState:
         z_mean = jnp.zeros_like(mean)
         z_ls = jnp.zeros_like(log_std)
-        return _OptState(step=jnp.asarray(0), m_mean=z_mean, v_mean=z_mean, m_logstd=z_ls, v_logstd=z_ls)
+        return _OptState(
+            step=jnp.asarray(0),
+            m_mean=z_mean,
+            v_mean=z_mean,
+            m_logstd=z_ls,
+            v_logstd=z_ls,
+        )
 
     def adam_update(params, grads, state: _OptState):
         mean, log_std = params
@@ -169,7 +175,13 @@ def fit_meanfield_gaussian_vi_jax(
         mean = mean + lr * m_mean_hat / (jnp.sqrt(v_mean_hat) + eps)
         log_std = log_std + lr * m_ls_hat / (jnp.sqrt(v_ls_hat) + eps)
 
-        return (mean, log_std), _OptState(step=step, m_mean=m_mean, v_mean=v_mean, m_logstd=m_ls, v_logstd=v_ls)
+        return (mean, log_std), _OptState(
+            step=step,
+            m_mean=m_mean,
+            v_mean=v_mean,
+            m_logstd=m_ls,
+            v_logstd=v_ls,
+        )
 
     def step_fn(carry, t):
         key, mean, log_std, opt_state = carry

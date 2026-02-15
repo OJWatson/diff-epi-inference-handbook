@@ -8,6 +8,7 @@ def test_meanfield_vi_seir_beta_only_smoke():
     pytest.importorskip("jax")
 
     from diff_epi_inference import SEIRParams
+    from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
     from diff_epi_inference.observation import (
         discrete_gamma_delay_pmf,
         expected_reported_cases_delayed,
@@ -15,7 +16,6 @@ def test_meanfield_vi_seir_beta_only_smoke():
         sample_nbinom_reports,
     )
     from diff_epi_inference.seir import simulate_seir_euler
-    from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
     from diff_epi_inference.vi import fit_meanfield_gaussian_vi_jax
 
     # --- Fixed settings: keep this tiny so the test stays fast ---
