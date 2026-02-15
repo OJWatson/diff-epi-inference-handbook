@@ -28,7 +28,16 @@ Before applying MH to the SEIR model, it helps to sanity-check the implementatio
 Below we sample from a standard normal target density using a Gaussian random-walk proposal.
 
 ```{python}
+import os
 import numpy as np
+
+CI_PROFILE = os.environ.get("QUARTO_PROFILE") == "ci" or os.environ.get("CI") == "true"
+
+
+def ci(default: int, ci_value: int) -> int:
+    """Use smaller settings when rendering under the Quarto CI profile."""
+    return ci_value if CI_PROFILE else default
+
 
 from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
 
@@ -43,7 +52,7 @@ res = random_walk_metropolis_hastings(
     log_prob_standard_normal,
     x0=np.array([5.0]),
     proposal_std=1.0,
-    n_steps=5_000,
+    n_steps=ci(5_000, 1_000),
     rng=rng,
 )
 
@@ -179,12 +188,14 @@ res = random_walk_metropolis_hastings(
     log_post_logbeta,
     x0=np.array([np.log(0.3)]),
     proposal_std=0.10,
-    n_steps=3_000,
+    n_steps=ci(3_000, 800),
     rng=np.random.default_rng(1),
 )
 
 beta_chain = np.exp(res.chain[:, 0])
-beta_chain = beta_chain[500:]  # crude burn-in for this demo
+# Crude burn-in for this demo (keep it robust to shorter CI runs).
+burn = min(500, beta_chain.shape[0] // 2)
+beta_chain = beta_chain[burn:]
 
 accept_rate = res.accept_rate
 beta_mean = float(np.mean(beta_chain))
@@ -249,7 +260,7 @@ def ppc_from_beta_draws(beta_draws: np.ndarray, rng: np.random.Generator, n_draw
 q05_mh, q50_mh, q95_mh = ppc_from_beta_draws(
     beta_chain,
     rng=np.random.default_rng(123),
-    n_draws=60,
+    n_draws=ci(60, 20),
 )
 
 t = np.arange(len(y_obs)) * dt
@@ -359,7 +370,7 @@ from diff_epi_inference.mcmc.hmc import hamiltonian_monte_carlo
 res_hmc = hamiltonian_monte_carlo(
     log_post_logbeta,
     x0=np.array([np.log(0.3)]),
-    n_steps=2_000,
+    n_steps=ci(2_000, 600),
     step_size=0.02,
     n_leapfrog=25,
     grad_eps=1e-4,
@@ -367,7 +378,9 @@ res_hmc = hamiltonian_monte_carlo(
 )
 
 beta_chain_hmc = np.exp(res_hmc.chain[:, 0])
-beta_chain_hmc = beta_chain_hmc[500:]
+# Crude burn-in (robust to shorter CI runs).
+burn_hmc = min(500, beta_chain_hmc.shape[0] // 2)
+beta_chain_hmc = beta_chain_hmc[burn_hmc:]
 
 accept_rate_hmc = res_hmc.accept_rate
 beta_mean_hmc = float(np.mean(beta_chain_hmc))
@@ -398,7 +411,7 @@ Using the same PPC helper as above:
 q05_hmc, q50_hmc, q95_hmc = ppc_from_beta_draws(
     beta_chain_hmc,
     rng=np.random.default_rng(456),
-    n_draws=60,
+    n_draws=ci(60, 20),
 )
 
 t = np.arange(len(y_obs)) * dt
@@ -443,8 +456,8 @@ try:
     res_nuts = run_blackjax_nuts(
         log_prob_standard_normal,
         x0=np.array([5.0]),
-        num_warmup=200,
-        num_samples=500,
+        num_warmup=ci(200, 50),
+        num_samples=ci(500, 150),
         seed=0,
     )
 
@@ -495,8 +508,8 @@ try:
     res_nuts_seir = run_blackjax_nuts(
         log_post_logbeta_jax,
         x0=np.array([np.log(0.3)]),
-        num_warmup=400,
-        num_samples=800,
+        num_warmup=ci(400, 100),
+        num_samples=ci(800, 250),
         seed=3,
     )
 
@@ -517,7 +530,7 @@ try:
     q05_nuts, q50_nuts, q95_nuts = ppc_from_beta_draws(
         beta_chain_nuts,
         rng=np.random.default_rng(789),
-        n_draws=60,
+        n_draws=ci(60, 20),
     )
 
     t = np.arange(len(y_obs)) * dt
@@ -644,7 +657,7 @@ def make_log_post_logbeta_for_y(y_obs_local: np.ndarray):
 rng = np.random.default_rng(2026)
 
 beta_grid = np.array([0.30, 0.40, 0.50, 0.60, 0.70])
-reps_per_beta = 2  # 5 * 2 = 10 datasets
+reps_per_beta = ci(2, 1)  # 5 * reps_per_beta datasets
 
 results: list[CoverageResult] = []
 
@@ -676,11 +689,13 @@ for beta_true_i in beta_grid:
             log_post_i,
             x0=np.array([np.log(0.5)]),
             proposal_std=0.10,
-            n_steps=800,
+            n_steps=ci(800, 250),
             rng=rng,
         )
 
-        beta_chain_i = np.exp(res_i.chain[:, 0])[200:]
+        beta_chain_i = np.exp(res_i.chain[:, 0])
+        burn_i = min(200, beta_chain_i.shape[0] // 2)
+        beta_chain_i = beta_chain_i[burn_i:]
         q05_i, q95_i = [float(q) for q in np.quantile(beta_chain_i, [0.05, 0.95])]
         contained_i = (q05_i <= float(beta_true_i) <= q95_i)
 
@@ -748,14 +763,16 @@ for beta_true_i in beta_grid:
         res_i = hamiltonian_monte_carlo(
             log_post_i,
             x0=np.array([np.log(0.5)]),
-            n_steps=200,
+            n_steps=ci(200, 80),
             step_size=0.02,
             n_leapfrog=10,
             grad_eps=1e-4,
             rng=rng,
         )
 
-        beta_chain_i = np.exp(res_i.chain[:, 0])[100:]
+        beta_chain_i = np.exp(res_i.chain[:, 0])
+        burn_i = min(100, beta_chain_i.shape[0] // 2)
+        beta_chain_i = beta_chain_i[burn_i:]
         q05_i, q95_i = [float(q) for q in np.quantile(beta_chain_i, [0.05, 0.95])]
         contained_i = (q05_i <= float(beta_true_i) <= q95_i)
 
