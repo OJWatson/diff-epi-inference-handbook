@@ -96,9 +96,7 @@ def test_modern_sbi_end_to_end_golden_outputs() -> None:
     logb_post = flow.sample(s_obs, n=5_000, rng=rng_post)[:, 0]
     beta_post = np.exp(logb_post)
 
-    assert float(beta_post.mean()) == pytest.approx(
-        0.3545349552914927, rel=1e-10, abs=1e-12
-    )
+    assert float(beta_post.mean()) == pytest.approx(0.3545349552914927, rel=1e-10, abs=1e-12)
     assert float(np.quantile(beta_post, 0.1)) == pytest.approx(
         0.29254098493715425, rel=1e-10, abs=1e-12
     )

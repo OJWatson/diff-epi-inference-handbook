@@ -14,12 +14,7 @@ def test_mvn_logpdf_matches_univariate_formula() -> None:
     # Univariate normal logpdf
     var = 2.0
     expected = float(
-        -0.5
-        * (
-            np.log(2.0 * np.pi)
-            + np.log(var)
-            + ((float(x[0]) - float(mean[0])) ** 2) / var
-        )
+        -0.5 * (np.log(2.0 * np.pi) + np.log(var) + ((float(x[0]) - float(mean[0])) ** 2) / var)
     )
 
     assert np.isfinite(got)
