@@ -20,6 +20,7 @@ from .pipeline import (
 )
 from .plotting import plot_timeseries
 from .seir import SEIRParams, simulate_seir_euler, simulate_seir_stochastic_tau_leap
+from .vi import fit_meanfield_gaussian_vi_jax
 
 __all__ = [
     "SEIRParams",
@@ -42,4 +43,5 @@ __all__ = [
     "reported_cases_dataset_from_S",
     "simulate_seir_and_report_deterministic",
     "simulate_seir_and_report_stochastic",
+    "fit_meanfield_gaussian_vi_jax",
 ]

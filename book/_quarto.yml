@@ -10,6 +10,7 @@ book:
     - index.qmd
     - running-example.qmd
     - classical-baselines.qmd
+    - variational-inference.qmd
     - likelihood-free-baselines.qmd
     - modern-sbi.qmd
 

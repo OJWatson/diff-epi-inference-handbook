@@ -1,0 +1,378 @@
+---
+title: "Variational inference"
+---
+
+This chapter introduces **variational inference (VI)**: an optimisation-based alternative to MCMC.
+
+In differentiable epidemiology, VI is useful when you have a differentiable (approximate) likelihood and want:
+
+- faster approximate posteriors than MCMC,
+- scalable inference for larger models or many datasets,
+- a bridge from classical Bayesian modelling to *amortised* inference (where we learn an inference network).
+
+## Goals (M5)
+
+- Explain the **ELBO** and how it relates to the KL divergence.
+- Work through a **mean-field Gaussian VI** example end-to-end.
+- Introduce **stochastic gradient VI** (SVI) and the **reparameterisation trick**.
+- Connect VI to the rest of the handbook (classical baselines and modern SBI).
+
+## Outline
+
+1) VI in one diagram
+2) The ELBO: what we optimise, and why
+3) Choosing a variational family (mean-field vs richer families)
+4) Optimisation strategies
+5) Worked example: normal–normal model (NumPy)
+6) Worked example: mean-field VI for the SEIR beta-only model (JAX)
+7) Where VI fits in differentiable epidemiology
+
+## 1) VI in one diagram
+
+We want a posterior
+
+$$p(\theta\mid y) \propto p(y\mid\theta)\,p(\theta),$$
+
+but direct computation is hard.
+In VI we pick a tractable family of densities $\{q_\phi(\theta)\}$ and solve
+
+$$q_{\phi^*}(\theta) \approx p(\theta\mid y)$$
+
+by optimisation.
+
+A common objective is to minimise the reverse KL:
+
+$$\phi^* = \arg\min_\phi\; \mathrm{KL}\bigl(q_\phi(\theta)\;\|\;p(\theta\mid y)\bigr).$$
+
+::: {.callout-note}
+**Reverse KL** typically prefers *mode-seeking* approximations.
+This can be a feature (fast, stable) or a bug (under-dispersed posteriors), depending on the task.
+:::
+
+## 2) The ELBO
+
+Start from:
+
+$$\log p(y) = \log \int p(y,\theta)\,d\theta.$$
+
+Multiply and divide by $q_\phi(\theta)$:
+
+$$\log p(y) = \log \int q_\phi(\theta)\,\frac{p(y,\theta)}{q_\phi(\theta)}\,d\theta
+= \log\,\mathbb{E}_{q_\phi}\left[\frac{p(y,\theta)}{q_\phi(\theta)}\right].$$
+
+Applying Jensen's inequality gives the **evidence lower bound (ELBO)**:
+
+$$\log p(y) \ge \mathcal{L}(\phi)
+= \mathbb{E}_{q_\phi}\bigl[\log p(y,\theta) - \log q_\phi(\theta)\bigr].$$
+
+Equivalently:
+
+$$\mathcal{L}(\phi) = \mathbb{E}_{q_\phi}[\log p(y\mid\theta)] - \mathrm{KL}\bigl(q_\phi(\theta)\;\|\;p(\theta)\bigr).$$
+
+Maximising the ELBO is the same as minimising $\mathrm{KL}(q_\phi\|p(\theta\mid y))$ up to the constant $\log p(y)$.
+
+## 3) Variational families
+
+A few common choices:
+
+- **Mean-field**: $q(\theta)=\prod_i q_i(\theta_i)$. Cheap, but can miss correlations.
+- **Full-covariance Gaussian**: captures correlations but scales poorly as $d^2$.
+- **Normalising flows**: expressive approximations; connects directly to the flow material in the modern SBI chapter.
+- **Structured VI**: keep some dependencies (e.g. blockwise factorisation) to match the model.
+
+In differentiable epidemiology, mean-field (or blockwise) Gaussian VI is often a practical default:
+
+- you get uncertainty estimates,
+- optimisation is stable,
+- gradients can be obtained through autodiff if the likelihood is differentiable.
+
+## 4) Optimisation strategies (brief)
+
+### Coordinate ascent VI (CAVI)
+
+For conjugate exponential-family models, the ELBO can be optimised by updating one factor $q_i$ at a time.
+This is fast and exact *within the chosen factorisation*, but less flexible.
+
+### Gradient-based VI ("black-box" VI)
+
+When conjugacy is unavailable, we optimise $\mathcal{L}(\phi)$ with gradients.
+Two key gradient estimators are:
+
+- **Score-function / REINFORCE**: works broadly, can have high variance.
+- **Reparameterisation trick**: lower variance, but requires a differentiable transform.
+
+In practice, most modern VI for continuous parameters uses reparameterisation.
+
+## 5) Worked example: normal–normal model (NumPy)
+
+We observe $y_1,\dots,y_n$ with
+
+$$y_i \mid \mu \sim \mathcal{N}(\mu,\,\sigma^2),\qquad \mu\sim\mathcal{N}(\mu_0,\,\tau_0^2),$$
+
+with known $\sigma$.
+The true posterior is Gaussian, so this is a nice sandbox.
+
+We choose a variational family
+
+$$q_\phi(\mu)=\mathcal{N}(m,\,s^2),\qquad \phi=(m,\log s).$$
+
+Even though the posterior is exactly Gaussian here, the point is to show:
+
+- how to write the ELBO,
+- how to optimise it,
+- how the ELBO trades data-fit vs KL-to-prior.
+
+```{python}
+import numpy as np
+
+rng = np.random.default_rng(0)
+
+# Data generating process
+mu_true = 1.3
+sigma = 0.7
+n = 50
+
+y = rng.normal(mu_true, sigma, size=n)
+
+# Prior
+mu0 = 0.0
+tau0 = 2.0
+
+# Closed-form posterior for reference
+# (normal prior + normal likelihood with known sigma)
+prec0 = 1.0 / tau0**2
+prec = prec0 + n / sigma**2
+
+tau_post = np.sqrt(1.0 / prec)
+mu_post = (mu0 * prec0 + y.sum() / sigma**2) / prec
+
+mu_post, tau_post
+```
+
+### ELBO for $q(\mu)=\mathcal{N}(m,s^2)$
+
+We can compute the ELBO in closed form.
+Write $s=\exp(\ell)$ where $\ell=\log s$ is unconstrained.
+
+```{python}
+def elbo(m: float, log_s: float) -> float:
+    s2 = float(np.exp(2.0 * log_s))
+
+    # E_q[log p(y|mu)] for normal likelihood with known sigma
+    # sum_i E[ -0.5 ((y_i - mu)^2 / sigma^2) - 0.5 log(2 pi sigma^2) ]
+    # where E[(y_i - mu)^2] = (y_i - m)^2 + s^2
+    const = -0.5 * n * np.log(2.0 * np.pi * sigma**2)
+    quad = -0.5 / sigma**2 * np.sum((y - m) ** 2 + s2)
+    eq_loglik = const + quad
+
+    # KL(q || p) for univariate Gaussians
+    # q=N(m,s^2), p=N(mu0,tau0^2)
+    kl = 0.5 * (
+        (s2 + (m - mu0) ** 2) / tau0**2
+        - 1.0
+        + 2.0 * (np.log(tau0) - log_s)
+    )
+
+    return float(eq_loglik - kl)
+
+
+print({
+    "ELBO at prior": elbo(m=mu0, log_s=np.log(tau0)),
+    "ELBO near posterior": elbo(m=mu_post, log_s=np.log(tau_post)),
+})
+```
+
+### Optimising the ELBO (simple gradient ascent)
+
+Because the ELBO is smooth here, we can optimise it with hand-derived gradients.
+
+```{python}
+def elbo_grad(m: float, log_s: float) -> tuple[float, float]:
+    # Derivatives of the closed-form ELBO above.
+    s2 = float(np.exp(2.0 * log_s))
+
+    # d/dm E_q[log p(y|mu)] = (1/sigma^2) * sum_i (y_i - m)
+    d_m_loglik = (1.0 / sigma**2) * float(np.sum(y - m))
+
+    # d/dm KL = (m - mu0)/tau0^2
+    d_m_kl = (m - mu0) / tau0**2
+
+    d_m = d_m_loglik - d_m_kl
+
+    # d/d(log s) E_q[log p(y|mu)] = d/d(log s) [ -0.5/sigma^2 * n * s^2 ]
+    # since s^2 = exp(2 log_s), d s^2 / d log_s = 2 s^2
+    d_ls_loglik = -0.5 / sigma**2 * n * (2.0 * s2)
+
+    # KL includes: 0.5*(s^2/tau0^2) - log s  (up to constants)
+    d_ls_kl = 0.5 * (2.0 * s2 / tau0**2) - (-1.0)  # derivative of +log_s in KL? careful below
+
+    # Let's recompute d/d log_s of KL exactly:
+    # KL = 0.5*((s2 + (m-mu0)^2)/tau0^2 - 1 + 2(log tau0 - log_s))
+    # d/d log_s KL = 0.5*( (2 s2)/tau0^2  + 2*(0 - 1) )
+    d_ls_kl = 0.5 * ((2.0 * s2) / tau0**2 - 2.0)
+
+    d_ls = d_ls_loglik - d_ls_kl
+
+    return float(d_m), float(d_ls)
+
+
+m, log_s = 0.0, np.log(1.0)
+
+lr = 0.05
+for t in range(400):
+    gm, gls = elbo_grad(m, log_s)
+    m += lr * gm
+    log_s += lr * gls
+
+print({
+    "m_vi": m,
+    "s_vi": float(np.exp(log_s)),
+    "m_posterior": float(mu_post),
+    "s_posterior": float(tau_post),
+    "elbo_final": elbo(m, log_s),
+})
+```
+
+::: {.callout-tip}
+In higher dimensions you typically work with a *vector* mean and a parameterisation of the covariance
+(e.g. diagonal in mean-field VI).
+The same ELBO pattern applies.
+:::
+
+## 6) Worked example: mean-field VI for the SEIR beta-only model (JAX)
+
+We now connect VI back to the running SEIR example.
+We reuse the **beta-only** JAX log-posterior from the classical-baselines chapter and fit a
+mean-field Gaussian variational approximation for $\log \beta$.
+
+::: {.callout-note}
+This is an intentionally minimal implementation:
+
+- variational family: $q(\log\beta)=\mathcal{N}(m, s^2)$
+- ELBO estimator: Monte Carlo + reparameterisation trick
+- optimiser: Adam (implemented directly, to avoid extra dependencies)
+:::
+
+```{python}
+import numpy as np
+
+try:
+    import jax  # noqa: F401
+
+    from diff_epi_inference import SEIRParams, discrete_gamma_delay_pmf
+    from diff_epi_inference import expected_reported_cases_delayed, incidence_from_susceptibles
+    from diff_epi_inference import sample_nbinom_reports, simulate_seir_euler
+    from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
+    from diff_epi_inference.vi import fit_meanfield_gaussian_vi_jax
+
+    rng = np.random.default_rng(2026)
+
+    # Fixed model settings (small for a quick demo)
+    sigma_fixed = 1 / 5
+    gamma_fixed = 1 / 7
+
+    s0, e0, i0, r0 = 999.0, 0.0, 1.0, 0.0
+    dt = 0.5
+    steps = 60
+
+    reporting_rate = 0.3
+    w = discrete_gamma_delay_pmf(shape=2.0, scale=1.0, max_delay=15)
+    dispersion = 20.0
+
+    # Prior on log(beta)
+    logbeta_prior_mean = float(np.log(0.5))
+    logbeta_prior_sd = 0.5
+
+    # Synthetic dataset
+    beta_true = 0.6
+    params_true = SEIRParams(beta=float(beta_true), sigma=sigma_fixed, gamma=gamma_fixed)
+    out_true = simulate_seir_euler(
+        params=params_true,
+        s0=s0,
+        e0=e0,
+        i0=i0,
+        r0=r0,
+        dt=dt,
+        steps=steps,
+    )
+    inc_true = incidence_from_susceptibles(out_true["S"])
+    mu_true = expected_reported_cases_delayed(
+        incidence=inc_true,
+        reporting_rate=reporting_rate,
+        delay_pmf=w,
+    )
+    y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
+
+    log_post = make_log_post_logbeta_jax(
+        y_obs=y_obs,
+        w_delay_pmf=w,
+        sigma=sigma_fixed,
+        gamma=gamma_fixed,
+        s0=s0,
+        e0=e0,
+        i0=i0,
+        r0=r0,
+        dt=dt,
+        steps=steps,
+        reporting_rate=reporting_rate,
+        dispersion=dispersion,
+        logbeta_prior_mean=logbeta_prior_mean,
+        logbeta_prior_sd=logbeta_prior_sd,
+    )
+
+    vi = fit_meanfield_gaussian_vi_jax(
+        log_post,
+        dim=1,
+        seed=0,
+        num_steps=400,
+        lr=5e-2,
+        num_mc_samples=32,
+        init_mean=np.array([np.log(0.3)]),
+        init_log_std=np.array([np.log(0.5)]),
+    )
+
+    beta_vi_mean = float(np.exp(vi.mean[0]))
+    beta_vi_sd = float(np.exp(vi.log_std[0])) * beta_vi_mean  # delta method-ish
+
+    {
+        "beta_true": beta_true,
+        "beta_vi_mean": beta_vi_mean,
+        "beta_vi_sd_approx": beta_vi_sd,
+        "elbo_start": float(vi.elbo_history[0]),
+        "elbo_end": float(vi.elbo_history[-1]),
+    }
+
+except ModuleNotFoundError as e:
+    print("Optional dependency missing; skipping JAX VI demo:", e)
+```
+
+## 7) Where VI fits in differentiable epidemiology
+
+Think of three regimes:
+
+1) **Classical likelihood-based inference** (MCMC, Laplace, VI)
+   - When you have a differentiable (or at least evaluable) likelihood.
+   - VI can be a good default when MCMC is too slow.
+
+2) **Likelihood-free baselines** (ABC)
+   - When you cannot write/evaluate the likelihood.
+   - VI is not directly applicable unless you introduce a surrogate likelihood.
+
+3) **Modern SBI** (flows, amortised inference)
+   - When you want fast inference across many datasets.
+   - You can view some SBI methods as amortised VI with expressive conditional densities.
+
+### Practical notes
+
+- VI gives a *lower bound* on the evidence, but the bound itself is not a guarantee of posterior accuracy.
+- Always validate with diagnostics that matter for the downstream question:
+  - posterior predictive checks,
+  - calibration checks (e.g. simulation-based calibration when possible),
+  - sensitivity to prior and variational family.
+
+## Exercises
+
+1) Replace the mean-field Gaussian with a **full-covariance** Gaussian in a 2D toy model.
+2) Implement a **reparameterised Monte Carlo** estimate of the ELBO for a non-conjugate likelihood.
+3) For an epidemiological running example, decide which parameters should share a variational block
+   (e.g. $(\beta,\gamma)$ together) and justify the factorisation.
