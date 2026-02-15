@@ -63,7 +63,7 @@ tasks:
     updated_at_utc: ''
   M5.0:
     last:
-      commit: f7c6435
+      commit: 6a72825
       log_path: portfolio/reports/runs/20260215T113008Z/logs/M5.0.txt
       outcome: success
       pushed: true
