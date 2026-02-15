@@ -218,19 +218,25 @@ def elbo_grad(m: float, log_s: float) -> tuple[float, float]:
 
 m, log_s = 0.0, np.log(1.0)
 
-lr = 0.05
-for t in range(400):
+# The gradients can be quite large (they scale with n / sigma^2),
+# so we use a conservative learning rate and clamp log_s for stability.
+lr = 1e-3
+log_s_min, log_s_max = np.log(0.05), np.log(5.0)
+
+for t in range(2_000):
     gm, gls = elbo_grad(m, log_s)
     m += lr * gm
-    log_s += lr * gls
+    log_s = float(np.clip(log_s + lr * gls, log_s_min, log_s_max))
 
-print({
-    "m_vi": m,
-    "s_vi": float(np.exp(log_s)),
-    "m_posterior": float(mu_post),
-    "s_posterior": float(tau_post),
-    "elbo_final": elbo(m, log_s),
-})
+print(
+    {
+        "m_vi": float(m),
+        "s_vi": float(np.exp(log_s)),
+        "m_posterior": float(mu_post),
+        "s_posterior": float(tau_post),
+        "elbo_final": float(elbo(m, log_s)),
+    }
+)
 ```
 
 ::: {.callout-tip}

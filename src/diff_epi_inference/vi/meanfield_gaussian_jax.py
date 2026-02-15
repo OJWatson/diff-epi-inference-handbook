@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
 import numpy as np
 
@@ -137,8 +137,7 @@ def fit_meanfield_gaussian_vi_jax(
 
     elbo_and_grad = jax.value_and_grad(elbo_estimate, argnums=(1, 2))
 
-    @dataclass
-    class _OptState:
+    class _OptState(NamedTuple):
         step: jax.Array
         m_mean: jax.Array
         v_mean: jax.Array

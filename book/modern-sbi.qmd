@@ -458,6 +458,105 @@ if _HAVE_MODERN_SBI:
     print({"final_train_NLL": final_nll})
 ```
 
+#### End-to-end: JAX conditional Gaussian NPE (posterior + posterior predictive)
+
+This section turns the tiny training loop above into a complete, deterministic workflow:
+
+- train a conditional Gaussian for $\log\beta \mid s(y)$
+- sample an approximate posterior given $y_{\text{obs}}$
+- run a small posterior predictive check (PPC)
+
+The goal is *not* state-of-the-art performance; it is a runnable template you can adapt.
+
+```{python}
+#| echo: true
+#| warning: false
+
+if _HAVE_MODERN_SBI:
+    import distrax
+
+    # Re-train deterministically (fresh init + fixed steps).
+    key = jax.random.PRNGKey(0)
+    key, subkey = jax.random.split(key)
+    model2 = CondGaussian(
+        net=eqx.nn.MLP(
+            in_size=3,
+            out_size=2,
+            width_size=16,
+            depth=2,
+            activation=jax.nn.tanh,
+            key=subkey,
+        )
+    )
+
+    opt2 = optax.adam(1e-2)
+    opt_state2 = opt2.init(eqx.filter(model2, eqx.is_array))
+
+    batch_size = 128
+    n_steps = 300
+    key, subkey = jax.random.split(key)
+    idx = jax.random.permutation(subkey, Xn.shape[0])
+
+    for t in range(n_steps):
+        i0 = (t * batch_size) % Xn.shape[0]
+        batch_idx = idx[i0 : i0 + batch_size]
+        xb = Xn[batch_idx]
+        yb = y[batch_idx]
+        model2, opt_state2, l = step(model2, opt_state2, xb, yb)
+
+    # --- Approx posterior for log(beta) given observed summaries ---
+    s_obs_j = jnp.asarray(s_obs)
+    s_obs_n = (s_obs_j - x_mean) / x_std
+    mu_hat, log_sigma_hat = model2(s_obs_n)
+    log_sigma_hat = jnp.maximum(log_sigma_hat, -6.0)
+
+    q = distrax.Normal(loc=mu_hat, scale=jnp.exp(log_sigma_hat))
+
+    key, subkey = jax.random.split(key)
+    logb_samps = np.asarray(q.sample(seed=subkey, sample_shape=(2_000,)))
+    beta_samps = np.exp(logb_samps)
+
+    print(
+        {
+            "beta_true": beta_true,
+            "beta_post_mean": float(np.mean(beta_samps)),
+            "beta_post_q05": float(np.quantile(beta_samps, 0.05)),
+            "beta_post_q95": float(np.quantile(beta_samps, 0.95)),
+        }
+    )
+
+    # --- Tiny posterior predictive check on the summary space ---
+    rng_ppc = np.random.default_rng(0)
+    n_ppc = 80
+    S_ppc = np.zeros((n_ppc, 3), dtype=float)
+    for i in range(n_ppc):
+        beta_i = float(beta_samps[i])
+        params_i = SEIRParams(beta=beta_i, sigma=params_true.sigma, gamma=params_true.gamma)
+        ds_i = simulate_seir_and_report_stochastic(
+            params=params_i,
+            s0=10_000,
+            e0=3,
+            i0=2,
+            r0=0,
+            dt=1.0,
+            steps=steps,
+            reporting_rate=0.25,
+            rng=rng_ppc,
+        )
+        S_ppc[i] = summary(ds_i.y)
+
+    # Compare observed summary to PPC distribution (just a few quantiles).
+    q_lo = np.quantile(S_ppc, 0.1, axis=0)
+    q_hi = np.quantile(S_ppc, 0.9, axis=0)
+    print(
+        {
+            "ppc_q10": q_lo.round(2).tolist(),
+            "ppc_q90": q_hi.round(2).tolist(),
+            "s_obs": s_obs.round(2).tolist(),
+        }
+    )
+```
+
 ### 3b) NLE: neural likelihood estimation
 
 In **NLE** we learn an explicit surrogate for the likelihood,
