@@ -8,6 +8,11 @@ TRACE entry semantics (Portfolio OS):
   - `branch` + `commit_parent` + `timestamp` (all known before creating the task commit), and/or
   - `head_after` (the task commit hash, if recorded in a follow-up commit).
 
+- task_id=M4.END branch=main commit_parent=c6ea026aebf0b8ca2dd23a0c34beffd8a24321d1 timestamp=2026-02-15T22:03:48Z
+  - Summary: Run the M4 acceptance gates and record milestone completion in TASKSTATE/NEXT_TASKS.
+  - Acceptance log: /home/kana/.openclaw/workspace/portfolio/reports/runs/20260215T220004Z/logs/diff-epi-inference-handbook.log
+  - Gates: `uv run pytest -q`; `quarto render book --to html`
+
 - task_id=M4.0 branch=main commit_parent=9695de20bba1f7cc8cae1f199fb989dc8bf7c770 timestamp=2026-02-15T00:04:14Z
   - Summary: Force CI HTML/PDF builds to execute (including JAX cells) via a Quarto `ci` profile; ignore Quarto *_files artifacts
   - Gates: `uv run pytest -q`; `uv run quarto render book --to html --profile ci`

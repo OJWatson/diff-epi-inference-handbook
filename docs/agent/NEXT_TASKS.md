@@ -5,6 +5,7 @@ Done:
   - M5.1 — Modern SBI: add acceptance tests for example outputs (golden checks)
   - M5.0 — Modern SBI: add runnable end-to-end example notebook/section (offline, deterministic)
   - M4.5 — Add brief NLE and NRE sections
+  - M4.END — Milestone end: M4 complete (gate on CI)
   - M4.0 — Make modern-sbi deps reproducible and run JAX cells in CI HTML build
 
 Now:
