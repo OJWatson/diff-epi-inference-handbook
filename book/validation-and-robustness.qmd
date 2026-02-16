@@ -1,0 +1,159 @@
+---
+title: "Validation and robustness"
+---
+
+This chapter collects a **repeatable validation workflow** you can apply to any inference method in this handbook.
+It is intentionally method-agnostic: you can use the same checks for classical MCMC, variational inference,
+ABC, and modern simulation-based inference.
+
+We focus on three pillars:
+
+1. **Posterior predictive checks (PPC)** — can the fitted model reproduce key features of the observed data?
+2. **Simulation-based calibration (SBC)** — does the full inference pipeline recover the correct posterior when the model is true?
+3. **Sensitivity analysis** — how brittle are your conclusions to modelling choices (priors, summaries, discrepancy, misspecification)?
+
+::: {.callout-important}
+Diagnostics can tell you that something is wrong, but they rarely tell you *what* to change.
+Treat them as part of an iterative loop: model → fit → diagnose → revise.
+:::
+
+## A validation workflow (checklist)
+
+When you build a new inference pipeline, write down answers to these explicitly:
+
+1. **What are the scientific quantities of interest?** (parameters, forecasts, counterfactuals)
+2. **What would “bad” look like?** (systematic bias, undercoverage, overconfidence, wrong tails)
+3. **What are your minimum diagnostics?**
+   - PPC on the raw data scale (or on domain-relevant summaries)
+   - a small calibration / coverage smoke test on synthetic data
+4. **What are your sensitivity axes?** (prior width, observation model, summaries, simulator mismatch)
+5. **What will you do if the checks fail?** (revise model, increase simulation budget, change summaries, change inference method)
+
+In earlier chapters we already used:
+
+- PPC overlays in the classical baselines,
+- a tiny calibration/coverage smoke test (SBC-style) on synthetic datasets.
+
+This chapter formalises those patterns.
+
+## 1) Posterior predictive checks (PPC)
+
+A posterior predictive check asks:
+
+> If \(\theta^{(m)}\sim p(\theta\mid y_{\text{obs}})\) and \(y^{(m)}\sim p(y\mid\theta^{(m)})\),
+> do the replicated datasets \(y^{(m)}\) look like \(y_{\text{obs}}\) in the ways we care about?
+
+### What PPCs can and cannot tell you
+
+PPCs are good at detecting:
+
+- gross model mismatch (wrong scale, wrong temporal structure),
+- mis-specified observation noise (too smooth / too noisy),
+- missing mechanisms that affect salient features (timing of peak, tail decay).
+
+PPCs are *not* a guarantee that:
+
+- parameters are identifiable,
+- posteriors are calibrated,
+- uncertainty is correctly quantified.
+
+A model can pass a coarse PPC while still producing **overconfident** posteriors.
+
+### Choosing PPC statistics
+
+A practical PPC uses a small set of interpretable features \(T(y)\), for example:
+
+- total burden \(\sum_t y_t\)
+- peak height \(\max_t y_t\)
+- peak timing \(\arg\max_t y_t\)
+- growth rate early in the epidemic
+- autocorrelation / day-of-week effects (if relevant)
+
+Then compare \(T(y_{\text{obs}})\) to the distribution of \(T(y^{(m)})\).
+
+::: {.callout-note}
+Many of the PPC plots in this handbook use simple predictive envelopes: e.g. 5–95% bands over time.
+That is often enough to catch glaring problems.
+:::
+
+## 2) Simulation-based calibration (SBC)
+
+SBC evaluates the *end-to-end* pipeline (prior + simulator + inference + posterior).
+The core idea is:
+
+1. Draw \(\theta^\star \sim p(\theta)\)
+2. Draw synthetic data \(y^\star \sim p(y\mid\theta^\star)\)
+3. Run your inference method to get draws \(\theta^{(m)} \sim p(\theta\mid y^\star)\) (or an approximation)
+4. Compute the **rank statistic** of \(\theta^\star\) among \(\{\theta^{(m)}\}\)
+
+If the whole pipeline is correct (and your sampler/estimator is accurate), the rank statistics are uniform.
+
+### Rank histograms and coverage
+
+Two lightweight SBC summaries:
+
+- **Rank histograms**: uniform is good; U-shaped suggests under-dispersed posteriors;
+  dome-shaped suggests over-dispersed posteriors; skew suggests bias.
+- **Empirical coverage**: across synthetic datasets, does a nominal 90% interval contain \(\theta^\star\)
+  about 90% of the time?
+
+In the early chapters we used a **coverage smoke test** as a fast proxy for full SBC.
+The trade-off is compute:
+
+- full SBC: stronger but expensive
+- coverage smoke tests: weaker but cheap and surprisingly effective for catching obvious bugs
+
+::: {.callout-warning}
+SBC only tests *calibration under the assumed model*. If the simulator is misspecified relative to reality,
+a perfectly calibrated posterior for the wrong model can still be scientifically misleading.
+:::
+
+## 3) Sensitivity analysis
+
+Sensitivity is about stress-testing your conclusions against plausible modelling choices.
+It is not one thing; it is a family of tests.
+
+### 3.1 Prior sensitivity
+
+Questions to ask:
+
+- If I widen/narrow the prior, do posterior conclusions shift drastically?
+- Are posterior intervals dominated by the prior? (a sign of weak identifiability)
+- Are conclusions driven by arbitrary bounds (e.g. truncations)?
+
+Practical recipe:
+
+- choose 2–3 prior variants (e.g. base, wider, narrower)
+- rerun the pipeline and compare posterior summaries for the scientific targets
+- rerun PPCs: if you change priors but PPCs are unchanged, that can indicate the data are informative; if PPCs deteriorate, priors may be preventing fit
+
+### 3.2 Summary selection sensitivity (ABC / SBI)
+
+If your pipeline uses summaries \(s(y)\), sensitivity can be severe:
+
+- small changes in summaries can change identifiability
+- summaries can discard information needed to recover key parameters
+
+Practical recipe:
+
+- try multiple summary sets (e.g. basic moments vs adding peak timing / early growth)
+- check (i) calibration/coverage on synthetic data and (ii) PPCs on held-out synthetic datasets
+
+### 3.3 Simulator discrepancy and misspecification
+
+Common misspecification sources in epidemic models:
+
+- reporting rate varies over time
+- delays are mis-modelled
+- contact patterns or interventions not captured
+- structural mismatch between the chosen compartmental model and reality
+
+Practical recipe:
+
+- add a simple discrepancy term (e.g. extra observation noise, a time-varying reporting factor)
+- repeat PPCs and check whether predictive fit improves without producing nonsensical parameter posteriors
+
+## Where this goes next
+
+- In **M7.1** we will add reusable diagnostic helpers (PPC/coverage/SBC utilities) so chapters can share consistent implementations.
+- In **M7.2** we will collect common failure modes and show at least one intentionally broken example.

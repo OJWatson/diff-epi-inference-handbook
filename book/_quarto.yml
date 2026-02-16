@@ -17,6 +17,7 @@ book:
     - toy-diff-epi-case-study.qmd
     - likelihood-free-baselines.qmd
     - modern-sbi.qmd
+    - validation-and-robustness.qmd
 
 format:
   html:
