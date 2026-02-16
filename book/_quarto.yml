@@ -13,6 +13,7 @@ book:
     - variational-inference.qmd
     - autodiff-basics.qmd
     - differentiability-axis.qmd
+    - gradient-estimators.qmd
     - likelihood-free-baselines.qmd
     - modern-sbi.qmd
 
