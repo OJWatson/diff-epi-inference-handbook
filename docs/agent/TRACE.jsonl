@@ -1,0 +1,1 @@
+{"ts_utc":"2026-02-16T04:36:13Z","tick_ts":"20260216T043006Z","task_id":"CI.FIX.M6","event":"completed","details":{"note":"Fix ruff violations and re-run CI-equivalent checks (ruff, pytest; pytest with nuts extras).","code_fix_commit":"c3b3482"}}
