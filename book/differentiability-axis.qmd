@@ -47,18 +47,135 @@ The simulator is discrete, event-driven, or otherwise non-differentiable with re
 **Implications:** likelihood-free or gradient-free methods (ABC, synthetic likelihood, neural density
 estimators, score-based approaches, etc.) are often more appropriate.
 
-## Decision checklist (to be expanded)
+## Demo 1: finite differences can be unstable at discontinuities
 
-Ask, for your specific model:
+A common first instinct is to “just do finite differences” when gradients are unavailable.
+This can fail dramatically if your objective is **not smooth**.
 
-1. Can you write the simulator as a pure function of inputs (no hidden global state)?
-2. Are the key operations smooth (no hard thresholds / discontinuities)?
-3. If stochastic, can you reparameterise the randomness?
-4. If not differentiable, can you build a differentiable surrogate or relaxation?
-5. What is the cost of a single simulation, and can you batch/parallelise it?
+Here is the simplest possible example: a step function.
+
+```{python}
+import matplotlib.pyplot as plt
+
+from diff_epi_inference.differentiability.demos import (
+    discontinuous_finite_difference_instability_demo,
+)
+
+res = discontinuous_finite_difference_instability_demo(x0=0.0)
+
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.plot(res.eps, res.fd_estimates, marker="o")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.set_xlabel("finite-difference step size ε")
+ax.set_ylabel("central FD estimate")
+ax.set_title("Finite differences near a discontinuity explode as ε → 0")
+plt.show()
+
+print({"x0": res.x0, "eps": res.eps.tolist(), "fd": res.fd_estimates.round(2).tolist()})
+```
+
+**Takeaway:** if your simulator includes hard thresholds, conditionals that change behaviour, integer rounding,
+or discrete-event updates, finite-difference gradients can become meaningless (or wildly sensitive to your choice of $\epsilon$).
+
+## Demo 2: autodiff on a smooth function is stable (optional JAX)
+
+When your simulator and likelihood are smooth, autodiff gives you gradients that are:
+
+- stable to step-size choices,
+- exact up to floating point / control-flow choices,
+- cheap compared to finite differences in high dimensions.
+
+```{python}
+try:
+    from diff_epi_inference.differentiability.demos import smooth_function_jax_grad_demo
+
+    res = smooth_function_jax_grad_demo(x0=0.3)
+    print(
+        {
+            "x0": res.x0,
+            "f0": round(res.f0, 6),
+            "grad_jax": round(res.grad0, 6),
+            "grad_analytic": round(res.grad0_analytic, 6),
+        }
+    )
+except ImportError as e:
+    print("Skipping JAX demo (optional deps not installed):", e)
+```
+
+## Demo 3: a stochastic tau-leap SEIR simulator is non-differentiable as implemented
+
+A tau-leaping simulator updates compartments using **random integer transitions**.
+For a *fixed* random seed, the mapping
+
+$$\beta \mapsto R_T(\beta)$$
+
+(where $R_T$ is the final recovered count) tends to be **jumpy**: flat for a while, then a sudden change when a random draw flips.
+That means a derivative in the usual sense does not exist for a single sample path.
+
+```{python}
+import matplotlib.pyplot as plt
+
+from diff_epi_inference.differentiability.demos import tau_leap_seir_nondifferentiability_demo
+
+res = tau_leap_seir_nondifferentiability_demo(beta0=0.25, span=0.06, n=61, fd_eps=1e-3, seed=0)
+
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(res.betas, res.final_size, lw=2)
+ax.set_xlabel("beta")
+ax.set_ylabel("final size (R_T)")
+ax.set_title("Tau-leap SEIR: a single-seed objective is jumpy in beta")
+plt.show()
+
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(res.betas, res.fd_estimates, lw=1)
+ax.axhline(0.0, color="k", lw=1)
+ax.set_xlabel("beta")
+ax.set_ylabel("central FD estimate")
+ax.set_title("Finite differences: mostly zero, punctuated by spikes")
+plt.show()
+```
+
+**Interpretation:**
+
+- The *expectation* $\mathbb{E}[R_T(\beta)]$ may be smooth in $\beta$.
+- But the *single-run simulator output* is not (and most inference pipelines see the single-run output).
+
+This is where you should consider:
+
+- averaging / using common random numbers carefully,
+- reparameterisable constructions (when possible),
+- synthetic likelihood / SBI / ABC,
+- differentiable surrogates or relaxations.
+
+## A method-selection decision tree (working sketch)
+
+This is deliberately simplified, but useful as a first pass.
+
+```{mermaid}
+flowchart TD
+  A[Start: simulator + observation model] --> B{Is everything differentiable\nend-to-end?}
+  B -- Yes --> C[Gradient-based inference\n(HMC/NUTS, VI, MAP)]
+  B -- No --> D{Is the core differentiable\nbut edges are non-smooth?}
+  D -- Yes --> E[Smoothing / relaxations\n+ gradient-based methods]
+  D -- No --> F{Is the simulator stochastic\nbut reparameterisable?}
+  F -- Yes --> G[Pathwise gradients\n(reparameterisation trick)]
+  F -- No --> H[Gradient-free / likelihood-free\n(ABC, synthetic likelihood, SBI, surrogates)]
+```
+
+## Method selection checklist (end-of-chapter)
+
+When you are picking an inference approach, write down answers to these explicitly:
+
+1. **Simulator type:** ODE / SDE / discrete-event (CTMC, ABM) / hybrid?
+2. **Where is non-smoothness coming from?** thresholds, rounding, discrete interventions, censoring?
+3. **What gradients do you actually need?** w.r.t. parameters only, or also w.r.t. latent trajectories / controls?
+4. **If stochastic:** can you express randomness as $x = g(\theta, \epsilon)$ with $\epsilon$ independent of $\theta$?
+5. **If not differentiable:** can you build a *differentiable relaxation* that is scientifically acceptable?
+6. **Cost profile:** how expensive is one simulation? can you batch/parallelise? can you amortise with a surrogate?
+7. **Identifiability:** even with gradients, do you have enough information in the data to pin down $\theta$?
+8. **Validation plan:** what will you use (PPC, SBC, coverage checks) to detect when the method is lying to you?
 
 ## Where this goes next
 
-- M6.2 will expand this chapter with concrete epidemiology examples, including one differentiable and one
-  non-differentiable toy simulator.
-- M6.3 will cover gradient estimators and relaxations (REINFORCE, straight-through, Gumbel-Softmax, etc.).
+- Next: we will cover concrete gradient estimators and relaxations (REINFORCE, straight-through, Gumbel-Softmax).
