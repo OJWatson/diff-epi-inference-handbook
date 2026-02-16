@@ -202,8 +202,15 @@ tasks:
       reason: validated_ci_acceptance_locally
       tick_ts: 20260216T000009Z
   M6.0:
-    status: todo
-    updated_at_utc: ''
+    status: done
+    updated_at_utc: '2026-02-16T01:03:44Z'
+    last:
+      commit: PENDING
+      log_path: /home/kana/.openclaw/workspace/portfolio/reports/logs/diff-epi-inference-handbook/20260216T010004Z.log
+      outcome: success
+      pushed: false
+      reason: added_autodiff_and_differentiability_chapter_skeletons_and_wired_into_book
+      tick_ts: 20260216T010004Z
   M6.1:
     status: todo
     updated_at_utc: ''
