@@ -212,8 +212,15 @@ tasks:
       reason: added_autodiff_and_differentiability_chapter_skeletons_and_wired_into_book
       tick_ts: 20260216T010004Z
   M6.1:
-    status: todo
-    updated_at_utc: ''
+    status: done
+    updated_at_utc: '2026-02-16T01:37:02Z'
+    last:
+      commit: 13aaa2b
+      log_path: /home/kana/.openclaw/workspace/portfolio/reports/runs/20260216T013007Z/logs/diff-epi-inference-handbook.log
+      outcome: success
+      pushed: false
+      reason: added_runnable_jax_autodiff_demos_and_optional_tests
+      tick_ts: 20260216T013007Z
   M6.2:
     status: todo
     updated_at_utc: ''

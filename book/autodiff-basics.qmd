@@ -46,6 +46,60 @@ Reverse-mode computes derivatives by first running the program forward (saving i
 and then pulling *adjoint* information backwards.
 It is often efficient for scalar objectives with many parameters, which is common in inference.
 
+## Runnable demos (JAX; optional dependency)
+
+This repository keeps JAX as an **optional dependency**.
+If you have it installed (see `pyproject.toml` extra `jax`), the cells below will run and produce
+concrete numerical output.
+
+### Demo 1: scalar function + gradient
+
+```{python}
+try:
+    import matplotlib.pyplot as plt
+
+    from diff_epi_inference.autodiff.demos import scalar_function_and_grad_demo
+
+    res = scalar_function_and_grad_demo(n=200)
+    print({"x_min": float(res.x_grid.min()), "x_max": float(res.x_grid.max())})
+
+    fig, ax = plt.subplots(figsize=(7, 3))
+    ax.plot(res.x_grid, res.f_vals, label="f(x)")
+    ax.plot(res.x_grid, res.grad_vals, label="df/dx")
+    ax.set_xlabel("x")
+    ax.set_title("A tiny scalar function and its autodiff gradient")
+    ax.legend(loc="best")
+    plt.show()
+except ImportError as e:
+    print("Skipping JAX autodiff demos (optional deps not installed):", e)
+```
+
+### Demo 2: forward-mode JVP for a vector-valued function
+
+```{python}
+try:
+    from diff_epi_inference.autodiff.demos import forward_mode_jvp_demo
+
+    res = forward_mode_jvp_demo(m=20, x0=0.3)
+    print({"x0": res.x0, "y_shape": res.y.shape, "jvp_shape": res.jvp.shape})
+    print("First 5 outputs y:", res.y[:5].round(4).tolist())
+    print("First 5 derivatives dy/dx:", res.jvp[:5].round(4).tolist())
+except ImportError as e:
+    print("Skipping JAX forward-mode demo (optional deps not installed):", e)
+```
+
+### Demo 3: reverse-mode gradient for a scalar loss with many parameters
+
+```{python}
+try:
+    from diff_epi_inference.autodiff.demos import reverse_mode_vjp_demo
+
+    res = reverse_mode_vjp_demo(dim=200, seed=0)
+    print({"dim": res.dim, "loss0": res.loss0, "grad_norm": res.grad_norm})
+except ImportError as e:
+    print("Skipping JAX reverse-mode demo (optional deps not installed):", e)
+```
+
 ## Practical checklist (to be expanded)
 
 - Is your objective scalar? Reverse-mode is usually the default choice.
