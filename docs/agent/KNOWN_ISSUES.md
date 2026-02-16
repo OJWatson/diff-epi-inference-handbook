@@ -1,3 +1,0 @@
-# KNOWN ISSUES
-
-- None recorded.

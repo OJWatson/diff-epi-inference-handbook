@@ -2,6 +2,16 @@
 
 This repository contains a short, runnable handbook (book/site) plus minimal Python scaffolding for examples.
 
+## Local acceptance gates
+
+Run in this order from repo root:
+
+```bash
+./scripts/ci.sh
+./scripts/test.sh
+make test
+```
+
 ## Local dev
 
 ```bash
