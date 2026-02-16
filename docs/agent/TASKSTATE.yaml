@@ -193,12 +193,12 @@ tasks:
       tick_ts: 20260215T233006Z
   CI.FIX.M5:
     status: done
-    updated_at_utc: '2026-02-16T00:06:00Z'
+    updated_at_utc: '2026-02-16T00:09:00Z'
     last:
-      commit: ''
+      commit: 6396adc
       log_path: /home/kana/.openclaw/workspace/portfolio/reports/runs/20260216T000009Z/logs/diff-epi-inference-handbook.log
       outcome: success
-      pushed: false
+      pushed: true
       reason: validated_ci_acceptance_locally
       tick_ts: 20260216T000009Z
   M6.0:
