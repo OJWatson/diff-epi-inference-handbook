@@ -14,6 +14,7 @@ book:
     - autodiff-basics.qmd
     - differentiability-axis.qmd
     - gradient-estimators.qmd
+    - toy-diff-epi-case-study.qmd
     - likelihood-free-baselines.qmd
     - modern-sbi.qmd
 

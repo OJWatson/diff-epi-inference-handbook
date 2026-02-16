@@ -1,0 +1,110 @@
+---
+title: "Toy differentiable epidemiology case study"
+---
+
+This chapter is a small, *pedagogical* example of **end-to-end differentiable
+inference** in a toy epidemic model.
+
+The point is not realism. The point is the pattern:
+
+1. write a simulator
+2. make the simulator *differentiable*
+3. define a loss / (pseudo-)likelihood
+4. take gradients
+5. fit parameters with gradient-based optimisation
+
+## A relaxed SIR-like simulator
+
+A discrete-time SIR model typically has *discrete* transition counts:
+
+- new infections ~ Binomial(S, p_inf)
+- new recoveries  ~ Binomial(I, p_rec)
+
+Directly sampling discrete counts blocks gradients.
+
+A common trick is to replace the discrete sampling with a **continuous
+relaxation** (e.g. a Concrete / Gumbel-Softmax relaxation), which produces
+fractional transition counts but keeps the computation differentiable.
+
+In this repo we implement a very small JAX-based toy simulator that uses a
+Binary-Concrete-style relaxation to produce differentiable "counts".
+
+```{python}
+#| label: toy-diff-epi-import
+#| echo: true
+#| warning: false
+
+HAVE_JAX = True
+try:
+    import jax  # noqa: F401
+except ModuleNotFoundError:
+    HAVE_JAX = False
+
+print("JAX available:", HAVE_JAX)
+```
+
+```{python}
+#| label: toy-diff-epi-demo
+#| echo: true
+#| warning: false
+
+if HAVE_JAX:
+    import numpy as np
+
+    from diff_epi_inference.examples.toy_diff_epi_jax import (
+        fit_beta_by_gradient_descent,
+        simulate_toy_relaxed_sir,
+    )
+
+    steps = 25
+    true_beta = 0.40
+    gamma = 0.20
+
+    # Generate a synthetic incidence curve
+    path = simulate_toy_relaxed_sir(
+        seed=0,
+        beta=true_beta,
+        gamma=gamma,
+        s0=80.0,
+        i0=20.0,
+        r0=0.0,
+        steps=steps,
+        temperature=0.6,
+    )
+    y_obs = np.asarray(path.new_infections)
+
+    # Fit beta by differentiating through the simulator
+    res = fit_beta_by_gradient_descent(
+        y_obs=y_obs,
+        seed=0,
+        beta_init=0.15,
+        gamma=gamma,
+        s0=80.0,
+        i0=20.0,
+        r0=0.0,
+        steps=steps,
+        temperature=0.6,
+        lr=0.25,
+        iters=40,
+    )
+
+    print("beta_init:", res.beta_init)
+    print("beta_hat :", round(res.beta_hat, 3))
+    print("loss[0]  :", float(res.losses[0]))
+    print("loss[-1] :", float(res.losses[-1]))
+else:
+    print("Skipping demo because JAX is not installed.")
+```
+
+## Notes and caveats
+
+- This is a *toy* relaxation. It is not a statistically principled replacement
+  for exact Binomial transitions.
+- Relaxations introduce bias: you gain gradients but you no longer simulate from
+  the exact discrete model.
+- In realistic applications you would typically combine:
+
+  - a better-motivated observation model,
+  - stronger priors/regularisation,
+  - diagnostics (e.g. SBC/PPC), and
+  - careful sensitivity analysis over the relaxation temperature.
