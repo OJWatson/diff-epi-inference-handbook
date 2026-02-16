@@ -205,10 +205,10 @@ tasks:
     status: done
     updated_at_utc: '2026-02-16T01:03:44Z'
     last:
-      commit: PENDING
+      commit: 99dd563
       log_path: /home/kana/.openclaw/workspace/portfolio/reports/logs/diff-epi-inference-handbook/20260216T010004Z.log
       outcome: success
-      pushed: false
+      pushed: true
       reason: added_autodiff_and_differentiability_chapter_skeletons_and_wired_into_book
       tick_ts: 20260216T010004Z
   M6.1:
