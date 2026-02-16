@@ -1,0 +1,64 @@
+---
+title: "Differentiability axis: when your simulator is (not) differentiable"
+---
+
+## Motivation
+
+In infectious disease modelling we often start from a simulator:
+
+- an ODE model solved numerically,
+- a stochastic simulator (e.g. Gillespie / CTMC),
+- an agent-based model,
+- a hybrid model with discrete events (interventions, thresholds, reporting delays).
+
+Some of these are naturally differentiable (or can be made differentiable), and some are not.
+Choosing an inference method is easier if you explicitly locate your model on a **differentiability axis**.
+
+## The differentiability axis (a working taxonomy)
+
+### 1) Fully differentiable end-to-end
+
+Everything from parameters $\theta$ to objective $\mathcal{L}(\theta)$ is differentiable.
+Examples include differentiable ODE solvers with smooth observation models.
+
+**Implications:** gradient-based optimisation and gradient-informed Bayesian methods are feasible.
+
+### 2) Differentiable core with non-differentiable edges
+
+The simulator may be differentiable, but you have non-smooth components:
+
+- thresholds / clipping / rounding,
+- discrete interventions triggered by conditions,
+- discontinuous likelihood approximations.
+
+**Implications:** you may need smoothing, continuous relaxations, or surrogate losses.
+
+### 3) Stochastic but reparameterisable
+
+Randomness is present, but can be written as a deterministic transform of noise:
+$z = g(\theta, \epsilon)$ with $\epsilon \sim p(\epsilon)$.
+
+**Implications:** pathwise (reparameterisation) gradients can work.
+
+### 4) Black-box / non-differentiable simulator
+
+The simulator is discrete, event-driven, or otherwise non-differentiable with respect to parameters.
+
+**Implications:** likelihood-free or gradient-free methods (ABC, synthetic likelihood, neural density
+estimators, score-based approaches, etc.) are often more appropriate.
+
+## Decision checklist (to be expanded)
+
+Ask, for your specific model:
+
+1. Can you write the simulator as a pure function of inputs (no hidden global state)?
+2. Are the key operations smooth (no hard thresholds / discontinuities)?
+3. If stochastic, can you reparameterise the randomness?
+4. If not differentiable, can you build a differentiable surrogate or relaxation?
+5. What is the cost of a single simulation, and can you batch/parallelise it?
+
+## Where this goes next
+
+- M6.2 will expand this chapter with concrete epidemiology examples, including one differentiable and one
+  non-differentiable toy simulator.
+- M6.3 will cover gradient estimators and relaxations (REINFORCE, straight-through, Gumbel-Softmax, etc.).

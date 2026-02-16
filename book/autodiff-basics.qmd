@@ -1,0 +1,59 @@
+---
+title: "Automatic differentiation basics"
+---
+
+## Why autodiff matters for this handbook
+
+Much of modern inference for epidemiological models relies on gradients (or approximations to gradients).
+Automatic differentiation (autodiff) is the workhorse that makes gradients practical in high-dimensional
+models and pipelines.
+
+This chapter is intentionally **conceptual-first**. Runnable demos and helper code live in the next tasks
+for milestone M6.
+
+## Learning goals
+
+After this chapter you should be able to:
+
+- Distinguish *symbolic differentiation*, *numerical differentiation*, and *automatic differentiation*.
+- Explain the difference between **forward-mode** (JVP) and **reverse-mode** (VJP) autodiff.
+- Recognise when reverse-mode is a good fit (scalar loss, many parameters) and when forward-mode helps.
+- Map epidemiology modelling steps (simulator, observation model, loss) to a computational graph.
+
+## Autodiff in one picture (computational graphs)
+
+Autodiff works by applying the chain rule to a program represented as a graph of elementary operations.
+In practice, libraries like JAX, PyTorch, and TensorFlow build and/or trace these graphs for you.
+
+### Notation
+
+- Parameters: $\theta$
+- Latent state trajectory (e.g. compartments over time): $x_{0:T}$
+- Simulator: $x_{0:T} = \mathrm{Sim}(\theta)$
+- Observations: $y \sim p(y \mid x_{0:T}, \theta)$
+- Objective (loss / negative log-likelihood): $\mathcal{L}(\theta)$
+
+## Forward-mode vs reverse-mode
+
+### Forward-mode (JVP)
+
+Forward-mode computes derivatives by pushing *tangent* information forward through the program.
+It is often efficient when the input dimension is small.
+
+### Reverse-mode (VJP)
+
+Reverse-mode computes derivatives by first running the program forward (saving intermediate values)
+and then pulling *adjoint* information backwards.
+It is often efficient for scalar objectives with many parameters, which is common in inference.
+
+## Practical checklist (to be expanded)
+
+- Is your objective scalar? Reverse-mode is usually the default choice.
+- Are you computing derivatives w.r.t. many outputs? Consider forward-mode or batching.
+- Do you have control-flow (loops/branches)? Ensure your autodiff library supports the pattern.
+- Are there non-differentiable ops (thresholds, argmax, discrete sampling)? See the next chapter.
+
+## Where this goes next
+
+- M6.1 will add runnable JAX demos for JVP/VJP intuition and small helper utilities.
+- M6.2 will cover differentiability in simulators and what to do when gradients are unavailable.

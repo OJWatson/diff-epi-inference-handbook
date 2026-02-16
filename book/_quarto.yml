@@ -11,6 +11,8 @@ book:
     - running-example.qmd
     - classical-baselines.qmd
     - variational-inference.qmd
+    - autodiff-basics.qmd
+    - differentiability-axis.qmd
     - likelihood-free-baselines.qmd
     - modern-sbi.qmd
 
