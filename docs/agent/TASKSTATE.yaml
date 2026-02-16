@@ -232,8 +232,15 @@ tasks:
       reason: expanded_differentiability_axis_chapter_with_demos_decision_tree_and_checklist
       tick_ts: 20260216T020005Z
   M6.3:
-    status: todo
-    updated_at_utc: ''
+    status: done
+    updated_at_utc: '2026-02-16T03:07:40Z'
+    last:
+      commit: 0861f1a
+      log_path: /home/kana/.openclaw/workspace/portfolio/reports/runs/20260216T030004Z/logs/diff-epi-inference-handbook.log
+      outcome: success
+      pushed: false
+      reason: added_bernoulli_concrete_relaxation_and_bias_variance_demo
+      tick_ts: 20260216T030004Z
   M6.4:
     status: todo
     updated_at_utc: ''
