@@ -69,3 +69,59 @@ def gumbel_softmax(
     idx = np.argmax(y_soft, axis=-1)
     y_hard = np.eye(k, dtype=float)[idx]
     return y_hard
+
+
+def bernoulli_concrete(
+    logit: float | np.ndarray,
+    *,
+    temperature: float,
+    rng: np.random.Generator,
+    hard: bool = False,
+) -> np.ndarray:
+    """Sample a Binary Concrete (relaxed Bernoulli) random variable.
+
+    This is the K=2 special case of :func:`gumbel_softmax`, returned as a scalar
+    in [0, 1] corresponding to the "1" class probability.
+
+    Parameters
+    ----------
+    logit:
+        Bernoulli logit(s). Any shape is allowed.
+    temperature:
+        Positive temperature. Lower -> closer to {0, 1}.
+    rng:
+        NumPy RNG.
+    hard:
+        If True, threshold the soft sample at 0.5.
+
+    Returns
+    -------
+    np.ndarray
+        Array with same shape as logit, values in [0, 1].
+
+    Notes
+    -----
+    In an autodiff framework, a common heuristic is the straight-through (ST)
+    estimator: use the hard sample in the forward pass but backprop through the
+    soft sample.
+    """
+
+    logit = np.asarray(logit, dtype=float)
+    temperature = float(temperature)
+    if temperature <= 0.0:
+        raise ValueError("temperature must be positive")
+    if not np.isfinite(logit).all():
+        raise ValueError("logit must be finite")
+
+    # Two Gumbel noises: equivalent to Logistic noise on the logit.
+    u1 = rng.uniform(low=1e-6, high=1.0 - 1e-6, size=logit.shape)
+    u0 = rng.uniform(low=1e-6, high=1.0 - 1e-6, size=logit.shape)
+    g1 = -np.log(-np.log(u1))
+    g0 = -np.log(-np.log(u0))
+
+    y_soft = 1.0 / (1.0 + np.exp(-(logit + g1 - g0) / temperature))
+
+    if not hard:
+        return y_soft
+
+    return (y_soft >= 0.5).astype(float)
