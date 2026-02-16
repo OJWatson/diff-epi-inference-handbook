@@ -218,7 +218,7 @@ tasks:
       commit: 13aaa2b
       log_path: /home/kana/.openclaw/workspace/portfolio/reports/runs/20260216T013007Z/logs/diff-epi-inference-handbook.log
       outcome: success
-      pushed: false
+      pushed: true
       reason: added_runnable_jax_autodiff_demos_and_optional_tests
       tick_ts: 20260216T013007Z
   M6.2:
