@@ -27,7 +27,9 @@ def test_reinforce_baseline_none_and_mean_are_consistent():
     grad_true = 2.0 * p * (1.0 - p)
 
     rng = np.random.default_rng(1)
-    f = lambda z: 2.0 * z + 0.1
+
+    def f(z: float) -> float:
+        return 2.0 * z + 0.1
 
     res_none = reinforce_grad_logit_bernoulli(
         f, logit=logit, rng=rng, n_samples=80_000, baseline="none"

@@ -235,9 +235,9 @@ def fit_beta_by_gradient_descent(
     logbeta = jnp.log(jnp.asarray(beta_init, dtype=float))
     losses = []
     for _ in range(int(iters)):
-        l = loss_fn(logbeta)
+        loss_val = loss_fn(logbeta)
         g = grad_fn(logbeta)
-        losses.append(l)
+        losses.append(loss_val)
         logbeta = logbeta - float(lr) * g
 
     beta_hat = float(np.exp(np.asarray(logbeta)))
