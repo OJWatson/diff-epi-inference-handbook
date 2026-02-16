@@ -242,8 +242,15 @@ tasks:
       reason: added_bernoulli_concrete_relaxation_and_bias_variance_demo
       tick_ts: 20260216T030004Z
   M6.4:
-    status: in_progress
-    updated_at_utc: '2026-02-16T03:32:00Z'
+    status: done
+    updated_at_utc: '2026-02-16T03:35:30Z'
+    last:
+      commit: 7ed63c7
+      log_path: /home/kana/.openclaw/workspace/portfolio/reports/runs/20260216T033006Z/logs/diff-epi-inference-handbook.log
+      outcome: success
+      pushed: true
+      reason: added_toy_relaxed_sir_jax_example_gradient_fit_and_book_chapter
+      tick_ts: 20260216T033006Z
   M6.END:
     status: todo
     updated_at_utc: ''
