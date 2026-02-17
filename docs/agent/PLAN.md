@@ -6,9 +6,17 @@
 - Remove stale/broken doc references and restore required build instructions (`docs/BUILD.md`) so README links resolve.
 - Make local acceptance gates runnable in-order with repo-local wrappers: `./scripts/ci.sh`, `./scripts/test.sh`, `make test`.
 
+## Drift Items
+
+| Item | Status | Owner | Recovery task |
+| --- | --- | --- | --- |
+| Roadmap/status references existed in plan but files were missing | Recovered | `@maintainers` | Maintain `ROADMAP.md` and `docs/STATUS.md` as source-of-truth trackers on `main`. |
+| Local Quarto execution may fail under restricted runtime/cache/log permissions | Recovered | `@maintainers` | Keep runtime-safe env command documented in `AGENTS.md` and `docs/BUILD.md`. |
+| Spec-to-repo mapping was implicit and scattered | Recovered | `@maintainers` | Maintain `docs/SPEC_TO_REPO_MAP.md` alongside milestone updates. |
+
 ## Next
 
-- Close M3 bookkeeping drift: each `Diverged` item gets an explicit owner and one concrete recovery task in agent docs.
+- Keep recovery item ownership current and ensure each has one concrete maintenance task.
 - Confirm gate sequence and documented setup paths stay aligned (`README.md`, `AGENTS.md`, `docs/BUILD.md`).
 - Keep CI event-driven on push/PR and add cron/manual safety-net runs to detect silent drift.
 

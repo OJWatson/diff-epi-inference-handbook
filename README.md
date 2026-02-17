@@ -2,6 +2,12 @@
 
 This repository contains a short, runnable handbook (book/site) plus minimal Python scaffolding for examples.
 
+## Project tracking
+
+- Milestone roadmap: [`ROADMAP.md`](ROADMAP.md)
+- Current status: [`docs/STATUS.md`](docs/STATUS.md)
+- Spec-to-repo mapping: [`docs/SPEC_TO_REPO_MAP.md`](docs/SPEC_TO_REPO_MAP.md)
+
 ## Local acceptance gates
 
 Run in this order from repo root:

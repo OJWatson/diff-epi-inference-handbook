@@ -26,7 +26,8 @@ Documented commands from README/docs:
 Sandbox reconciliation:
 
 - If Quarto execution fails due restricted local runtime/socket permissions, run:
-  - `XDG_CACHE_HOME=/tmp/xdg-cache quarto render book --to html --no-execute`
+  - `XDG_CACHE_HOME=/tmp/xdg-cache XDG_DATA_HOME=/tmp/xdg-data JUPYTER_RUNTIME_DIR=/tmp/jupyter-runtime quarto render book --to html --profile ci`
+  - If execution is still blocked, use: `XDG_CACHE_HOME=/tmp/xdg-cache XDG_DATA_HOME=/tmp/xdg-data quarto render book --to html --no-execute`
 - Treat CI `build-html` as the executable render authority for fully executed notebooks.
 
 ## Branch and commit policy

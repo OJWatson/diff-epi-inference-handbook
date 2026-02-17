@@ -6,6 +6,17 @@ This plan is written after reviewing the current repository contents in `diff-ep
 
 The repo is already in good shape structurally: Quarto book, executable examples, a minimal companion Python package, a healthy set of unit tests, CI that builds HTML (and optionally PDF), and tag-triggered GitHub Pages publishing. The biggest remaining work is content expansion and implementing the “modern SBI” and “autodiff/differentiability” material in a way that stays runnable and reproducible.
 
+## Realignment update (2026-02-17)
+
+This document originally captured a gap-to-goal snapshot. The repository has since been realigned and milestone implementation status is now tracked in:
+
+- `ROADMAP.md` (milestone completion table)
+- `docs/STATUS.md` (current state and gate health)
+- `docs/SPEC_TO_REPO_MAP.md` (spec-to-code/test mapping)
+
+Current status for M0-M8 is **Complete** in `ROADMAP.md`.
+The detailed sections below remain useful as historical implementation guidance and rationale.
+
 ---
 
 ## 0. Current snapshot (what is already implemented)
@@ -680,4 +691,3 @@ By the time M6 is complete, you should have:
 
 And by M8:
 - A polished, citable, versioned handbook with a stable site and PDF artefacts per release.
-

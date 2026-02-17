@@ -110,6 +110,27 @@ Then render with:
 .tools/quarto-${QUARTO_VER}/bin/quarto render book --to html
 ```
 
+### Sandbox / restricted runtime reconciliation
+
+If Quarto cannot create local cache/runtime/log directories in your environment, use:
+
+```bash
+XDG_CACHE_HOME=/tmp/xdg-cache \
+XDG_DATA_HOME=/tmp/xdg-data \
+JUPYTER_RUNTIME_DIR=/tmp/jupyter-runtime \
+quarto render book --to html --profile ci
+```
+
+If execution is still blocked in your environment, fallback to:
+
+```bash
+XDG_CACHE_HOME=/tmp/xdg-cache \
+XDG_DATA_HOME=/tmp/xdg-data \
+quarto render book --to html --no-execute
+```
+
+Treat CI `build-html` as the authoritative fully executed render.
+
 ## Render the book
 
 ### HTML
