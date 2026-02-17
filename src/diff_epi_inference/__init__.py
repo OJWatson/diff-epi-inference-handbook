@@ -18,7 +18,13 @@ from .pipeline import (
     simulate_seir_and_report_deterministic,
     simulate_seir_and_report_stochastic,
 )
-from .plotting import plot_timeseries
+from .plotting import (
+    plot_observation_overlay,
+    plot_ppc_overlay,
+    plot_seir_compartments,
+    plot_timeseries,
+    plot_two_timeseries,
+)
 from .seir import SEIRParams, simulate_seir_euler, simulate_seir_stochastic_tau_leap
 from .vi import fit_meanfield_gaussian_vi_jax
 
@@ -37,7 +43,11 @@ __all__ = [
     "ConditionalAffineDiagNormal",
     "TimeSeriesDataset",
     "from_cases",
+    "plot_observation_overlay",
+    "plot_ppc_overlay",
+    "plot_seir_compartments",
     "plot_timeseries",
+    "plot_two_timeseries",
     "save_timeseries_npz",
     "load_timeseries_npz",
     "reported_cases_dataset_from_S",

@@ -2,8 +2,24 @@
 title: "Home"
 ---
 
-This is the bootstrap scaffold for the *Differentiable Epidemiology* handbook.
+This handbook introduces practical inference workflows for infectious-disease models, with an emphasis on:
 
-- Single-source Quarto book that can render to **HTML** and **PDF**.
-- Companion Python package (minimal, tested).
-- A runnable **end-to-end** example.
+- clear model assumptions and equations,
+- runnable examples that scale from classical baselines to modern simulation-based inference,
+- and diagnostics that keep uncertainty quantification honest.
+
+## Who this is for
+
+- Researchers and practitioners who want to understand inference for epidemic models without relying on opaque tooling.
+- Readers comfortable with basic probability and willing to work through small, executable examples.
+
+## Reading paths
+
+- Practical path: `running-example` → `classical-baselines` → `likelihood-free-baselines` → `validation-and-robustness`.
+- Gradient-first path: `autodiff-basics` → `differentiability-axis` → `gradient-estimators` → `modern-sbi`.
+
+## Reproducibility
+
+- The companion package is intentionally lightweight and tested.
+- The same source renders to both **HTML** and **PDF**.
+- CI executes the HTML build to keep examples reproducible over time.

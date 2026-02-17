@@ -1,10 +1,10 @@
 ---
-title: "Running example (M1): SEIR + reporting"
+title: "Running example: SEIR + reporting"
 ---
 
 This page executes a minimal deterministic **SEIR + reporting** pipeline using the companion Python package.
 
-Scope (M1 slice):
+Scope:
 
 - Deterministic SEIR simulation (Euler discretisation).
 - A paired **stochastic** SEIR variant (tau-leaping; non-differentiable).
@@ -26,7 +26,6 @@ Observation model (per time step):
 
 ```{python}
 import numpy as np
-import matplotlib.pyplot as plt
 
 from diff_epi_inference import (
     SEIRParams,
@@ -36,6 +35,9 @@ from diff_epi_inference import (
     incidence_from_susceptibles,
     nbinom_loglik,
     sample_nbinom_reports,
+    plot_observation_overlay,
+    plot_seir_compartments,
+    plot_two_timeseries,
     simulate_seir_and_report_deterministic,
     simulate_seir_and_report_stochastic,
     simulate_seir_euler,
@@ -55,16 +57,15 @@ out = simulate_seir_euler(
 t = out["t"]
 S, E, I, R = out["S"], out["E"], out["I"], out["R"]
 
-fig, ax = plt.subplots(figsize=(7, 4))
-ax.plot(t, S, label="S")
-ax.plot(t, E, label="E")
-ax.plot(t, I, label="I")
-ax.plot(t, R, label="R")
-ax.set_xlabel("time")
-ax.set_ylabel("population")
-ax.set_title("SEIR (Euler discretisation)")
-ax.legend()
-plt.show()
+fig, ax = plot_seir_compartments(
+    t=t,
+    S=S,
+    E=E,
+    I_series=I,
+    R=R,
+    title="SEIR (Euler discretisation)",
+)
+fig
 
 # Basic invariant check
 assert np.allclose(S + E + I + R, S[0] + E[0] + I[0] + R[0])
@@ -90,14 +91,15 @@ ll = nbinom_loglik(y=y, mu=mu, dispersion=dispersion)
 
 ds_det = TimeSeriesDataset(t=t[1:], y=y, name="reported (deterministic)")
 
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(ds_det.t, mu, label="E[reported] (delay + rho)")
-ax.plot(ds_det.t, ds_det.y, label=ds_det.name, alpha=0.7)
-ax.set_xlabel("time")
-ax.set_ylabel("cases / step")
-ax.set_title("Observation model")
-ax.legend()
-plt.show()
+fig, ax = plot_observation_overlay(
+    t=ds_det.t,
+    observed=ds_det.y,
+    expected=mu,
+    observed_label=ds_det.name,
+    expected_label="E[reported] (delay + rho)",
+    title="Observation model",
+)
+fig
 
 assert np.isfinite(ll)
 assert inc.shape == mu.shape == ds_det.y.shape
@@ -130,14 +132,16 @@ ds_sto2 = simulate_seir_and_report_stochastic(
     name="reported (stoch pipeline)",
 )
 
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(ds_det2.t, ds_det2.y, label=ds_det2.name)
-ax.plot(ds_sto2.t, ds_sto2.y, label=ds_sto2.name, alpha=0.8)
-ax.set_xlabel("time")
-ax.set_ylabel("cases / step")
-ax.set_title("Paired deterministic vs stochastic reported cases")
-ax.legend()
-plt.show()
+fig, ax = plot_two_timeseries(
+    t=ds_det2.t,
+    y1=ds_det2.y,
+    y2=ds_sto2.y,
+    label1=ds_det2.name,
+    label2=ds_sto2.name,
+    title="Paired deterministic vs stochastic reported cases",
+    ylabel="cases / step",
+)
+fig
 
 assert ds_det2.t.shape == ds_det2.y.shape == ds_sto2.t.shape == ds_sto2.y.shape
 ```

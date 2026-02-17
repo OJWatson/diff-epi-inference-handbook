@@ -176,6 +176,8 @@ When you are picking an inference approach, write down answers to these explicit
 7. **Identifiability:** even with gradients, do you have enough information in the data to pin down $\theta$?
 8. **Validation plan:** what will you use (PPC, SBC, coverage checks) to detect when the method is lying to you?
 
-## Where this goes next
+## Key takeaways
 
-- Next: we will cover concrete gradient estimators and relaxations (REINFORCE, straight-through, Gumbel-Softmax).
+- Always classify your simulator and observation pipeline by differentiability before choosing inference.
+- Finite differences are unreliable around discontinuities and discrete-event dynamics.
+- When exact gradients are unavailable, move deliberately to relaxations or likelihood-free methods.

@@ -5,7 +5,7 @@ title: "Likelihood-free baselines"
 This chapter introduces likelihood-free baselines for the running example.
 These methods are useful when the simulator is non-differentiable and/or when a tractable likelihood is unavailable.
 
-## Goals (M3)
+## Goals
 
 - Implement and demonstrate **ABC rejection** as a minimal, robust baseline.
 - (Optional) extend to **SMC-ABC** for better efficiency.
@@ -405,8 +405,6 @@ fig
 #| warning: false
 #| fig-cap: "Synthetic likelihood: posterior predictive overlay (a few draws)."
 
-import matplotlib.pyplot as plt
-
 rng_ppc = np.random.default_rng(123)
 
 # Draw a few posterior samples of logbeta (post burn-in) for posterior predictive checks.
@@ -415,8 +413,7 @@ idx = rng_ppc.choice(post_logbeta.size, size=12, replace=False)
 logbeta_draws = post_logbeta[idx]
 
 # Simulate trajectories and overlay them.
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(np.arange(steps), y_obs, color="black", lw=2.0, label="observed")
+draws = []
 
 for logb in logbeta_draws:
     params = SEIRParams(beta=float(np.exp(logb)), sigma=params_true.sigma, gamma=params_true.gamma)
@@ -431,12 +428,16 @@ for logb in logbeta_draws:
         reporting_rate=0.25,
         rng=rng_ppc,
     )
-    ax.plot(np.arange(steps), ds.y.astype(float), color="C0", alpha=0.25, lw=1.0)
+    draws.append(ds.y.astype(float))
 
-ax.set_xlabel("time")
-ax.set_ylabel("reported cases")
-ax.set_title("Posterior predictive overlay")
-ax.legend()
+from diff_epi_inference.plotting import plot_ppc_overlay
+
+fig, ax = plot_ppc_overlay(
+    t=np.arange(steps, dtype=float),
+    observed=y_obs,
+    draws=np.asarray(draws),
+    title="Posterior predictive overlay",
+)
 fig
 ```
 
@@ -448,4 +449,4 @@ Notes:
 ## Notes
 
 - These baselines are intentionally simple and prioritise clarity over efficiency.
-- Later chapters will revisit summary selection, amortisation, and calibration at scale.
+- Summary choice and calibration should always be revisited when moving to higher-dimensional settings.

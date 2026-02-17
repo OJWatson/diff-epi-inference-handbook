@@ -4,9 +4,9 @@ title: "Modern simulation-based inference"
 
 This chapter starts the **modern SBI** track: amortised neural posterior / likelihood / ratio estimation and conditional density models.
 
-The goal in M4 is to provide a minimal, runnable baseline pipeline and show how to evaluate it (calibration, posterior predictive checks, and diagnostics).
+The goal is to provide a minimal, runnable baseline pipeline and show how to evaluate it (calibration, posterior predictive checks, and diagnostics).
 
-## Goals (M4)
+## Goals
 
 - Introduce **normalising flows** (incl. conditional flows) as flexible density models.
 - Implement a small **NPE** (neural posterior estimation) pipeline.
@@ -819,5 +819,5 @@ the comparison depends strongly on the dimensionality of $\theta$ and on how bro
 
 ## Notes
 
-- We will start with the **beta-only** running example (as in earlier chapters) and then expand the parameter set once the pipeline is stable.
-- We will prioritise a small, dependency-light implementation; optional integrations (e.g. `sbi` library) can be added behind extras.
+- This chapter starts with a **beta-only** running example so the inference mechanics stay transparent.
+- The implementation is intentionally dependency-light; richer integrations can be added without changing the core workflow.

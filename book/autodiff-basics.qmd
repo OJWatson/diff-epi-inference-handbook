@@ -8,8 +8,7 @@ Much of modern inference for epidemiological models relies on gradients (or appr
 Automatic differentiation (autodiff) is the workhorse that makes gradients practical in high-dimensional
 models and pipelines.
 
-This chapter is intentionally **conceptual-first**. Runnable demos and helper code live in the next tasks
-for milestone M6.
+This chapter is intentionally **conceptual-first**. Runnable demos and helper code are included below.
 
 ## Learning goals
 
@@ -107,7 +106,8 @@ except ImportError as e:
 - Do you have control-flow (loops/branches)? Ensure your autodiff library supports the pattern.
 - Are there non-differentiable ops (thresholds, argmax, discrete sampling)? See the next chapter.
 
-## Where this goes next
+## Key takeaways
 
-- M6.1 will add runnable JAX demos for JVP/VJP intuition and small helper utilities.
-- M6.2 will cover differentiability in simulators and what to do when gradients are unavailable.
+- Forward-mode and reverse-mode both apply the chain rule; they differ in traversal direction and cost profile.
+- Reverse-mode is usually the default for scalar objectives with many parameters.
+- Autodiff is only as useful as the differentiability of your modeling pipeline.

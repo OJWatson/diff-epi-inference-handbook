@@ -5,7 +5,7 @@ title: "Classical baselines"
 This chapter introduces *amortisation-free* inference baselines for the SEIR running example.
 These serve as anchors for later SBI/VI methods.
 
-## Goals (M2)
+## Goals
 
 - Provide a **Metropolis–Hastings (MH)** baseline on the (possibly) non-differentiable simulator / likelihood.
 - Provide a **gradient-based HMC/NUTS** baseline on the differentiable ODE likelihood.
@@ -104,6 +104,7 @@ from diff_epi_inference import (
     expected_reported_cases_delayed,
     incidence_from_susceptibles,
     nbinom_loglik,
+    plot_observation_overlay,
     sample_nbinom_reports,
     simulate_seir_euler,
 )
@@ -265,15 +266,17 @@ q05_mh, q50_mh, q95_mh = ppc_from_beta_draws(
 
 t = np.arange(len(y_obs)) * dt
 
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.fill_between(t, q05_mh, q95_mh, alpha=0.25, label="posterior predictive 90%")
-ax.plot(t, q50_mh, lw=1.2, label="posterior predictive median")
-ax.plot(t, y_obs, lw=1.0, color="black", label="observed y")
-ax.set_xlabel("time")
-ax.set_ylabel("reported cases")
-ax.set_title("PPC (MH; beta only)")
+fig, ax = plot_observation_overlay(
+    t=t,
+    observed=y_obs,
+    expected=q50_mh,
+    observed_label="observed y",
+    expected_label="posterior predictive median",
+    title="PPC (MH; beta only)",
+)
+ax.fill_between(t, q05_mh, q95_mh, alpha=0.2, label="posterior predictive 90%")
 ax.legend(loc="upper right")
-plt.show()
+fig
 ```
 
 ### 2) Random-walk Metropolis–Hastings
@@ -416,15 +419,17 @@ q05_hmc, q50_hmc, q95_hmc = ppc_from_beta_draws(
 
 t = np.arange(len(y_obs)) * dt
 
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.fill_between(t, q05_hmc, q95_hmc, alpha=0.25, label="posterior predictive 90%")
-ax.plot(t, q50_hmc, lw=1.2, label="posterior predictive median")
-ax.plot(t, y_obs, lw=1.0, color="black", label="observed y")
-ax.set_xlabel("time")
-ax.set_ylabel("reported cases")
-ax.set_title("PPC (HMC; beta only)")
+fig, ax = plot_observation_overlay(
+    t=t,
+    observed=y_obs,
+    expected=q50_hmc,
+    observed_label="observed y",
+    expected_label="posterior predictive median",
+    title="PPC (HMC; beta only)",
+)
+ax.fill_between(t, q05_hmc, q95_hmc, alpha=0.2, label="posterior predictive 90%")
 ax.legend(loc="upper right")
-plt.show()
+fig
 ```
 
 ### 3) HMC / NUTS on the ODE model (recommended path)
@@ -535,15 +540,17 @@ try:
 
     t = np.arange(len(y_obs)) * dt
 
-    fig, ax = plt.subplots(figsize=(7, 3))
-    ax.fill_between(t, q05_nuts, q95_nuts, alpha=0.25, label="posterior predictive 90%")
-    ax.plot(t, q50_nuts, lw=1.2, label="posterior predictive median")
-    ax.plot(t, y_obs, lw=1.0, color="black", label="observed y")
-    ax.set_xlabel("time")
-    ax.set_ylabel("reported cases")
-    ax.set_title("PPC (NUTS via BlackJAX; beta only)")
+    fig, ax = plot_observation_overlay(
+        t=t,
+        observed=y_obs,
+        expected=q50_nuts,
+        observed_label="observed y",
+        expected_label="posterior predictive median",
+        title="PPC (NUTS via BlackJAX; beta only)",
+    )
+    ax.fill_between(t, q05_nuts, q95_nuts, alpha=0.2, label="posterior predictive 90%")
     ax.legend(loc="upper right")
-    plt.show()
+    fig
 except NameError:
     print("Skipping NUTS PPC (NUTS SEIR demo did not run)")
 ```
@@ -801,8 +808,8 @@ coverage_by_beta_hmc = {beta: float(np.mean(v)) for beta, v in sorted(by_beta_hm
 coverage_by_beta_hmc
 ```
 
-## Next coding tasks
+## Key takeaways
 
-- Add `src/diff_epi_inference/mcmc/mh.py` with a minimal MH sampler + tests.
-- Add `src/diff_epi_inference/mcmc/nuts.py` (or wrapper around an existing library) + tests.
-- Add plotting helpers for chains + PPC.
+- MH and HMC provide strong non-amortised baselines for debugging model and likelihood behavior.
+- Even in small examples, PPC and calibration smoke checks are essential alongside trace diagnostics.
+- Optional NUTS (autodiff-based) is the most practical production baseline when dependencies are available.

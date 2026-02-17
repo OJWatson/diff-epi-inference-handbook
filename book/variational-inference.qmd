@@ -10,7 +10,7 @@ In differentiable epidemiology, VI is useful when you have a differentiable (app
 - scalable inference for larger models or many datasets,
 - a bridge from classical Bayesian modelling to *amortised* inference (where we learn an inference network).
 
-## Goals (M5)
+## Goals
 
 - Explain the **ELBO** and how it relates to the KL divergence.
 - Work through a **mean-field Gaussian VI** example end-to-end.

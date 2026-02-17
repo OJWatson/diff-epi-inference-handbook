@@ -153,7 +153,8 @@ Practical recipe:
 - add a simple discrepancy term (e.g. extra observation noise, a time-varying reporting factor)
 - repeat PPCs and check whether predictive fit improves without producing nonsensical parameter posteriors
 
-## Where this goes next
+## Key takeaways
 
-- In **M7.1** we will add reusable diagnostic helpers (PPC/coverage/SBC utilities) so chapters can share consistent implementations.
-- In **M7.2** we will collect common failure modes and show at least one intentionally broken example.
+- PPC, SBC-style checks, and sensitivity analysis should be treated as a single validation workflow.
+- Good chain diagnostics do not guarantee scientific validity; calibration and misspecification checks remain essential.
+- Lightweight smoke diagnostics are useful in CI, but should be complemented by deeper offline validation.
