@@ -11,7 +11,7 @@ class SEIRParams:
 
     Notes
     -----
-    This is intentionally lightweight for M0: no external ODE solvers.
+    This is intentionally lightweight: no external ODE solvers.
     """
 
     beta: float  # transmission rate
@@ -77,7 +77,7 @@ def simulate_seir_stochastic_tau_leap(
 ) -> dict[str, np.ndarray]:
     """Simulate a simple *stochastic* SEIR model using tau-leaping.
 
-    This provides a paired non-differentiable variant for M1.
+    This provides a paired non-differentiable variant for the running example.
 
     Transitions over each time step are sampled as:
 

@@ -81,7 +81,7 @@ def discrete_gamma_delay_pmf(*, shape: float, scale: float, max_delay: int) -> n
 
     Notes
     -----
-    This is a pragmatic M1 helper intended for runnable examples. It uses a midpoint
+    This is a pragmatic helper intended for runnable examples. It uses a midpoint
     approximation of the Gamma PDF evaluated at (d + 0.5).
     """
 

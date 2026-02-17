@@ -9,7 +9,7 @@ import numpy as np
 class TimeSeriesDataset:
     """A minimal standard dataset format for the handbook.
 
-    This is intentionally small and dependency-free (NumPy only) for M1.
+    This is intentionally small and dependency-free (NumPy only).
 
     Fields
     ------

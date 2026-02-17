@@ -5,7 +5,7 @@ These are kept minimal and dependency-free so they can be imported in tests.
 
 from .paired_seir import make_paired_seir_reported_datasets
 
-# Optional JAX-based differentiable epidemiology toy example (M6.4).
+# Optional JAX-based differentiable epidemiology toy example.
 # Imported lazily by tests/docs; we keep it out of __all__ if JAX is missing.
 try:  # pragma: no cover
     from .toy_diff_epi_jax import (

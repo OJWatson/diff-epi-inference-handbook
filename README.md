@@ -2,11 +2,11 @@
 
 This repository contains a short, runnable handbook (book/site) plus minimal Python scaffolding for examples.
 
-## Project tracking
+## Project docs
 
-- Milestone roadmap: [`ROADMAP.md`](ROADMAP.md)
-- Current status: [`docs/STATUS.md`](docs/STATUS.md)
-- Spec-to-repo mapping: [`docs/SPEC_TO_REPO_MAP.md`](docs/SPEC_TO_REPO_MAP.md)
+- Build and execution guide: [`docs/BUILD.md`](docs/BUILD.md)
+- Code and chapter map: [`docs/SPEC_TO_REPO_MAP.md`](docs/SPEC_TO_REPO_MAP.md)
+- Project brief: [`docs/DIFF_EPI_DEVELOPMENT_PLAN.md`](docs/DIFF_EPI_DEVELOPMENT_PLAN.md)
 
 ## Local acceptance gates
 

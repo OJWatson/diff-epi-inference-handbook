@@ -345,7 +345,7 @@ print(
 ```
 
 This model is intentionally crude: the posterior width here is driven mostly by the regression residuals.
-In the next step we will replace this simple conditional affine flow with a **more expressive conditional flow** so the learned posterior can be non-Gaussian and multi-modal.
+The same NPE workflow can be extended to more expressive conditional flows when non-Gaussian posteriors are needed.
 
 #### Tiny JAX training loop (behind `modern-sbi`)
 
@@ -589,8 +589,8 @@ def log_posterior(theta, y_obs):
 # targeting log_posterior(., y_obs).
 ```
 
-This handbook currently focuses on NPE as the first runnable baseline; NLE is a natural next step once
-we have a comfortable conditional density model for the observation space (or summary space).
+This handbook focuses first on NPE for clarity; NLE uses the same simulation bank pattern and
+becomes practical once you have a conditional density model for the observation space (or summary space).
 
 ### 3c) NRE: neural ratio estimation
 

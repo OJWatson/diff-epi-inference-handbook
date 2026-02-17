@@ -4,7 +4,7 @@ This module is intentionally small and self-contained: it provides a miniature
 SIR-like simulator where the *discrete* transition counts are replaced by a
 smooth relaxation so that gradients can flow end-to-end.
 
-The goal is pedagogical (M6.4): demonstrate the pattern
+The goal is pedagogical: demonstrate the pattern
 
     simulator -> loss/likelihood -> grad -> gradient-based fit
 

@@ -8,7 +8,7 @@ Canonical spec inputs:
 - `docs/DIFF_EPI_DEVELOPMENT_PLAN.md`
 - `README.md`
 
-## Core Model + Observation Pipeline (M1)
+## Core Model + Observation Pipeline
 
 - SEIR simulators: `src/diff_epi_inference/seir.py`
 - Observation/reporting helpers: `src/diff_epi_inference/observation.py`
@@ -42,4 +42,4 @@ Canonical spec inputs:
 
 - Book config: `book/_quarto.yml`, `book/_quarto-ci.yml`
 - CI and Pages workflows: `.github/workflows/ci.yml`, `.github/workflows/pages.yml`
-- Build/run docs: `docs/BUILD.md`, `README.md`, `AGENTS.md`
+- Build/run docs: `docs/BUILD.md`, `README.md`
