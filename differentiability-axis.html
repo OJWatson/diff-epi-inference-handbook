@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Differentiability axis: when your simulator is (not) differentiable – Differentiable Epidemiology</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./gradient-estimators.html" rel="next">
+<link href="./autodiff-basics.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-00ccf60c28c3bdf2d57f5131fbf16f11.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differentiability-axis.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differentiability axis: when your simulator is (not) differentiable</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Differentiable Epidemiology</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Home</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./running-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Running example: SEIR + reporting</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical-baselines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Classical baselines</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./variational-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Variational inference</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./autodiff-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Automatic differentiation basics</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./differentiability-axis.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differentiability axis: when your simulator is (not) differentiable</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gradient-estimators.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Gradient estimators &amp; relaxations</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./toy-diff-epi-case-study.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Toy differentiable epidemiology case study</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./likelihood-free-baselines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Likelihood-free baselines</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./modern-sbi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Modern simulation-based inference</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./validation-and-robustness.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Validation and robustness</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">References</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#motivation" id="toc-motivation" class="nav-link active" data-scroll-target="#motivation"><span class="header-section-number">6.1</span> Motivation</a></li>
+  <li><a href="#the-differentiability-axis" id="toc-the-differentiability-axis" class="nav-link" data-scroll-target="#the-differentiability-axis"><span class="header-section-number">6.2</span> The differentiability axis</a>
+  <ul class="collapse">
+  <li><a href="#fully-differentiable-end-to-end" id="toc-fully-differentiable-end-to-end" class="nav-link" data-scroll-target="#fully-differentiable-end-to-end"><span class="header-section-number">6.2.1</span> 1) Fully differentiable end-to-end</a></li>
+  <li><a href="#differentiable-core-with-non-differentiable-edges" id="toc-differentiable-core-with-non-differentiable-edges" class="nav-link" data-scroll-target="#differentiable-core-with-non-differentiable-edges"><span class="header-section-number">6.2.2</span> 2) Differentiable core with non-differentiable edges</a></li>
+  <li><a href="#stochastic-but-reparameterisable" id="toc-stochastic-but-reparameterisable" class="nav-link" data-scroll-target="#stochastic-but-reparameterisable"><span class="header-section-number">6.2.3</span> 3) Stochastic but reparameterisable</a></li>
+  <li><a href="#black-box-non-differentiable-simulator" id="toc-black-box-non-differentiable-simulator" class="nav-link" data-scroll-target="#black-box-non-differentiable-simulator"><span class="header-section-number">6.2.4</span> 4) Black-box / non-differentiable simulator</a></li>
+  </ul></li>
+  <li><a href="#demo-1-finite-differences-can-be-unstable-at-discontinuities" id="toc-demo-1-finite-differences-can-be-unstable-at-discontinuities" class="nav-link" data-scroll-target="#demo-1-finite-differences-can-be-unstable-at-discontinuities"><span class="header-section-number">6.3</span> Demo 1: finite differences can be unstable at discontinuities</a></li>
+  <li><a href="#demo-2-autodiff-on-a-smooth-function-is-stable" id="toc-demo-2-autodiff-on-a-smooth-function-is-stable" class="nav-link" data-scroll-target="#demo-2-autodiff-on-a-smooth-function-is-stable"><span class="header-section-number">6.4</span> Demo 2: autodiff on a smooth function is stable</a></li>
+  <li><a href="#demo-3-a-stochastic-tau-leap-seir-simulator-is-non-differentiable-as-implemented" id="toc-demo-3-a-stochastic-tau-leap-seir-simulator-is-non-differentiable-as-implemented" class="nav-link" data-scroll-target="#demo-3-a-stochastic-tau-leap-seir-simulator-is-non-differentiable-as-implemented"><span class="header-section-number">6.5</span> Demo 3: a stochastic tau-leap SEIR simulator is non-differentiable as implemented</a></li>
+  <li><a href="#a-method-selection-decision-tree" id="toc-a-method-selection-decision-tree" class="nav-link" data-scroll-target="#a-method-selection-decision-tree"><span class="header-section-number">6.6</span> A method-selection decision tree</a></li>
+  <li><a href="#method-selection-checklist-end-of-chapter" id="toc-method-selection-checklist-end-of-chapter" class="nav-link" data-scroll-target="#method-selection-checklist-end-of-chapter"><span class="header-section-number">6.7</span> Method selection checklist (end-of-chapter)</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">6.8</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differentiability axis: when your simulator is (not) differentiable</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="motivation" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="motivation"><span class="header-section-number">6.1</span> Motivation</h2>
+<p>In infectious disease modelling we often start from a simulator:</p>
+<ul>
+<li>an ODE model solved numerically,</li>
+<li>a stochastic simulator (e.g.&nbsp;Gillespie / CTMC),</li>
+<li>an agent-based model,</li>
+<li>a hybrid model with discrete events (interventions, thresholds, reporting delays).</li>
+</ul>
+<p>Some of these are naturally differentiable (or can be made differentiable), and some are not. Choosing an inference method is easier if you explicitly locate your model on a <strong>differentiability axis</strong>. This framing mirrors current simulation-based inference practice <span class="citation" data-cites="cranmer2020frontier">(<a href="#ref-cranmer2020frontier" role="doc-biblioref">Cranmer, Brehmer, and Louppe 2020</a>)</span>.</p>
+</section>
+<section id="the-differentiability-axis" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="the-differentiability-axis"><span class="header-section-number">6.2</span> The differentiability axis</h2>
+<section id="fully-differentiable-end-to-end" class="level3" data-number="6.2.1">
+<h3 data-number="6.2.1" class="anchored" data-anchor-id="fully-differentiable-end-to-end"><span class="header-section-number">6.2.1</span> 1) Fully differentiable end-to-end</h3>
+<p>Everything from parameters <span class="math inline">\(\theta\)</span> to objective <span class="math inline">\(\mathcal{L}(\theta)\)</span> is differentiable. Examples include differentiable ODE solvers with smooth observation models.</p>
+<p><strong>Implications:</strong> gradient-based optimisation and gradient-informed Bayesian methods are feasible.</p>
+</section>
+<section id="differentiable-core-with-non-differentiable-edges" class="level3" data-number="6.2.2">
+<h3 data-number="6.2.2" class="anchored" data-anchor-id="differentiable-core-with-non-differentiable-edges"><span class="header-section-number">6.2.2</span> 2) Differentiable core with non-differentiable edges</h3>
+<p>The simulator may be differentiable, but you have non-smooth components:</p>
+<ul>
+<li>thresholds / clipping / rounding,</li>
+<li>discrete interventions triggered by conditions,</li>
+<li>discontinuous likelihood approximations.</li>
+</ul>
+<p><strong>Implications:</strong> you may need smoothing, continuous relaxations, or surrogate losses.</p>
+</section>
+<section id="stochastic-but-reparameterisable" class="level3" data-number="6.2.3">
+<h3 data-number="6.2.3" class="anchored" data-anchor-id="stochastic-but-reparameterisable"><span class="header-section-number">6.2.3</span> 3) Stochastic but reparameterisable</h3>
+<p>Randomness is present, but can be written as a deterministic transform of noise: <span class="math inline">\(z = g(\theta, \epsilon)\)</span> with <span class="math inline">\(\epsilon \sim p(\epsilon)\)</span>.</p>
+<p><strong>Implications:</strong> pathwise (reparameterisation) gradients can work.</p>
+</section>
+<section id="black-box-non-differentiable-simulator" class="level3" data-number="6.2.4">
+<h3 data-number="6.2.4" class="anchored" data-anchor-id="black-box-non-differentiable-simulator"><span class="header-section-number">6.2.4</span> 4) Black-box / non-differentiable simulator</h3>
+<p>The simulator is discrete, event-driven, or otherwise non-differentiable with respect to parameters.</p>
+<p><strong>Implications:</strong> likelihood-free or gradient-free methods (ABC, synthetic likelihood, neural density estimators, score-based approaches, etc.) are often more appropriate.</p>
+</section>
+</section>
+<section id="demo-1-finite-differences-can-be-unstable-at-discontinuities" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="demo-1-finite-differences-can-be-unstable-at-discontinuities"><span class="header-section-number">6.3</span> Demo 1: finite differences can be unstable at discontinuities</h2>
+<p>A common first instinct is to “just do finite differences” when gradients are unavailable. This can fail dramatically if your objective is <strong>not smooth</strong>.</p>
+<p>Here is the simplest possible example: a step function.</p>
+<div id="1caf52e7" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.differentiability.demos <span class="im">import</span> (</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    discontinuous_finite_difference_instability_demo,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> discontinuous_finite_difference_instability_demo(x0<span class="op">=</span><span class="fl">0.0</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">3</span>))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>ax.plot(res.eps, res.fd_estimates, marker<span class="op">=</span><span class="st">"o"</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>ax.set_xscale(<span class="st">"log"</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ax.set_yscale(<span class="st">"log"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"finite-difference step size ε"</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"central FD estimate"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Finite differences near a discontinuity explode as ε → 0"</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({<span class="st">"x0"</span>: res.x0, <span class="st">"eps"</span>: res.eps.tolist(), <span class="st">"fd"</span>: res.fd_estimates.<span class="bu">round</span>(<span class="dv">2</span>).tolist()})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="differentiability-axis_files/figure-html/cell-2-output-1.png" width="517" height="303" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'x0': 0.0, 'eps': [1.0, 0.3, 0.1, 0.03, 0.01, 0.003], 'fd': [0.5, 1.67, 5.0, 16.67, 50.0, 166.67]}</code></pre>
+</div>
+</div>
+<p><strong>Takeaway:</strong> if your simulator includes hard thresholds, conditionals that change behaviour, integer rounding, or discrete-event updates, finite-difference gradients can become meaningless (or wildly sensitive to your choice of <span class="math inline">\(\epsilon\)</span>).</p>
+</section>
+<section id="demo-2-autodiff-on-a-smooth-function-is-stable" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="demo-2-autodiff-on-a-smooth-function-is-stable"><span class="header-section-number">6.4</span> Demo 2: autodiff on a smooth function is stable</h2>
+<p>When your simulator and likelihood are smooth, autodiff gives you gradients that are:</p>
+<ul>
+<li>stable to step-size choices,</li>
+<li>exact up to floating point / control-flow choices,</li>
+<li>cheap compared to finite differences in high dimensions.</li>
+</ul>
+<div id="eaa8e9c7" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.differentiability.demos <span class="im">import</span> smooth_function_jax_grad_demo</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> smooth_function_jax_grad_demo(x0<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"x0"</span>: res.x0,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"f0"</span>: <span class="bu">round</span>(res.f0, <span class="dv">6</span>),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"grad_jax"</span>: <span class="bu">round</span>(res.grad0, <span class="dv">6</span>),</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">"grad_analytic"</span>: <span class="bu">round</span>(res.grad0_analytic, <span class="dv">6</span>),</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'x0': 0.3, 'f0': 0.30452, 'grad_jax': 1.015337, 'grad_analytic': 1.015336}</code></pre>
+</div>
+</div>
+</section>
+<section id="demo-3-a-stochastic-tau-leap-seir-simulator-is-non-differentiable-as-implemented" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="demo-3-a-stochastic-tau-leap-seir-simulator-is-non-differentiable-as-implemented"><span class="header-section-number">6.5</span> Demo 3: a stochastic tau-leap SEIR simulator is non-differentiable as implemented</h2>
+<p>A tau-leaping simulator updates compartments using <strong>random integer transitions</strong>. For a <em>fixed</em> random seed, the mapping</p>
+<p><span class="math display">\[\beta \mapsto R_T(\beta)\]</span></p>
+<p>(where <span class="math inline">\(R_T\)</span> is the final recovered count) tends to be <strong>jumpy</strong>: flat for a while, then a sudden change when a random draw flips. That means a derivative in the usual sense does not exist for a single sample path.</p>
+<div id="6e9d1cfe" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.differentiability.demos <span class="im">import</span> tau_leap_seir_nondifferentiability_demo</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tau_leap_seir_nondifferentiability_demo(beta0<span class="op">=</span><span class="fl">0.25</span>, span<span class="op">=</span><span class="fl">0.06</span>, n<span class="op">=</span><span class="dv">61</span>, fd_eps<span class="op">=</span><span class="fl">1e-3</span>, seed<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">3</span>))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>ax.plot(res.betas, res.final_size, lw<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"beta"</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"final size (R_T)"</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Tau-leap SEIR: a single-seed objective is jumpy in beta"</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">3</span>))</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>ax.plot(res.betas, res.fd_estimates, lw<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>ax.axhline(<span class="fl">0.0</span>, color<span class="op">=</span><span class="st">"k"</span>, lw<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"beta"</span>)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"central FD estimate"</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Finite differences: mostly zero, punctuated by spikes"</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="differentiability-axis_files/figure-html/cell-4-output-1.png" width="593" height="302" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="differentiability-axis_files/figure-html/cell-4-output-2.png" width="610" height="302" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation:</strong></p>
+<ul>
+<li>The <em>expectation</em> <span class="math inline">\(\mathbb{E}[R_T(\beta)]\)</span> may be smooth in <span class="math inline">\(\beta\)</span>.</li>
+<li>But the <em>single-run simulator output</em> is not (and most inference pipelines see the single-run output).</li>
+</ul>
+<p>This is where you should consider:</p>
+<ul>
+<li>averaging / using common random numbers carefully,</li>
+<li>reparameterisable constructions (when possible),</li>
+<li>synthetic likelihood / SBI / ABC,</li>
+<li>differentiable surrogates or relaxations.</li>
+</ul>
+</section>
+<section id="a-method-selection-decision-tree" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="a-method-selection-decision-tree"><span class="header-section-number">6.6</span> A method-selection decision tree</h2>
+<p>This is deliberately simplified, but useful as a first pass.</p>
+<div class="cell" data-layout-align="default">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>flowchart TD</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  A[Start: simulator + observation model] --&gt; B{Is everything differentiable\nend-to-end?}</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  B -- Yes --&gt; C[Gradient-based inference\n(HMC/NUTS, VI, MAP)]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  B -- No --&gt; D{Is the core differentiable\nbut edges are non-smooth?}</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  D -- Yes --&gt; E[Smoothing / relaxations\n+ gradient-based methods]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  D -- No --&gt; F{Is the simulator stochastic\nbut reparameterisable?}</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  F -- Yes --&gt; G[Pathwise gradients\n(reparameterisation trick)]</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  F -- No --&gt; H[Gradient-free / likelihood-free\n(ABC, synthetic likelihood, SBI, surrogates)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+  A[Start: simulator + observation model] --&gt; B{Is everything differentiable\nend-to-end?}
+  B -- Yes --&gt; C[Gradient-based inference\n(HMC/NUTS, VI, MAP)]
+  B -- No --&gt; D{Is the core differentiable\nbut edges are non-smooth?}
+  D -- Yes --&gt; E[Smoothing / relaxations\n+ gradient-based methods]
+  D -- No --&gt; F{Is the simulator stochastic\nbut reparameterisable?}
+  F -- Yes --&gt; G[Pathwise gradients\n(reparameterisation trick)]
+  F -- No --&gt; H[Gradient-free / likelihood-free\n(ABC, synthetic likelihood, SBI, surrogates)]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="method-selection-checklist-end-of-chapter" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="method-selection-checklist-end-of-chapter"><span class="header-section-number">6.7</span> Method selection checklist (end-of-chapter)</h2>
+<p>When you are picking an inference approach, write down answers to these explicitly:</p>
+<ol type="1">
+<li><strong>Simulator type:</strong> ODE / SDE / discrete-event (CTMC, ABM) / hybrid?</li>
+<li><strong>Where is non-smoothness coming from?</strong> thresholds, rounding, discrete interventions, censoring?</li>
+<li><strong>What gradients do you actually need?</strong> w.r.t. parameters only, or also w.r.t. latent trajectories / controls?</li>
+<li><strong>If stochastic:</strong> can you express randomness as <span class="math inline">\(x = g(\theta, \epsilon)\)</span> with <span class="math inline">\(\epsilon\)</span> independent of <span class="math inline">\(\theta\)</span>?</li>
+<li><strong>If not differentiable:</strong> can you build a <em>differentiable relaxation</em> that is scientifically acceptable?</li>
+<li><strong>Cost profile:</strong> how expensive is one simulation? can you batch/parallelise? can you amortise with a surrogate?</li>
+<li><strong>Identifiability:</strong> even with gradients, do you have enough information in the data to pin down <span class="math inline">\(\theta\)</span>?</li>
+<li><strong>Validation plan:</strong> what will you use (PPC, SBC, coverage checks) to detect when the method is lying to you?</li>
+</ol>
+</section>
+<section id="key-takeaways" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">6.8</span> Key takeaways</h2>
+<ul>
+<li>Always classify your simulator and observation pipeline by differentiability before choosing inference.</li>
+<li>Finite differences are unreliable around discontinuities and discrete-event dynamics.</li>
+<li>When exact gradients are unavailable, move deliberately to relaxations or likelihood-free methods.</li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-cranmer2020frontier" class="csl-entry" role="listitem">
+Cranmer, Kyle, Johann Brehmer, and Gilles Louppe. 2020. <span>“The Frontier of Simulation-Based Inference.”</span> <em>Proceedings of the National Academy of Sciences</em> 117 (48): 30055–62.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./autodiff-basics.html" class="pagination-link" aria-label="Automatic differentiation basics">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Automatic differentiation basics</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./gradient-estimators.html" class="pagination-link" aria-label="Gradient estimators &amp; relaxations">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Gradient estimators &amp; relaxations</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

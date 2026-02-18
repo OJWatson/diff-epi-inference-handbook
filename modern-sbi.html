@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>10&nbsp; Modern simulation-based inference – Differentiable Epidemiology</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./validation-and-robustness.html" rel="next">
+<link href="./likelihood-free-baselines.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-00ccf60c28c3bdf2d57f5131fbf16f11.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./modern-sbi.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Modern simulation-based inference</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Differentiable Epidemiology</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Home</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./running-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Running example: SEIR + reporting</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical-baselines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Classical baselines</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./variational-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Variational inference</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./autodiff-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Automatic differentiation basics</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./differentiability-axis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differentiability axis: when your simulator is (not) differentiable</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gradient-estimators.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Gradient estimators &amp; relaxations</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./toy-diff-epi-case-study.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Toy differentiable epidemiology case study</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./likelihood-free-baselines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Likelihood-free baselines</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./modern-sbi.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Modern simulation-based inference</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./validation-and-robustness.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Validation and robustness</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">References</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#chapter-map" id="toc-chapter-map" class="nav-link active" data-scroll-target="#chapter-map"><span class="header-section-number">10.1</span> Chapter map</a>
+  <ul class="collapse">
+  <li><a href="#npe-pipeline-end-to-end" id="toc-npe-pipeline-end-to-end" class="nav-link" data-scroll-target="#npe-pipeline-end-to-end"><span class="header-section-number">10.1.1</span> 3) NPE pipeline (end-to-end)</a></li>
+  <li><a href="#b-nle-neural-likelihood-estimation" id="toc-b-nle-neural-likelihood-estimation" class="nav-link" data-scroll-target="#b-nle-neural-likelihood-estimation"><span class="header-section-number">10.1.2</span> 3b) NLE: neural likelihood estimation</a></li>
+  <li><a href="#c-nre-neural-ratio-estimation" id="toc-c-nre-neural-ratio-estimation" class="nav-link" data-scroll-target="#c-nre-neural-ratio-estimation"><span class="header-section-number">10.1.3</span> 3c) NRE: neural ratio estimation</a></li>
+  <li><a href="#diagnostics-and-calibration" id="toc-diagnostics-and-calibration" class="nav-link" data-scroll-target="#diagnostics-and-calibration"><span class="header-section-number">10.1.4</span> 4) Diagnostics and calibration</a></li>
+  <li><a href="#amortised-vs-local-inference" id="toc-amortised-vs-local-inference" class="nav-link" data-scroll-target="#amortised-vs-local-inference"><span class="header-section-number">10.1.5</span> 5) Amortised vs local inference</a></li>
+  </ul></li>
+  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes"><span class="header-section-number">10.2</span> Notes</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Modern simulation-based inference</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This chapter starts the <strong>modern SBI</strong> track: amortised neural posterior / likelihood / ratio estimation and conditional density models.</p>
+<p>The goal is to provide a minimal, runnable baseline pipeline and show how to evaluate it (calibration, posterior predictive checks, and diagnostics).</p>
+<p>This chapter follows the modern SBI framing in <span class="citation" data-cites="cranmer2020frontier papamakarios2019snpe">(<a href="#ref-cranmer2020frontier" role="doc-biblioref">Cranmer, Brehmer, and Louppe 2020</a>; <a href="#ref-papamakarios2019snpe" role="doc-biblioref">Papamakarios, Sterratt, and Murray 2019</a>)</span> and keeps the implementation deliberately transparent.</p>
+<section id="chapter-map" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="chapter-map"><span class="header-section-number">10.1</span> Chapter map</h2>
+<ul>
+<li>Flow mechanics with an explicit change-of-variables example.</li>
+<li>End-to-end beta-only NPE loop (simulation bank, conditional density fit, posterior sampling).</li>
+<li>Lightweight JAX conditional density training loop.</li>
+<li>Posterior predictive and amortised-vs-local diagnostics.</li>
+</ul>
+<section id="a-tiny-flow-from-scratch-1d-2d" class="level4" data-number="10.1.0.1">
+<h4 data-number="10.1.0.1" class="anchored" data-anchor-id="a-tiny-flow-from-scratch-1d-2d"><span class="header-section-number">10.1.0.1</span> A tiny flow “from scratch” (1D + 2D)</h4>
+<p>A <em>normalising flow</em> builds a flexible density by transforming a simple base random variable <span class="math inline">\(z \sim p_Z(z)\)</span> (often standard normal) through an invertible map:</p>
+<p><span class="math display">\[x = f_\phi(z), \qquad z = f_\phi^{-1}(x).\]</span></p>
+<p>The change-of-variables formula gives</p>
+<p><span class="math display">\[\log p_X(x) = \log p_Z\bigl(f_\phi^{-1}(x)\bigr) + \log\left|\det \nabla_x f_\phi^{-1}(x)\right|.\]</span></p>
+<p>Below we implement two tiny examples in pure NumPy:</p>
+<ol type="1">
+<li><strong>1D affine flow</strong> (shift + scale), which is “just” a learned Gaussian.</li>
+<li><strong>2D coupling flow</strong> (RealNVP-style), which introduces non-trivial dependencies.</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>These are deliberately minimal and not meant to be a performant flow library. The point is to make the <em>invertibility</em> and <em>log-determinant Jacobian</em> bookkeeping concrete.</p>
+</div>
+</div>
+<div id="578f8e96" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="d-affine-flow" class="level5" data-number="10.1.0.1.1">
+<h5 data-number="10.1.0.1.1" class="anchored" data-anchor-id="d-affine-flow"><span class="header-section-number">10.1.0.1.1</span> 1D affine flow</h5>
+<div id="02e8305d" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stdnorm_logpdf(z: np.ndarray) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> (z<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> np.log(<span class="dv">2</span> <span class="op">*</span> np.pi))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> affine_forward(z: np.ndarray, mu: <span class="bu">float</span>, log_sigma: <span class="bu">float</span>) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""x = mu + exp(log_sigma) * z"""</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mu <span class="op">+</span> np.exp(log_sigma) <span class="op">*</span> z</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> affine_inverse(x: np.ndarray, mu: <span class="bu">float</span>, log_sigma: <span class="bu">float</span>) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""z = (x - mu) / exp(log_sigma)"""</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (x <span class="op">-</span> mu) <span class="op">*</span> np.exp(<span class="op">-</span>log_sigma)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> affine_log_prob(x: np.ndarray, mu: <span class="bu">float</span>, log_sigma: <span class="bu">float</span>) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""log p_X(x) induced by z~N(0,1), x = mu + sigma z."""</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    z <span class="op">=</span> affine_inverse(x, mu<span class="op">=</span>mu, log_sigma<span class="op">=</span>log_sigma)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># For 1D: log|det d/dx f^{-1}(x)| = log(1/sigma) = -log_sigma</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> stdnorm_logpdf(z) <span class="op">-</span> log_sigma</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Toy data: non-standard normal</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>x_data <span class="op">=</span> rng.normal(loc<span class="op">=</span><span class="fl">2.0</span>, scale<span class="op">=</span><span class="fl">0.7</span>, size<span class="op">=</span><span class="dv">2_000</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co"># MLE for Gaussian = match sample mean/std.</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>mu_hat <span class="op">=</span> <span class="bu">float</span>(x_data.mean())</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>log_sigma_hat <span class="op">=</span> <span class="bu">float</span>(np.log(x_data.std(ddof<span class="op">=</span><span class="dv">0</span>)))</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>nll <span class="op">=</span> <span class="kw">lambda</span> mu, ls: <span class="bu">float</span>(<span class="op">-</span>affine_log_prob(x_data, mu<span class="op">=</span>mu, log_sigma<span class="op">=</span>ls).mean())</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mu_hat"</span>: mu_hat,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">"sigma_hat"</span>: <span class="bu">float</span>(np.exp(log_sigma_hat)),</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="st">"NLL(base std normal)"</span>: nll(mu<span class="op">=</span><span class="fl">0.0</span>, ls<span class="op">=</span><span class="fl">0.0</span>),</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="st">"NLL(fitted affine flow)"</span>: nll(mu<span class="op">=</span>mu_hat, ls<span class="op">=</span>log_sigma_hat),</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'mu_hat': 1.9803820899009006, 'sigma_hat': 0.7001382390069695, 'NLL(base std normal)': 3.124991921064692, 'NLL(fitted affine flow)': 1.0624610540641546}</code></pre>
+</div>
+</div>
+</section>
+<section id="d-coupling-flow-one-coupling-layer" class="level5" data-number="10.1.0.1.2">
+<h5 data-number="10.1.0.1.2" class="anchored" data-anchor-id="d-coupling-flow-one-coupling-layer"><span class="header-section-number">10.1.0.1.2</span> 2D coupling flow (one coupling layer)</h5>
+<p>A classic <em>coupling layer</em> keeps part of the vector unchanged and uses it to scale/shift the rest. For <span class="math inline">\(x=(x_1,x_2)\)</span>, one simple form is</p>
+<p><span class="math display">\[y_1 = x_1, \qquad y_2 = x_2\,\exp(s(x_1)) + t(x_1).\]</span></p>
+<p>This is always invertible as long as <span class="math inline">\(\exp(s(x_1))&gt;0\)</span>, and its Jacobian determinant is cheap:</p>
+<p><span class="math display">\[\log |\det \nabla_x f(x)| = s(x_1).\]</span></p>
+<div id="02ce0055" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> coupling_forward(x: np.ndarray, a: <span class="bu">float</span>, b: <span class="bu">float</span>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[np.ndarray, np.ndarray]:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""One 2D coupling layer.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">    y1 = x1</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">    y2 = x2 * exp(a*x1) + b*x1</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns: (y, log_det_J) where log_det_J is per-sample.</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    x1 <span class="op">=</span> x[:, <span class="dv">0</span>]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    x2 <span class="op">=</span> x[:, <span class="dv">1</span>]</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> a <span class="op">*</span> x1</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> b <span class="op">*</span> x1</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    y1 <span class="op">=</span> x1</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    y2 <span class="op">=</span> x2 <span class="op">*</span> np.exp(s) <span class="op">+</span> t</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> np.stack([y1, y2], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    log_det <span class="op">=</span> s  <span class="co"># per-sample</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> y, log_det</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> coupling_inverse(y: np.ndarray, a: <span class="bu">float</span>, b: <span class="bu">float</span>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[np.ndarray, np.ndarray]:</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Inverse of coupling_forward.</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">    x1 = y1</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">    x2 = (y2 - b*x1) * exp(-a*x1)</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns: (x, log_det_J_inv) where log_det_J_inv is per-sample.</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    y1 <span class="op">=</span> y[:, <span class="dv">0</span>]</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    y2 <span class="op">=</span> y[:, <span class="dv">1</span>]</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> a <span class="op">*</span> y1</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> b <span class="op">*</span> y1</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    x1 <span class="op">=</span> y1</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    x2 <span class="op">=</span> (y2 <span class="op">-</span> t) <span class="op">*</span> np.exp(<span class="op">-</span>s)</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> np.stack([x1, x2], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    log_det_inv <span class="op">=</span> <span class="op">-</span>s</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x, log_det_inv</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stdnorm2_logpdf(z: np.ndarray) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> (np.<span class="bu">sum</span>(z<span class="op">**</span><span class="dv">2</span>, axis<span class="op">=</span><span class="dv">1</span>) <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> np.log(<span class="dv">2</span> <span class="op">*</span> np.pi))</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> coupling_flow_log_prob(y: np.ndarray, a: <span class="bu">float</span>, b: <span class="bu">float</span>) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="co"># y = f(x), with base density on x ~ N(0, I)</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    x, log_det_inv <span class="op">=</span> coupling_inverse(y, a<span class="op">=</span>a, b<span class="op">=</span>b)</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> stdnorm2_logpdf(x) <span class="op">+</span> log_det_inv</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Draw samples by pushing base samples through the coupling layer</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> rng.normal(size<span class="op">=</span>(<span class="dv">5_000</span>, <span class="dv">2</span>))</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>flow_samples, log_det <span class="op">=</span> coupling_forward(z, a<span class="op">=</span><span class="fl">0.8</span>, b<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>    <span class="st">"samples_mean"</span>: flow_samples.mean(axis<span class="op">=</span><span class="dv">0</span>).<span class="bu">round</span>(<span class="dv">3</span>).tolist(),</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">"samples_cov"</span>: np.cov(flow_samples.T).<span class="bu">round</span>(<span class="dv">3</span>).tolist(),</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>    <span class="st">"avg_log_det"</span>: <span class="bu">float</span>(log_det.mean()),</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'samples_mean': [0.014, -0.019], 'samples_cov': [[0.995, 0.403], [0.403, 3.771]], 'avg_log_det': 0.01122702511566227}</code></pre>
+</div>
+</div>
+<div id="8a739a84" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">4</span>))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>ax.scatter(flow_samples[::<span class="dv">10</span>, <span class="dv">0</span>], flow_samples[::<span class="dv">10</span>, <span class="dv">1</span>], s<span class="op">=</span><span class="dv">5</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Samples from a tiny 2D coupling flow"</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"x1"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"x2"</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>ax.set_aspect(<span class="st">"equal"</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="modern-sbi_files/figure-html/cell-5-output-1.png" width="319" height="376" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In practice, <em>learned</em> coupling flows use neural nets to represent <span class="math inline">\(s(\cdot)\)</span> and <span class="math inline">\(t(\cdot)\)</span> (and stack many layers, alternating which coordinates are transformed), but the bookkeeping is the same.</p>
+</section>
+</section>
+<section id="npe-pipeline-end-to-end" class="level3" data-number="10.1.1">
+<h3 data-number="10.1.1" class="anchored" data-anchor-id="npe-pipeline-end-to-end"><span class="header-section-number">10.1.1</span> 3) NPE pipeline (end-to-end)</h3>
+<ul>
+<li>Generate training pairs <span class="math inline">\((\theta_i, y_i)\)</span> from the simulator + prior.</li>
+<li>Choose an encoder for time series <span class="math inline">\(y\)</span> (summaries first; later a small neural encoder).</li>
+<li>Train a conditional density model for <span class="math inline">\(\theta\mid y\)</span>.</li>
+<li>Evaluate on held-out simulations.</li>
+</ul>
+<section id="demo-beta-only-npe-with-the-package-conditional-flow-helper-no-deep-learning" class="level4" data-number="10.1.1.1">
+<h4 data-number="10.1.1.1" class="anchored" data-anchor-id="demo-beta-only-npe-with-the-package-conditional-flow-helper-no-deep-learning"><span class="header-section-number">10.1.1.1</span> Demo: beta-only “NPE” with the package conditional-flow helper (no deep learning)</h4>
+<p>Before we use a full conditional flow, it helps to see the basic <strong>NPE loop</strong> in the simplest possible form. We will:</p>
+<ol type="1">
+<li>Sample <span class="math inline">\(\theta_i = \log \beta_i\)</span> from a prior.</li>
+<li>Simulate a stochastic SEIR observation <span class="math inline">\(y_i\)</span>.</li>
+<li>Compress <span class="math inline">\(y_i\)</span> to a low-dimensional summary vector <span class="math inline">\(s_i\)</span>.</li>
+<li>Fit a conditional density model <span class="math display">\[q_\phi(\log \beta \mid s) = \mathcal{N}(\mu_\phi(s),\,\sigma_\phi(s)^2).\]</span></li>
+</ol>
+<p>Here <span class="math inline">\(\mu_\phi(s)\)</span> is just a linear regression and <span class="math inline">\(\sigma_\phi\)</span> is a single global scale. This is not a powerful model, but it is a runnable baseline with exactly the same control flow as neural NPE.</p>
+<p>In code, we will use the package’s <code>ConditionalAffineDiagNormal</code> helper to fit this model in closed form.</p>
+<div id="55b45002" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference <span class="im">import</span> SEIRParams</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.pipeline <span class="im">import</span> simulate_seir_and_report_stochastic</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Synthetic "observed" dataset ---</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>beta_true <span class="op">=</span> <span class="fl">0.35</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>params_true <span class="op">=</span> SEIRParams(beta<span class="op">=</span>beta_true, sigma<span class="op">=</span><span class="dv">1</span> <span class="op">/</span> <span class="fl">4.0</span>, gamma<span class="op">=</span><span class="dv">1</span> <span class="op">/</span> <span class="fl">6.0</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> <span class="dv">80</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>ds_obs <span class="op">=</span> simulate_seir_and_report_stochastic(</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    params<span class="op">=</span>params_true,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    s0<span class="op">=</span><span class="dv">10_000</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    e0<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    i0<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    r0<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    dt<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    steps<span class="op">=</span>steps,</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    reporting_rate<span class="op">=</span><span class="fl">0.25</span>,</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    rng<span class="op">=</span>rng,</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>y_obs <span class="op">=</span> ds_obs.y.astype(<span class="bu">float</span>)</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> summary(y: np.ndarray) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A tiny hand-crafted encoder for a reported-incidence time series."""</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> np.asarray(y, dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    peak_t <span class="op">=</span> <span class="bu">int</span>(np.argmax(y))</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.array([np.<span class="bu">sum</span>(y), np.<span class="bu">max</span>(y), peak_t], dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>s_obs <span class="op">=</span> summary(y_obs)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({<span class="st">"beta_true"</span>: beta_true, <span class="st">"s_obs"</span>: s_obs.<span class="bu">round</span>(<span class="dv">3</span>).tolist()})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'beta_true': 0.35, 's_obs': [1138.0, 59.0, 77.0]}</code></pre>
+</div>
+</div>
+<div id="0404a8b9" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Prior over log(beta) ---</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>logbeta_prior_mean <span class="op">=</span> <span class="bu">float</span>(np.log(<span class="fl">0.3</span>))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>logbeta_prior_sd <span class="op">=</span> <span class="fl">0.35</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prior_sample_logbeta(rng: np.random.Generator) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(rng.normal(loc<span class="op">=</span>logbeta_prior_mean, scale<span class="op">=</span>logbeta_prior_sd))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_y_from_logbeta(logbeta: <span class="bu">float</span>, <span class="op">*</span>, rng: np.random.Generator) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    beta <span class="op">=</span> <span class="bu">float</span>(np.exp(logbeta))</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> SEIRParams(beta<span class="op">=</span>beta, sigma<span class="op">=</span>params_true.sigma, gamma<span class="op">=</span>params_true.gamma)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    ds <span class="op">=</span> simulate_seir_and_report_stochastic(</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        params<span class="op">=</span>params,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        s0<span class="op">=</span><span class="dv">10_000</span>,</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        e0<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        i0<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        r0<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        dt<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        steps<span class="op">=</span>steps,</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>        reporting_rate<span class="op">=</span><span class="fl">0.25</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>        rng<span class="op">=</span>rng,</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ds.y.astype(<span class="bu">float</span>)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_training_data(n_sims: <span class="bu">int</span>, <span class="op">*</span>, rng: np.random.Generator) <span class="op">-&gt;</span> <span class="bu">tuple</span>[np.ndarray, np.ndarray]:</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Return (S, logbeta) with S shape (n_sims, d)."""</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>    S <span class="op">=</span> np.zeros((n_sims, <span class="dv">3</span>), dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    logb <span class="op">=</span> np.zeros((n_sims,), dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_sims):</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>        lb <span class="op">=</span> prior_sample_logbeta(rng)</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> simulate_y_from_logbeta(lb, rng<span class="op">=</span>rng)</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>        S[i] <span class="op">=</span> summary(y)</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>        logb[i] <span class="op">=</span> lb</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> S, logb</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>S_train, logb_train <span class="op">=</span> make_training_data(<span class="dv">800</span>, rng<span class="op">=</span>np.random.default_rng(<span class="dv">1</span>))</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>S_test, logb_test <span class="op">=</span> make_training_data(<span class="dv">200</span>, rng<span class="op">=</span>np.random.default_rng(<span class="dv">2</span>))</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({<span class="st">"S_train_shape"</span>: S_train.shape, <span class="st">"logb_train_mean"</span>: <span class="bu">float</span>(logb_train.mean())})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'S_train_shape': (800, 3), 'logb_train_mean': -1.2095443448622796}</code></pre>
+</div>
+</div>
+<div id="8581096c" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.flows <span class="im">import</span> ConditionalAffineDiagNormal</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit q(logbeta | s) as a *conditional affine flow* (a diagonal Gaussian)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># in closed form.</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>flow <span class="op">=</span> ConditionalAffineDiagNormal.fit_closed_form(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    contexts<span class="op">=</span>S_train,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    thetas<span class="op">=</span>logb_train[:, <span class="va">None</span>],</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict mean log(beta) on a test set (for a sanity check).</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>mu_test <span class="op">=</span> flow.mean(S_test)[:, <span class="dv">0</span>]</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>rmse <span class="op">=</span> <span class="bu">float</span>(np.sqrt(np.mean((mu_test <span class="op">-</span> logb_test) <span class="op">**</span> <span class="dv">2</span>)))</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({<span class="st">"sigma_hat"</span>: <span class="bu">float</span>(np.exp(flow.log_sigma[<span class="dv">0</span>])), <span class="st">"test_RMSE_logbeta"</span>: rmse})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'sigma_hat': 0.13429620838685563, 'test_RMSE_logbeta': 0.13001736854755003}</code></pre>
+</div>
+</div>
+<div id="087ad20a" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample from the learned posterior q(logbeta | s_obs).</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>logb_post <span class="op">=</span> flow.sample(s_obs, <span class="dv">5_000</span>, rng<span class="op">=</span>np.random.default_rng(<span class="dv">3</span>))[:, <span class="dv">0</span>]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>beta_post <span class="op">=</span> np.exp(logb_post)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_true"</span>: beta_true,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_post_mean"</span>: <span class="bu">float</span>(np.mean(beta_post)),</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_post_q10"</span>: <span class="bu">float</span>(np.quantile(beta_post, <span class="fl">0.1</span>)),</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_post_q90"</span>: <span class="bu">float</span>(np.quantile(beta_post, <span class="fl">0.9</span>)),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'beta_true': 0.35, 'beta_post_mean': 0.3545202252634459, 'beta_post_q10': 0.2961454270383665, 'beta_post_q90': 0.418358659968864}</code></pre>
+</div>
+</div>
+<p>This model is intentionally crude: the posterior width here is driven mostly by the regression residuals. The same NPE workflow can be extended to more expressive conditional flows when non-Gaussian posteriors are needed.</p>
+</section>
+<section id="tiny-jax-training-loop-behind-modern-sbi" class="level4" data-number="10.1.1.2">
+<h4 data-number="10.1.1.2" class="anchored" data-anchor-id="tiny-jax-training-loop-behind-modern-sbi"><span class="header-section-number">10.1.1.2</span> Tiny JAX training loop (behind <code>modern-sbi</code>)</h4>
+<p>The point of this section is <em>not</em> to introduce new modelling ideas. It is just a minimal, end-to-end example of the mechanics we will reuse for neural NPE:</p>
+<ul>
+<li>define a parametric model</li>
+<li>write a loss (negative log-likelihood)</li>
+<li>take gradients</li>
+<li>apply an optimiser update</li>
+</ul>
+<div id="7d0c9f75" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="3f6cc465" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reuse the (S_train, logb_train) data defined above.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> jnp.asarray(S_train)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> jnp.asarray(logb_train)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardise inputs (same idea as above).</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>x_mean <span class="op">=</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>x_std <span class="op">=</span> jnp.where(X.std(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">&gt;</span> <span class="dv">0</span>, X.std(axis<span class="op">=</span><span class="dv">0</span>), <span class="fl">1.0</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>Xn <span class="op">=</span> (X <span class="op">-</span> x_mean) <span class="op">/</span> x_std</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CondGaussian(eqx.Module):</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    net: eqx.nn.MLP</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x: jnp.ndarray) <span class="op">-&gt;</span> <span class="bu">tuple</span>[jnp.ndarray, jnp.ndarray]:</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Predict (mu, log_sigma) for log(beta) given summaries.</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        out <span class="op">=</span> <span class="va">self</span>.net(x)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>        mu <span class="op">=</span> out[<span class="dv">0</span>]</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>        log_sigma <span class="op">=</span> out[<span class="dv">1</span>]</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> mu, log_sigma</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">0</span>)</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CondGaussian(</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    net<span class="op">=</span>eqx.nn.MLP(</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        in_size<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        out_size<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>        width_size<span class="op">=</span><span class="dv">16</span>,</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>        depth<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>        activation<span class="op">=</span>jax.nn.tanh,</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>        key<span class="op">=</span>key,</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> nll_one(params: CondGaussian, x: jnp.ndarray, y: jnp.ndarray) <span class="op">-&gt;</span> jnp.ndarray:</span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>    mu, log_sigma <span class="op">=</span> params(x)</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add a small floor for numerical stability.</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>    log_sigma <span class="op">=</span> jnp.maximum(log_sigma, <span class="op">-</span><span class="fl">6.0</span>)</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>    sigma2 <span class="op">=</span> jnp.exp(<span class="fl">2.0</span> <span class="op">*</span> log_sigma)</span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">0.5</span> <span class="op">*</span> ((y <span class="op">-</span> mu) <span class="op">**</span> <span class="dv">2</span> <span class="op">/</span> sigma2 <span class="op">+</span> <span class="fl">2.0</span> <span class="op">*</span> log_sigma <span class="op">+</span> jnp.log(<span class="fl">2.0</span> <span class="op">*</span> jnp.pi))</span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss(params: CondGaussian, xb: jnp.ndarray, yb: jnp.ndarray) <span class="op">-&gt;</span> jnp.ndarray:</span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jnp.mean(jax.vmap(nll_one, in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="dv">0</span>, <span class="dv">0</span>))(params, xb, yb))</span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>opt <span class="op">=</span> optax.adam(<span class="fl">1e-2</span>)</span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>opt_state <span class="op">=</span> opt.init(eqx.<span class="bu">filter</span>(model, eqx.is_array))</span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a><span class="at">@eqx.filter_jit</span></span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> step(params: CondGaussian, opt_state, xb: jnp.ndarray, yb: jnp.ndarray):</span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a>    l, grads <span class="op">=</span> eqx.filter_value_and_grad(loss)(params, xb, yb)</span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a>    updates, opt_state <span class="op">=</span> opt.update(grads, opt_state, params)</span>
+<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> eqx.apply_updates(params, updates)</span>
+<span id="cb16-56"><a href="#cb16-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> params, opt_state, l</span>
+<span id="cb16-57"><a href="#cb16-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-58"><a href="#cb16-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-59"><a href="#cb16-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Tiny SGD loop.</span></span>
+<span id="cb16-60"><a href="#cb16-60" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">128</span></span>
+<span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>n_steps <span class="op">=</span> <span class="dv">200</span></span>
+<span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>key, subkey <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>idx <span class="op">=</span> jax.random.permutation(subkey, Xn.shape[<span class="dv">0</span>])</span>
+<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(n_steps):</span>
+<span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a>    i0 <span class="op">=</span> (t <span class="op">*</span> batch_size) <span class="op">%</span> Xn.shape[<span class="dv">0</span>]</span>
+<span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>    batch_idx <span class="op">=</span> idx[i0 : i0 <span class="op">+</span> batch_size]</span>
+<span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>    xb <span class="op">=</span> Xn[batch_idx]</span>
+<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a>    yb <span class="op">=</span> y[batch_idx]</span>
+<span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a>    model, opt_state, l <span class="op">=</span> step(model, opt_state, xb, yb)</span>
+<span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-72"><a href="#cb16-72" aria-hidden="true" tabindex="-1"></a><span class="co"># Quick sanity check: does the trained model reduce NLL vs random initialisation?</span></span>
+<span id="cb16-73"><a href="#cb16-73" aria-hidden="true" tabindex="-1"></a>final_nll <span class="op">=</span> <span class="bu">float</span>(loss(model, Xn, y))</span>
+<span id="cb16-74"><a href="#cb16-74" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({<span class="st">"final_train_NLL"</span>: final_nll})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'final_train_NLL': -0.9696986079216003}</code></pre>
+</div>
+</div>
+</section>
+<section id="end-to-end-jax-conditional-gaussian-npe-posterior-posterior-predictive" class="level4" data-number="10.1.1.3">
+<h4 data-number="10.1.1.3" class="anchored" data-anchor-id="end-to-end-jax-conditional-gaussian-npe-posterior-posterior-predictive"><span class="header-section-number">10.1.1.3</span> End-to-end: JAX conditional Gaussian NPE (posterior + posterior predictive)</h4>
+<p>This section turns the tiny training loop above into a complete, deterministic workflow:</p>
+<ul>
+<li>train a conditional Gaussian for <span class="math inline">\(\log\beta \mid s(y)\)</span></li>
+<li>sample an approximate posterior given <span class="math inline">\(y_{\text{obs}}\)</span></li>
+<li>run a small posterior predictive check (PPC)</li>
+</ul>
+<p>The goal is <em>not</em> state-of-the-art performance; it is a runnable template you can adapt.</p>
+<div id="c4a9fe47" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> distrax</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-train deterministically (fresh init + fixed steps).</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">0</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>key, subkey <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>model2 <span class="op">=</span> CondGaussian(</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    net<span class="op">=</span>eqx.nn.MLP(</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        in_size<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        out_size<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        width_size<span class="op">=</span><span class="dv">16</span>,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        depth<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>        activation<span class="op">=</span>jax.nn.tanh,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>        key<span class="op">=</span>subkey,</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>opt2 <span class="op">=</span> optax.adam(<span class="fl">1e-2</span>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>opt_state2 <span class="op">=</span> opt2.init(eqx.<span class="bu">filter</span>(model2, eqx.is_array))</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">128</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>n_steps <span class="op">=</span> <span class="dv">300</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>key, subkey <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>idx <span class="op">=</span> jax.random.permutation(subkey, Xn.shape[<span class="dv">0</span>])</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(n_steps):</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>    i0 <span class="op">=</span> (t <span class="op">*</span> batch_size) <span class="op">%</span> Xn.shape[<span class="dv">0</span>]</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    batch_idx <span class="op">=</span> idx[i0 : i0 <span class="op">+</span> batch_size]</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    xb <span class="op">=</span> Xn[batch_idx]</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    yb <span class="op">=</span> y[batch_idx]</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    model2, opt_state2, l <span class="op">=</span> step(model2, opt_state2, xb, yb)</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Approx posterior for log(beta) given observed summaries ---</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>s_obs_j <span class="op">=</span> jnp.asarray(s_obs)</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>s_obs_n <span class="op">=</span> (s_obs_j <span class="op">-</span> x_mean) <span class="op">/</span> x_std</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>mu_hat, log_sigma_hat <span class="op">=</span> model2(s_obs_n)</span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>log_sigma_hat <span class="op">=</span> jnp.maximum(log_sigma_hat, <span class="op">-</span><span class="fl">6.0</span>)</span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>q <span class="op">=</span> distrax.Normal(loc<span class="op">=</span>mu_hat, scale<span class="op">=</span>jnp.exp(log_sigma_hat))</span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>key, subkey <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>logb_samps <span class="op">=</span> np.asarray(q.sample(seed<span class="op">=</span>subkey, sample_shape<span class="op">=</span>(<span class="dv">2_000</span>,)))</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>beta_samps <span class="op">=</span> np.exp(logb_samps)</span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_true"</span>: beta_true,</span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_post_mean"</span>: <span class="bu">float</span>(np.mean(beta_samps)),</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_post_q05"</span>: <span class="bu">float</span>(np.quantile(beta_samps, <span class="fl">0.05</span>)),</span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_post_q95"</span>: <span class="bu">float</span>(np.quantile(beta_samps, <span class="fl">0.95</span>)),</span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Tiny posterior predictive check on the summary space ---</span></span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>rng_ppc <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>n_ppc <span class="op">=</span> <span class="dv">80</span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>S_ppc <span class="op">=</span> np.zeros((n_ppc, <span class="dv">3</span>), dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_ppc):</span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>    beta_i <span class="op">=</span> <span class="bu">float</span>(beta_samps[i])</span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>    params_i <span class="op">=</span> SEIRParams(beta<span class="op">=</span>beta_i, sigma<span class="op">=</span>params_true.sigma, gamma<span class="op">=</span>params_true.gamma)</span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>    ds_i <span class="op">=</span> simulate_seir_and_report_stochastic(</span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>        params<span class="op">=</span>params_i,</span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>        s0<span class="op">=</span><span class="dv">10_000</span>,</span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>        e0<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>        i0<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a>        r0<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>        dt<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>        steps<span class="op">=</span>steps,</span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>        reporting_rate<span class="op">=</span><span class="fl">0.25</span>,</span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>        rng<span class="op">=</span>rng_ppc,</span>
+<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a>    S_ppc[i] <span class="op">=</span> summary(ds_i.y)</span>
+<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare observed summary to PPC distribution (just a few quantiles).</span></span>
+<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a>q_lo <span class="op">=</span> np.quantile(S_ppc, <span class="fl">0.1</span>, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a>q_hi <span class="op">=</span> np.quantile(S_ppc, <span class="fl">0.9</span>, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb18-77"><a href="#cb18-77" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ppc_q10"</span>: q_lo.<span class="bu">round</span>(<span class="dv">2</span>).tolist(),</span>
+<span id="cb18-79"><a href="#cb18-79" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ppc_q90"</span>: q_hi.<span class="bu">round</span>(<span class="dv">2</span>).tolist(),</span>
+<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a>        <span class="st">"s_obs"</span>: s_obs.<span class="bu">round</span>(<span class="dv">2</span>).tolist(),</span>
+<span id="cb18-81"><a href="#cb18-81" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb18-82"><a href="#cb18-82" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'beta_true': 0.35, 'beta_post_mean': 0.3329930901527405, 'beta_post_q05': 0.3035953938961029, 'beta_post_q95': 0.3644125163555145}
+{'ppc_q10': [247.5, 21.7, 69.0], 'ppc_q90': [1437.1, 78.1, 79.0], 's_obs': [1138.0, 59.0, 77.0]}</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="b-nle-neural-likelihood-estimation" class="level3" data-number="10.1.2">
+<h3 data-number="10.1.2" class="anchored" data-anchor-id="b-nle-neural-likelihood-estimation"><span class="header-section-number">10.1.2</span> 3b) NLE: neural likelihood estimation</h3>
+<p>In <strong>NLE</strong> we learn an explicit surrogate for the likelihood,</p>
+<p><span class="math display">\[q_\phi(y\mid\theta) \approx p(y\mid\theta),\]</span></p>
+<p>typically using a conditional density model (often a conditional flow). Once we can evaluate <span class="math inline">\(\log q_\phi(y_{\text{obs}}\mid\theta)\)</span>, we can do standard Bayesian inference with MCMC:</p>
+<p><span class="math display">\[\log p(\theta\mid y_{\text{obs}}) = \log p(\theta) + \log q_\phi(y_{\text{obs}}\mid\theta) + \text{const}.\]</span></p>
+<p>Practical notes:</p>
+<ul>
+<li>In many problems, <span class="math inline">\(y\)</span> is high-dimensional; in that case NLE is often done on <em>summaries</em> <span class="math inline">\(s(y)\)</span>, learning <span class="math inline">\(q_\phi(s\mid\theta)\)</span>.</li>
+<li>Compared to NPE, NLE often makes it easier to reuse a learned likelihood across different priors (since the likelihood itself is prior-independent).</li>
+</ul>
+<p>A minimal skeleton (pseudo-code) looks like:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train on simulator output:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   (theta_i, y_i) ~ p(theta) p(y|theta)</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit conditional density model q_phi(y|theta)</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> log_posterior(theta, y_obs):</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> log_prior(theta) <span class="op">+</span> flow_like.log_prob(y_obs, context<span class="op">=</span>theta)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Then run any MCMC method (Metropolis, HMC, slice, ...)</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co"># targeting log_posterior(., y_obs).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This handbook focuses first on NPE for clarity; NLE uses the same simulation bank pattern and becomes practical once you have a conditional density model for the observation space (or summary space).</p>
+</section>
+<section id="c-nre-neural-ratio-estimation" class="level3" data-number="10.1.3">
+<h3 data-number="10.1.3" class="anchored" data-anchor-id="c-nre-neural-ratio-estimation"><span class="header-section-number">10.1.3</span> 3c) NRE: neural ratio estimation</h3>
+<p>In <strong>NRE</strong> we learn the <em>likelihood-to-evidence ratio</em></p>
+<p><span class="math display">\[r(\theta, y) = \frac{p(y\mid\theta)}{p(y)},\]</span></p>
+<p>usually by reducing ratio estimation to binary classification. A common construction is:</p>
+<ul>
+<li>draw <strong>joint</strong> samples <span class="math inline">\((\theta, y) \sim p(\theta) p(y\mid\theta)\)</span> and label them 1</li>
+<li>draw <strong>marginal/product</strong> samples <span class="math inline">\((\theta, y') \sim p(\theta) p(y)\)</span> (e.g.&nbsp;by shuffling <span class="math inline">\(y\)</span>) and label them 0</li>
+<li>train a classifier <span class="math inline">\(d_\phi(\theta, y) \approx \Pr(\text{joint}=1\mid\theta, y)\)</span></li>
+</ul>
+<p>Then the estimated ratio is</p>
+<p><span class="math display">\[\hat r_\phi(\theta, y) = \frac{d_\phi(\theta, y)}{1 - d_\phi(\theta, y)}.\]</span></p>
+<p>This gives a posterior via</p>
+<p><span class="math display">\[p(\theta\mid y_{\text{obs}}) \propto p(\theta)\,\hat r_\phi(\theta, y_{\text{obs}}).\]</span></p>
+<p>NRE is attractive when you want a flexible posterior but do not want to model a full conditional density. As with NLE, it is common to feed the classifier summaries <span class="math inline">\(s(y)\)</span> (or learned embeddings) rather than raw <span class="math inline">\(y\)</span>.</p>
+<p>A minimal skeleton (pseudo-code) looks like:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make training pairs for a joint-vs-product classifier.</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Joint: (theta, y) ~ p(theta) p(y|theta)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Product: (theta, y') ~ p(theta) p(y)  (e.g. shuffle y within a batch)</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> log_ratio_hat(theta, y):</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># d_phi(theta, y) is the classifier probability of "joint".</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> classifier.predict_proba(theta, y)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.log(d) <span class="op">-</span> np.log1p(<span class="op">-</span>d)  <span class="co"># logit(d)</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Posterior (up to normalisation): log p(theta) + log r_hat(theta, y_obs)</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> log_posterior(theta, y_obs):</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> log_prior(theta) <span class="op">+</span> log_ratio_hat(theta, y_obs)</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Then sample theta from log_posterior(., y_obs) using MCMC.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="diagnostics-and-calibration" class="level3" data-number="10.1.4">
+<h3 data-number="10.1.4" class="anchored" data-anchor-id="diagnostics-and-calibration"><span class="header-section-number">10.1.4</span> 4) Diagnostics and calibration</h3>
+<ul>
+<li>Posterior predictive checks (PPC).</li>
+<li>Coverage / calibration checks (small SBC-style smoke test).</li>
+<li>Failure modes: misspecification, simulation budget, overconfident posteriors.</li>
+</ul>
+</section>
+<section id="amortised-vs-local-inference" class="level3" data-number="10.1.5">
+<h3 data-number="10.1.5" class="anchored" data-anchor-id="amortised-vs-local-inference"><span class="header-section-number">10.1.5</span> 5) Amortised vs local inference</h3>
+<p>There are two common ways to spend a simulation budget when learning a conditional density model (e.g.&nbsp;an NPE-style estimator):</p>
+<ul>
+<li><strong>Amortised</strong>: train once on samples from the prior predictive, then reuse the trained model for many observations.</li>
+<li><strong>Local / sequential</strong>: for a <em>single</em> observation, concentrate simulations around the region of parameter space that seems plausible for that observation (often via rounds of proposals).</li>
+</ul>
+<p>Below is a tiny comparison on the beta-only running example, using the same simple conditional Gaussian model from the earlier section.</p>
+<p>The goal is not to claim strong performance, but to make the trade-off concrete:</p>
+<ul>
+<li>amortised training uses a larger <em>up-front</em> simulation budget, but inference per new dataset is cheap</li>
+<li>local training can use fewer simulations overall if you only care about one dataset, and can often be more accurate for that dataset when the prior is broad</li>
+</ul>
+<div id="7bfa90dc" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference <span class="im">import</span> plot_series_comparison</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.flows <span class="im">import</span> ConditionalAffineDiagNormal</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Reuse from above: prior_sample_logbeta, simulate_y_from_logbeta, summary,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># as well as the amortised `flow` trained on (S_train, logb_train).</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_local_flow(</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    s_obs: np.ndarray,</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    flow_init: ConditionalAffineDiagNormal,</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    n_local: <span class="bu">int</span> <span class="op">=</span> <span class="dv">400</span>,</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    proposal_sd: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.15</span>,</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    rng: np.random.Generator,</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> ConditionalAffineDiagNormal:</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Fit a *local* conditional model by simulating around an initial guess.</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a><span class="co">    We use the amortised flow's posterior mean as a proposal centre, then draw</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a><span class="co">    log(beta) ~ Normal(center, proposal_sd) and simulate y, returning summaries.</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a><span class="co">    This is a very small stand-in for a sequential NPE scheme.</span></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>    center <span class="op">=</span> <span class="bu">float</span>(flow_init.mean(s_obs[<span class="va">None</span>, :])[<span class="dv">0</span>, <span class="dv">0</span>])</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>    S <span class="op">=</span> np.zeros((n_local, <span class="dv">3</span>), dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>    logb <span class="op">=</span> np.zeros((n_local,), dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_local):</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>        lb <span class="op">=</span> <span class="bu">float</span>(rng.normal(loc<span class="op">=</span>center, scale<span class="op">=</span>proposal_sd))</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> simulate_y_from_logbeta(lb, rng<span class="op">=</span>rng)</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>        S[i] <span class="op">=</span> summary(y)</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>        logb[i] <span class="op">=</span> lb</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ConditionalAffineDiagNormal.fit_closed_form(contexts<span class="op">=</span>S, thetas<span class="op">=</span>logb[:, <span class="va">None</span>])</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lognormal_sd(<span class="op">*</span>, mu: <span class="bu">float</span>, sigma: <span class="bu">float</span>) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""SD of exp(X) when X ~ Normal(mu, sigma^2)."""</span></span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>    v <span class="op">=</span> <span class="bu">float</span>(sigma<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(np.sqrt((np.exp(v) <span class="op">-</span> <span class="fl">1.0</span>) <span class="op">*</span> np.exp(<span class="fl">2.0</span> <span class="op">*</span> mu <span class="op">+</span> v)))</span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ppc_summary_distance(</span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a>    flow_model: ConditionalAffineDiagNormal,</span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a>    s_obs: np.ndarray,</span>
+<span id="cb22-47"><a href="#cb22-47" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb22-48"><a href="#cb22-48" aria-hidden="true" tabindex="-1"></a>    n: <span class="bu">int</span>,</span>
+<span id="cb22-49"><a href="#cb22-49" aria-hidden="true" tabindex="-1"></a>    rng: np.random.Generator,</span>
+<span id="cb22-50"><a href="#cb22-50" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb22-51"><a href="#cb22-51" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""PPC score: mean L2 distance between simulated and observed summaries."""</span></span>
+<span id="cb22-52"><a href="#cb22-52" aria-hidden="true" tabindex="-1"></a>    logb_samp <span class="op">=</span> flow_model.sample(s_obs, n<span class="op">=</span>n, rng<span class="op">=</span>rng)[:, <span class="dv">0</span>]</span>
+<span id="cb22-53"><a href="#cb22-53" aria-hidden="true" tabindex="-1"></a>    dists <span class="op">=</span> []</span>
+<span id="cb22-54"><a href="#cb22-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> lb <span class="kw">in</span> logb_samp:</span>
+<span id="cb22-55"><a href="#cb22-55" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> simulate_y_from_logbeta(<span class="bu">float</span>(lb), rng<span class="op">=</span>rng)</span>
+<span id="cb22-56"><a href="#cb22-56" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> summary(y)</span>
+<span id="cb22-57"><a href="#cb22-57" aria-hidden="true" tabindex="-1"></a>        dists.append(<span class="bu">float</span>(np.linalg.norm(s <span class="op">-</span> s_obs)))</span>
+<span id="cb22-58"><a href="#cb22-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(np.mean(dists))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="e25899b1" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a few synthetic "observations" with different true betas.</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>K <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>rng_obs <span class="op">=</span> np.random.default_rng(<span class="dv">123</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>logb_true <span class="op">=</span> np.array([prior_sample_logbeta(rng_obs) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(K)], dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>beta_true_vec <span class="op">=</span> np.exp(logb_true)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>s_obs_list: <span class="bu">list</span>[np.ndarray] <span class="op">=</span> []</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(K):</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    yk <span class="op">=</span> simulate_y_from_logbeta(<span class="bu">float</span>(logb_true[k]), rng<span class="op">=</span>rng_obs)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    s_obs_list.append(summary(yk))</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>n_local <span class="op">=</span> <span class="dv">400</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>n_ppc <span class="op">=</span> <span class="dv">120</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare amortised vs local across point estimate error, posterior width, and PPC score.</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> []</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, s_k <span class="kw">in</span> <span class="bu">enumerate</span>(s_obs_list):</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    mu_am <span class="op">=</span> <span class="bu">float</span>(flow.mean(s_k[<span class="va">None</span>, :])[<span class="dv">0</span>, <span class="dv">0</span>])</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>    beta_hat_am <span class="op">=</span> <span class="bu">float</span>(np.exp(mu_am))</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>    sd_beta_am <span class="op">=</span> lognormal_sd(mu<span class="op">=</span>mu_am, sigma<span class="op">=</span><span class="bu">float</span>(np.exp(flow.log_sigma[<span class="dv">0</span>])))</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>    ppc_am <span class="op">=</span> ppc_summary_distance(flow, s_k, n<span class="op">=</span>n_ppc, rng<span class="op">=</span>np.random.default_rng(<span class="dv">200</span> <span class="op">+</span> k))</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>    flow_loc <span class="op">=</span> fit_local_flow(</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>        s_k,</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>        flow_init<span class="op">=</span>flow,</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>        n_local<span class="op">=</span>n_local,</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        proposal_sd<span class="op">=</span><span class="fl">0.15</span>,</span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>        rng<span class="op">=</span>np.random.default_rng(<span class="dv">10</span> <span class="op">+</span> k),</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>    mu_loc <span class="op">=</span> <span class="bu">float</span>(flow_loc.mean(s_k[<span class="va">None</span>, :])[<span class="dv">0</span>, <span class="dv">0</span>])</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>    beta_hat_loc <span class="op">=</span> <span class="bu">float</span>(np.exp(mu_loc))</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>    sd_beta_loc <span class="op">=</span> lognormal_sd(mu<span class="op">=</span>mu_loc, sigma<span class="op">=</span><span class="bu">float</span>(np.exp(flow_loc.log_sigma[<span class="dv">0</span>])))</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>    ppc_loc <span class="op">=</span> ppc_summary_distance(flow_loc, s_k, n<span class="op">=</span>n_ppc, rng<span class="op">=</span>np.random.default_rng(<span class="dv">500</span> <span class="op">+</span> k))</span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>    rows.append(</span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>            <span class="st">"k"</span>: k,</span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a>            <span class="st">"beta_true"</span>: <span class="bu">float</span>(beta_true_vec[k]),</span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a>            <span class="st">"beta_hat_am"</span>: beta_hat_am,</span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a>            <span class="st">"abs_err_am"</span>: <span class="bu">float</span>(<span class="bu">abs</span>(beta_hat_am <span class="op">-</span> beta_true_vec[k])),</span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a>            <span class="st">"sd_beta_am"</span>: sd_beta_am,</span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a>            <span class="st">"ppc_dist_am"</span>: ppc_am,</span>
+<span id="cb23-45"><a href="#cb23-45" aria-hidden="true" tabindex="-1"></a>            <span class="st">"beta_hat_loc"</span>: beta_hat_loc,</span>
+<span id="cb23-46"><a href="#cb23-46" aria-hidden="true" tabindex="-1"></a>            <span class="st">"abs_err_loc"</span>: <span class="bu">float</span>(<span class="bu">abs</span>(beta_hat_loc <span class="op">-</span> beta_true_vec[k])),</span>
+<span id="cb23-47"><a href="#cb23-47" aria-hidden="true" tabindex="-1"></a>            <span class="st">"sd_beta_loc"</span>: sd_beta_loc,</span>
+<span id="cb23-48"><a href="#cb23-48" aria-hidden="true" tabindex="-1"></a>            <span class="st">"ppc_dist_loc"</span>: ppc_loc,</span>
+<span id="cb23-49"><a href="#cb23-49" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb23-50"><a href="#cb23-50" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="af731048" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>abs_err_am <span class="op">=</span> np.asarray([r[<span class="st">"abs_err_am"</span>] <span class="cf">for</span> r <span class="kw">in</span> rows], dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>abs_err_loc <span class="op">=</span> np.asarray([r[<span class="st">"abs_err_loc"</span>] <span class="cf">for</span> r <span class="kw">in</span> rows], dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>ppc_am <span class="op">=</span> np.asarray([r[<span class="st">"ppc_dist_am"</span>] <span class="cf">for</span> r <span class="kw">in</span> rows], dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>ppc_loc <span class="op">=</span> np.asarray([r[<span class="st">"ppc_dist_loc"</span>] <span class="cf">for</span> r <span class="kw">in</span> rows], dtype<span class="op">=</span><span class="bu">float</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>mean_err_am <span class="op">=</span> <span class="bu">float</span>(np.mean(abs_err_am))</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>mean_err_loc <span class="op">=</span> <span class="bu">float</span>(np.mean(abs_err_loc))</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>mean_ppc_am <span class="op">=</span> <span class="bu">float</span>(np.mean(ppc_am))</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>mean_ppc_loc <span class="op">=</span> <span class="bu">float</span>(np.mean(ppc_loc))</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"amortised_sims_total"</span>: <span class="bu">int</span>(<span class="bu">len</span>(S_train)),</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"local_sims_per_obs"</span>: <span class="bu">int</span>(n_local),</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"local_sims_total"</span>: <span class="bu">int</span>(n_local <span class="op">*</span> K),</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mean_abs_err_amortised"</span>: mean_err_am,</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mean_abs_err_local"</span>: mean_err_loc,</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mean_ppc_dist_amortised"</span>: mean_ppc_am,</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mean_ppc_dist_local"</span>: mean_ppc_loc,</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plot_series_comparison(</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>    t<span class="op">=</span>np.arange(K, dtype<span class="op">=</span><span class="bu">float</span>),</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>    observed<span class="op">=</span>abs_err_am,</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>    fitted<span class="op">=</span>abs_err_loc,</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>    observed_label<span class="op">=</span><span class="st">"amortised |error|"</span>,</span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>    fitted_label<span class="op">=</span><span class="st">"local |error|"</span>,</span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Amortised vs local: absolute beta error by dataset"</span>,</span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>    ylabel<span class="op">=</span><span class="st">"absolute error"</span>,</span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a>fig</span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plot_series_comparison(</span>
+<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a>    t<span class="op">=</span>np.arange(K, dtype<span class="op">=</span><span class="bu">float</span>),</span>
+<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a>    observed<span class="op">=</span>ppc_am,</span>
+<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a>    fitted<span class="op">=</span>ppc_loc,</span>
+<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a>    observed_label<span class="op">=</span><span class="st">"amortised PPC distance"</span>,</span>
+<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a>    fitted_label<span class="op">=</span><span class="st">"local PPC distance"</span>,</span>
+<span id="cb24-40"><a href="#cb24-40" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Amortised vs local: PPC summary distance by dataset"</span>,</span>
+<span id="cb24-41"><a href="#cb24-41" aria-hidden="true" tabindex="-1"></a>    ylabel<span class="op">=</span><span class="st">"mean L2 summary distance"</span>,</span>
+<span id="cb24-42"><a href="#cb24-42" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-43"><a href="#cb24-43" aria-hidden="true" tabindex="-1"></a>fig</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{'amortised_sims_total': 800, 'local_sims_per_obs': 400, 'local_sims_total': 3200, 'mean_abs_err_amortised': 0.03743904795563384, 'mean_abs_err_local': 0.030592436050012765, 'mean_ppc_dist_amortised': 394.10878384108923, 'mean_ppc_dist_local': 275.6685276886164}</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+<figure class="figure">
+<p><img src="modern-sbi_files/figure-html/cell-15-output-2.png" width="593" height="302" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="modern-sbi_files/figure-html/cell-15-output-3.png" width="597" height="302" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="modern-sbi_files/figure-html/cell-15-output-4.png" width="593" height="302" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Interpretation (for this toy setup):</p>
+<ul>
+<li><strong>Compute budget</strong>: the amortised model pays an up-front simulation cost (here: <code>len(S_train)</code> sims), while the local approach spends <code>n_local</code> simulations <em>per observation</em>.</li>
+<li><strong>Posterior width</strong>: we report an approximate posterior width via <code>sd_beta(·)</code> (treating <span class="math inline">\(\log\beta\)</span> as Gaussian, so <span class="math inline">\(\beta\)</span> is log-normal).</li>
+<li><strong>PPC score</strong>: <code>ppc_dist(·)</code> is a tiny posterior predictive check score: simulate datasets from posterior draws and report the mean L2 distance between simulated and observed summaries.</li>
+</ul>
+<p>In practice, sequential NPE schemes use <em>multiple rounds</em> and better proposal adaptation, and the comparison depends strongly on the dimensionality of <span class="math inline">\(\theta\)</span> and on how broad the prior is.</p>
+</section>
+</section>
+<section id="notes" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="notes"><span class="header-section-number">10.2</span> Notes</h2>
+<ul>
+<li>This chapter starts with a <strong>beta-only</strong> running example so the inference mechanics stay transparent.</li>
+<li>The implementation is intentionally dependency-light; richer integrations can be added without changing the core workflow.</li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-cranmer2020frontier" class="csl-entry" role="listitem">
+Cranmer, Kyle, Johann Brehmer, and Gilles Louppe. 2020. <span>“The Frontier of Simulation-Based Inference.”</span> <em>Proceedings of the National Academy of Sciences</em> 117 (48): 30055–62.
+</div>
+<div id="ref-papamakarios2019snpe" class="csl-entry" role="listitem">
+Papamakarios, George, David Sterratt, and Iain Murray. 2019. <span>“Sequential Neural Posterior Estimation with Autoregressive Flows.”</span> <em>Proceedings of Machine Learning Research</em> 89: 837–48.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./likelihood-free-baselines.html" class="pagination-link" aria-label="Likelihood-free baselines">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Likelihood-free baselines</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./validation-and-robustness.html" class="pagination-link" aria-label="Validation and robustness">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Validation and robustness</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

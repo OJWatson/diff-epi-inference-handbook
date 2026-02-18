@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7&nbsp; Gradient estimators &amp; relaxations – Differentiable Epidemiology</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./toy-diff-epi-case-study.html" rel="next">
+<link href="./differentiability-axis.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-00ccf60c28c3bdf2d57f5131fbf16f11.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gradient-estimators.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Gradient estimators &amp; relaxations</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Differentiable Epidemiology</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Home</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./running-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Running example: SEIR + reporting</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical-baselines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Classical baselines</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./variational-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Variational inference</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./autodiff-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Automatic differentiation basics</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./differentiability-axis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differentiability axis: when your simulator is (not) differentiable</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gradient-estimators.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Gradient estimators &amp; relaxations</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./toy-diff-epi-case-study.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Toy differentiable epidemiology case study</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./likelihood-free-baselines.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Likelihood-free baselines</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./modern-sbi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Modern simulation-based inference</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./validation-and-robustness.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Validation and robustness</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">References</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#finite-differences-fragile" id="toc-finite-differences-fragile" class="nav-link active" data-scroll-target="#finite-differences-fragile"><span class="header-section-number">7.1</span> 0) Finite differences (fragile)</a>
+  <ul class="collapse">
+  <li><a href="#demo-biasvariance-trade-off-on-a-toy-bernoulli-infection-event" id="toc-demo-biasvariance-trade-off-on-a-toy-bernoulli-infection-event" class="nav-link" data-scroll-target="#demo-biasvariance-trade-off-on-a-toy-bernoulli-infection-event"><span class="header-section-number">7.1.1</span> Demo: bias/variance trade-off on a toy Bernoulli “infection event”</a></li>
+  </ul></li>
+  <li><a href="#score-function-gradients-reinforce" id="toc-score-function-gradients-reinforce" class="nav-link" data-scroll-target="#score-function-gradients-reinforce"><span class="header-section-number">7.2</span> 1) Score-function gradients (REINFORCE)</a>
+  <ul class="collapse">
+  <li><a href="#minimal-demo-bernoulli-reinforce-numpy" id="toc-minimal-demo-bernoulli-reinforce-numpy" class="nav-link" data-scroll-target="#minimal-demo-bernoulli-reinforce-numpy"><span class="header-section-number">7.2.1</span> Minimal demo: Bernoulli REINFORCE (NumPy)</a></li>
+  <li><a href="#variance-reduction-baselines" id="toc-variance-reduction-baselines" class="nav-link" data-scroll-target="#variance-reduction-baselines"><span class="header-section-number">7.2.2</span> Variance reduction: baselines</a></li>
+  </ul></li>
+  <li><a href="#pathwise-reparameterisation-gradients" id="toc-pathwise-reparameterisation-gradients" class="nav-link" data-scroll-target="#pathwise-reparameterisation-gradients"><span class="header-section-number">7.3</span> 2) Pathwise (reparameterisation) gradients</a></li>
+  <li><a href="#relaxations-for-categorical-discrete-choices" id="toc-relaxations-for-categorical-discrete-choices" class="nav-link" data-scroll-target="#relaxations-for-categorical-discrete-choices"><span class="header-section-number">7.4</span> 3) Relaxations for categorical / discrete choices</a>
+  <ul class="collapse">
+  <li><a href="#gumbelsoftmax-concrete" id="toc-gumbelsoftmax-concrete" class="nav-link" data-scroll-target="#gumbelsoftmax-concrete"><span class="header-section-number">7.4.1</span> Gumbel–Softmax (Concrete)</a></li>
+  <li><a href="#straight-through-estimators-heuristic" id="toc-straight-through-estimators-heuristic" class="nav-link" data-scroll-target="#straight-through-estimators-heuristic"><span class="header-section-number">7.4.2</span> Straight-through estimators (heuristic)</a></li>
+  </ul></li>
+  <li><a href="#practical-checklist" id="toc-practical-checklist" class="nav-link" data-scroll-target="#practical-checklist"><span class="header-section-number">7.5</span> Practical checklist</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Gradient estimators &amp; relaxations</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Many inference and learning methods in differentiable epidemiology rely on gradients. When your model has <strong>discrete</strong> components (discrete latent states, interventions, thresholds, reporting rules), naive differentiation breaks. The estimator families below follow the classical REINFORCE and Concrete/Gumbel-Softmax literature <span class="citation" data-cites="williams1992reinforce jang2017gumbel maddison2017concrete">(<a href="#ref-williams1992reinforce" role="doc-biblioref">Williams 1992</a>; <a href="#ref-jang2017gumbel" role="doc-biblioref">Jang, Gu, and Poole 2017</a>; <a href="#ref-maddison2017concrete" role="doc-biblioref">Maddison, Mnih, and Teh 2017</a>)</span>.</p>
+<p>This chapter collects a few practical tools:</p>
+<ul>
+<li><strong>Score-function gradients (REINFORCE)</strong> — general but often high-variance.</li>
+<li><strong>Pathwise / reparameterisation gradients</strong> — low variance when available.</li>
+<li><strong>Relaxations</strong> such as <strong>Gumbel–Softmax</strong> and <strong>straight-through</strong> estimators — heuristics that make optimisation possible even when the underlying model is discrete.</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>These estimators and relaxations are <em>not magic</em>. Always validate with posterior predictive checks / calibration, and expect sensitivity to temperature schedules, baselines, and parameterisation.</p>
+</div>
+</div>
+<section id="finite-differences-fragile" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="finite-differences-fragile"><span class="header-section-number">7.1</span> 0) Finite differences (fragile)</h2>
+<p>A first impulse is to approximate a gradient with finite differences:</p>
+<p><span class="math display">\[
+\frac{\partial}{\partial \phi}\,\mathbb{E}[f(z)]
+\approx \frac{\widehat{\mathbb{E}}_{\phi+\epsilon}[f(z)]-\widehat{\mathbb{E}}_{\phi-\epsilon}[f(z)]}{2\epsilon}.
+\]</span></p>
+<p>This can work for smooth, low-noise problems, but it is often <em>fragile</em>:</p>
+<ul>
+<li>you must choose a step size <span class="math inline">\(\epsilon\)</span>;</li>
+<li>Monte Carlo noise can dominate the difference;</li>
+<li>for discontinuous / discrete models, the estimator can be extremely unstable.</li>
+</ul>
+<section id="demo-biasvariance-trade-off-on-a-toy-bernoulli-infection-event" class="level3" data-number="7.1.1">
+<h3 data-number="7.1.1" class="anchored" data-anchor-id="demo-biasvariance-trade-off-on-a-toy-bernoulli-infection-event"><span class="header-section-number">7.1.1</span> Demo: bias/variance trade-off on a toy Bernoulli “infection event”</h3>
+<p>We estimate the gradient of <span class="math inline">\(\mathbb{E}[z]\)</span> where <span class="math inline">\(z\sim \mathrm{Bernoulli}(\sigma(\phi))\)</span>. The true gradient is <span class="math inline">\(\sigma(\phi)(1-\sigma(\phi))\)</span>.</p>
+<p>We compare three estimators:</p>
+<ul>
+<li>finite differences (MC)</li>
+<li>REINFORCE (score-function)</li>
+<li>a <em>soft relaxation</em> (Binary Concrete) with a pathwise derivative (biased at finite temperature)</li>
+</ul>
+<div id="eb5a0969" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.gradients <span class="im">import</span> bernoulli_concrete, reinforce_grad_logit_bernoulli</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>logit <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> <span class="fl">1.0</span> <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">+</span> np.exp(<span class="op">-</span>logit))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>true_grad <span class="op">=</span> p <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> p)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mc_mean_z(logit_value: <span class="bu">float</span>, <span class="op">*</span>, rng: np.random.Generator, n: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> <span class="fl">1.0</span> <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">+</span> np.exp(<span class="op">-</span>logit_value))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    z <span class="op">=</span> rng.binomial(n<span class="op">=</span><span class="dv">1</span>, p<span class="op">=</span>p, size<span class="op">=</span>n).astype(<span class="bu">float</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(np.mean(z))</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>n_samples <span class="op">=</span> <span class="dv">400</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>n_rep <span class="op">=</span> <span class="dv">300</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>eps <span class="op">=</span> <span class="fl">1e-2</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>tau <span class="op">=</span> <span class="fl">0.7</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>fd <span class="op">=</span> []</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>reinforce <span class="op">=</span> []</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>relaxed_pathwise <span class="op">=</span> []</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_rep):</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1) finite differences with two independent MC estimates</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    m_plus <span class="op">=</span> mc_mean_z(logit <span class="op">+</span> eps, rng<span class="op">=</span>rng, n<span class="op">=</span>n_samples)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    m_minus <span class="op">=</span> mc_mean_z(logit <span class="op">-</span> eps, rng<span class="op">=</span>rng, n<span class="op">=</span>n_samples)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    fd.append((m_plus <span class="op">-</span> m_minus) <span class="op">/</span> (<span class="dv">2</span> <span class="op">*</span> eps))</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2) REINFORCE: unbiased but high variance</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> reinforce_grad_logit_bernoulli(<span class="kw">lambda</span> z: z, logit<span class="op">=</span>logit, rng<span class="op">=</span>rng, n_samples<span class="op">=</span>n_samples)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    reinforce.append(r.grad)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3) Binary Concrete relaxation: differentiable sample y in [0, 1]</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> bernoulli_concrete(logit, temperature<span class="op">=</span>tau, rng<span class="op">=</span>rng)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pathwise derivative dy/dlogit for y = sigmoid((logit + noise)/tau)</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    relaxed_pathwise.append(<span class="bu">float</span>(y <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> y) <span class="op">/</span> tau))</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="fl">3.5</span>))</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>ax.boxplot([fd, reinforce, relaxed_pathwise], labels<span class="op">=</span>[<span class="st">"finite diff"</span>, <span class="st">"REINFORCE"</span>, <span class="ss">f"relax (tau=</span><span class="sc">{</span>tau<span class="sc">}</span><span class="ss">)"</span>], showfliers<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>ax.axhline(true_grad, color<span class="op">=</span><span class="st">"black"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, linewidth<span class="op">=</span><span class="dv">1</span>, label<span class="op">=</span><span class="st">"true"</span>)</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"gradient estimate"</span>)</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="ss">f"Toy Bernoulli gradient at logit=</span><span class="sc">{</span>logit<span class="sc">}</span><span class="ss"> (n=</span><span class="sc">{</span>n_samples<span class="sc">}</span><span class="ss">, reps=</span><span class="sc">{</span>n_rep<span class="sc">}</span><span class="ss">)"</span>)</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="st">"upper right"</span>)</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>np.mean(fd), np.mean(reinforce), np.mean(relaxed_pathwise), true_grad</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="gradient-estimators_files/figure-html/cell-2-output-1.png" width="587" height="320" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>(np.float64(0.3608333333333333),
+ np.float64(0.2434422916666667),
+ np.float64(0.18795659526175915),
+ np.float64(0.24445831169074586))</code></pre>
+</div>
+</div>
+<p>In practice:</p>
+<ul>
+<li>finite differences can be <em>wildly noisy</em> unless you spend a lot of compute;</li>
+<li>REINFORCE is unbiased but may require careful baselines / variance reduction;</li>
+<li>relaxations can give stable gradients, but they change the model (bias).</li>
+</ul>
+</section>
+</section>
+<section id="score-function-gradients-reinforce" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="score-function-gradients-reinforce"><span class="header-section-number">7.2</span> 1) Score-function gradients (REINFORCE)</h2>
+<p>Suppose we want gradients of an expectation</p>
+<p><span class="math display">\[
+\nabla_\phi\; \mathbb{E}_{z\sim p_\phi(z)}[f(z)]
+\]</span></p>
+<p>where <span class="math inline">\(z\)</span> is discrete. We can use the identity</p>
+<p><span class="math display">\[
+\nabla_\phi\; \mathbb{E}[f(z)] = \mathbb{E}\bigl[f(z)\,\nabla_\phi \log p_\phi(z)\bigr].
+\]</span></p>
+<p>For a Bernoulli variable parameterised by a <strong>logit</strong> <span class="math inline">\(\phi\)</span>,</p>
+<p><span class="math display">\[
+\nabla_\phi \log p_\phi(z) = z - \sigma(\phi).
+\]</span></p>
+<section id="minimal-demo-bernoulli-reinforce-numpy" class="level3" data-number="7.2.1">
+<h3 data-number="7.2.1" class="anchored" data-anchor-id="minimal-demo-bernoulli-reinforce-numpy"><span class="header-section-number">7.2.1</span> Minimal demo: Bernoulli REINFORCE (NumPy)</h3>
+<div id="1aa752b3" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.gradients <span class="im">import</span> reinforce_grad_logit_bernoulli</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>logit <span class="op">=</span> <span class="fl">0.3</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># f(z)=z  =&gt; E[z]=p  =&gt; d/dlogit E[z] = p(1-p)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> reinforce_grad_logit_bernoulli(<span class="kw">lambda</span> z: z, logit<span class="op">=</span>logit, rng<span class="op">=</span>rng, n_samples<span class="op">=</span><span class="dv">50_000</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> <span class="fl">1.0</span> <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">+</span> np.exp(<span class="op">-</span>logit))</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>res.grad, p <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> p)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<pre><code>(0.24469142040000003, np.float64(0.24445831169074586))</code></pre>
+</div>
+</div>
+</section>
+<section id="variance-reduction-baselines" class="level3" data-number="7.2.2">
+<h3 data-number="7.2.2" class="anchored" data-anchor-id="variance-reduction-baselines"><span class="header-section-number">7.2.2</span> Variance reduction: baselines</h3>
+<p>A common control variate is to subtract a baseline <span class="math inline">\(b\)</span>:</p>
+<p><span class="math display">\[
+\mathbb{E}[(f(z)-b)\nabla_\phi\log p_\phi(z)]
+\]</span></p>
+<p>Any baseline that does <strong>not</strong> depend on <span class="math inline">\(z\)</span> keeps the estimator unbiased and can drastically reduce variance.</p>
+<p>(Our tiny implementation uses the sample mean of <span class="math inline">\(f(z)\)</span> as a baseline option.)</p>
+</section>
+</section>
+<section id="pathwise-reparameterisation-gradients" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="pathwise-reparameterisation-gradients"><span class="header-section-number">7.3</span> 2) Pathwise (reparameterisation) gradients</h2>
+<p>When randomness can be expressed as a deterministic transform of parameter-free noise,</p>
+<p><span class="math display">\[
+\epsilon\sim p(\epsilon),\qquad z = g(\phi,\epsilon),
+\]</span></p>
+<p>we can differentiate through <span class="math inline">\(g\)</span> and estimate</p>
+<p><span class="math display">\[
+\nabla_\phi\,\mathbb{E}[f(g(\phi,\epsilon))]
+\approx \frac{1}{S}\sum_{s=1}^S \nabla_\phi f(g(\phi,\epsilon_s)).
+\]</span></p>
+<p>This usually has much lower variance than REINFORCE.</p>
+<p>In epidemiology, this is most directly applicable when your simulator is differentiable and the noise is reparameterisable (e.g.&nbsp;Gaussian noise models).</p>
+</section>
+<section id="relaxations-for-categorical-discrete-choices" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="relaxations-for-categorical-discrete-choices"><span class="header-section-number">7.4</span> 3) Relaxations for categorical / discrete choices</h2>
+<section id="gumbelsoftmax-concrete" class="level3" data-number="7.4.1">
+<h3 data-number="7.4.1" class="anchored" data-anchor-id="gumbelsoftmax-concrete"><span class="header-section-number">7.4.1</span> Gumbel–Softmax (Concrete)</h3>
+<p>For a categorical variable with logits <span class="math inline">\(\ell\in\mathbb{R}^K\)</span>, Gumbel–Softmax draws a <strong>soft one-hot</strong> vector on the simplex. As temperature <span class="math inline">\(\tau\to 0\)</span>, samples become closer to one-hot.</p>
+<p>For <span class="math inline">\(K=2\)</span> (a Bernoulli choice), this reduces to the <strong>Binary Concrete</strong> (a soft sample in <span class="math inline">\([0,1]\)</span>).</p>
+<div id="499be368" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diff_epi_inference.gradients <span class="im">import</span> gumbel_softmax</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>logits <span class="op">=</span> np.array([<span class="fl">0.0</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span>])</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> gumbel_softmax(logits, temperature<span class="op">=</span><span class="fl">0.7</span>, rng<span class="op">=</span>rng)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">float</span>(np.<span class="bu">sum</span>(y)), y</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>(1.0, array([0.51559895, 0.46900191, 0.01539914]))</code></pre>
+</div>
+</div>
+</section>
+<section id="straight-through-estimators-heuristic" class="level3" data-number="7.4.2">
+<h3 data-number="7.4.2" class="anchored" data-anchor-id="straight-through-estimators-heuristic"><span class="header-section-number">7.4.2</span> Straight-through estimators (heuristic)</h3>
+<p>A common practical trick is:</p>
+<ul>
+<li><strong>forward pass:</strong> use a hard discrete sample (argmax / threshold)</li>
+<li><strong>backward pass:</strong> pretend we used the soft sample</li>
+</ul>
+<p>This enables optimisation but is biased.</p>
+</section>
+</section>
+<section id="practical-checklist" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="practical-checklist"><span class="header-section-number">7.5</span> Practical checklist</h2>
+<p>When you reach for gradient estimators / relaxations:</p>
+<ol type="1">
+<li>Can you rewrite the randomness in a reparameterised form (pathwise gradient)?</li>
+<li>If you must use REINFORCE, can you add an effective baseline (and maybe Rao–Blackwellise parts)?</li>
+<li>If using Gumbel–Softmax:
+<ul>
+<li>choose a temperature schedule,</li>
+<li>check sensitivity to <span class="math inline">\(\tau\)</span>,</li>
+<li>validate downstream metrics (not just loss curves).</li>
+</ul></li>
+<li>Always test for <em>pathological gradients</em>: exploding variance, vanishing gradients at low temperatures, or optimisation instability.</li>
+</ol>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-jang2017gumbel" class="csl-entry" role="listitem">
+Jang, Eric, Shixiang Gu, and Ben Poole. 2017. <span>“Categorical Reparameterization with Gumbel-Softmax.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+<div id="ref-maddison2017concrete" class="csl-entry" role="listitem">
+Maddison, Chris J, Andriy Mnih, and Yee Whye Teh. 2017. <span>“The Concrete Distribution: A Continuous Relaxation of Discrete Random Variables.”</span> <em>International Conference on Learning Representations</em>.
+</div>
+<div id="ref-williams1992reinforce" class="csl-entry" role="listitem">
+Williams, Ronald J. 1992. <span>“Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning.”</span> <em>Machine Learning</em> 8: 229–56.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./differentiability-axis.html" class="pagination-link" aria-label="Differentiability axis: when your simulator is (not) differentiable">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differentiability axis: when your simulator is (not) differentiable</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./toy-diff-epi-case-study.html" class="pagination-link" aria-label="Toy differentiable epidemiology case study">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Toy differentiable epidemiology case study</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
