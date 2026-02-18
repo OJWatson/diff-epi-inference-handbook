@@ -25,9 +25,9 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Sync deps (locked; dev + modern-sbi)
+      - name: Sync deps (locked; dev + modern-sbi + nuts)
         run: |
-          uv sync --frozen --extra dev --extra modern-sbi
+          uv sync --frozen --extra dev --extra modern-sbi --extra nuts
           uv pip check
 
       - name: Set up Quarto

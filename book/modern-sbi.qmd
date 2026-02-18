@@ -335,105 +335,94 @@ It is just a minimal, end-to-end example of the mechanics we will reuse for neur
 - take gradients
 - apply an optimiser update
 
-::: {.callout-note}
-This example requires the optional **modern SBI** dependencies:
-
-```bash
-uv pip install -e '.[modern-sbi]'
-```
-
-If you do not have these installed, the code below will print a message and skip.
-:::
-
 ```{python}
 #| echo: true
 #| warning: false
 
-try:
-    import jax
-    import jax.numpy as jnp
-    import equinox as eqx
-    import optax
-
-    _HAVE_MODERN_SBI = True
-except Exception as e:  # pragma: no cover
-    _HAVE_MODERN_SBI = False
-    print("(Skipping JAX example; install `.[modern-sbi]` to run it.)")
-    print("Import error:", repr(e))
+import jax
+import jax.numpy as jnp
+import equinox as eqx
+import optax
 ```
 
 ```{python}
 #| echo: true
 #| warning: false
 
-if _HAVE_MODERN_SBI:
-    # Reuse the (S_train, logb_train) data defined above.
-    X = jnp.asarray(S_train)
-    y = jnp.asarray(logb_train)
+# Reuse the (S_train, logb_train) data defined above.
+X = jnp.asarray(S_train)
+y = jnp.asarray(logb_train)
 
-    # Standardise inputs (same idea as above).
-    x_mean = X.mean(axis=0)
-    x_std = jnp.where(X.std(axis=0) > 0, X.std(axis=0), 1.0)
-    Xn = (X - x_mean) / x_std
+# Standardise inputs (same idea as above).
+x_mean = X.mean(axis=0)
+x_std = jnp.where(X.std(axis=0) > 0, X.std(axis=0), 1.0)
+Xn = (X - x_mean) / x_std
 
-    class CondGaussian(eqx.Module):
-        net: eqx.nn.MLP
 
-        def __call__(self, x: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-            # Predict (mu, log_sigma) for log(beta) given summaries.
-            out = self.net(x)
-            mu = out[0]
-            log_sigma = out[1]
-            return mu, log_sigma
+class CondGaussian(eqx.Module):
+    net: eqx.nn.MLP
 
-    key = jax.random.PRNGKey(0)
-    model = CondGaussian(
-        net=eqx.nn.MLP(
-            in_size=3,
-            out_size=2,
-            width_size=16,
-            depth=2,
-            activation=jax.nn.tanh,
-            key=key,
-        )
+    def __call__(self, x: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+        # Predict (mu, log_sigma) for log(beta) given summaries.
+        out = self.net(x)
+        mu = out[0]
+        log_sigma = out[1]
+        return mu, log_sigma
+
+
+key = jax.random.PRNGKey(0)
+model = CondGaussian(
+    net=eqx.nn.MLP(
+        in_size=3,
+        out_size=2,
+        width_size=16,
+        depth=2,
+        activation=jax.nn.tanh,
+        key=key,
     )
+)
 
-    def nll_one(params: CondGaussian, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
-        mu, log_sigma = params(x)
-        # Add a small floor for numerical stability.
-        log_sigma = jnp.maximum(log_sigma, -6.0)
-        sigma2 = jnp.exp(2.0 * log_sigma)
-        return 0.5 * ((y - mu) ** 2 / sigma2 + 2.0 * log_sigma + jnp.log(2.0 * jnp.pi))
 
-    def loss(params: CondGaussian, xb: jnp.ndarray, yb: jnp.ndarray) -> jnp.ndarray:
-        return jnp.mean(jax.vmap(nll_one, in_axes=(None, 0, 0))(params, xb, yb))
+def nll_one(params: CondGaussian, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
+    mu, log_sigma = params(x)
+    # Add a small floor for numerical stability.
+    log_sigma = jnp.maximum(log_sigma, -6.0)
+    sigma2 = jnp.exp(2.0 * log_sigma)
+    return 0.5 * ((y - mu) ** 2 / sigma2 + 2.0 * log_sigma + jnp.log(2.0 * jnp.pi))
 
-    opt = optax.adam(1e-2)
-    opt_state = opt.init(eqx.filter(model, eqx.is_array))
 
-    @eqx.filter_jit
-    def step(params: CondGaussian, opt_state, xb: jnp.ndarray, yb: jnp.ndarray):
-        l, grads = eqx.filter_value_and_grad(loss)(params, xb, yb)
-        updates, opt_state = opt.update(grads, opt_state, params)
-        params = eqx.apply_updates(params, updates)
-        return params, opt_state, l
+def loss(params: CondGaussian, xb: jnp.ndarray, yb: jnp.ndarray) -> jnp.ndarray:
+    return jnp.mean(jax.vmap(nll_one, in_axes=(None, 0, 0))(params, xb, yb))
 
-    # Tiny SGD loop.
-    batch_size = 128
-    n_steps = 200
-    key, subkey = jax.random.split(key)
-    idx = jax.random.permutation(subkey, Xn.shape[0])
 
-    for t in range(n_steps):
-        i0 = (t * batch_size) % Xn.shape[0]
-        batch_idx = idx[i0 : i0 + batch_size]
-        xb = Xn[batch_idx]
-        yb = y[batch_idx]
-        model, opt_state, l = step(model, opt_state, xb, yb)
+opt = optax.adam(1e-2)
+opt_state = opt.init(eqx.filter(model, eqx.is_array))
 
-    # Quick sanity check: does the trained model reduce NLL vs random initialisation?
-    final_nll = float(loss(model, Xn, y))
-    print({"final_train_NLL": final_nll})
+
+@eqx.filter_jit
+def step(params: CondGaussian, opt_state, xb: jnp.ndarray, yb: jnp.ndarray):
+    l, grads = eqx.filter_value_and_grad(loss)(params, xb, yb)
+    updates, opt_state = opt.update(grads, opt_state, params)
+    params = eqx.apply_updates(params, updates)
+    return params, opt_state, l
+
+
+# Tiny SGD loop.
+batch_size = 128
+n_steps = 200
+key, subkey = jax.random.split(key)
+idx = jax.random.permutation(subkey, Xn.shape[0])
+
+for t in range(n_steps):
+    i0 = (t * batch_size) % Xn.shape[0]
+    batch_idx = idx[i0 : i0 + batch_size]
+    xb = Xn[batch_idx]
+    yb = y[batch_idx]
+    model, opt_state, l = step(model, opt_state, xb, yb)
+
+# Quick sanity check: does the trained model reduce NLL vs random initialisation?
+final_nll = float(loss(model, Xn, y))
+print({"final_train_NLL": final_nll})
 ```
 
 #### End-to-end: JAX conditional Gaussian NPE (posterior + posterior predictive)
@@ -450,89 +439,88 @@ The goal is *not* state-of-the-art performance; it is a runnable template you ca
 #| echo: true
 #| warning: false
 
-if _HAVE_MODERN_SBI:
-    import distrax
+import distrax
 
-    # Re-train deterministically (fresh init + fixed steps).
-    key = jax.random.PRNGKey(0)
-    key, subkey = jax.random.split(key)
-    model2 = CondGaussian(
-        net=eqx.nn.MLP(
-            in_size=3,
-            out_size=2,
-            width_size=16,
-            depth=2,
-            activation=jax.nn.tanh,
-            key=subkey,
-        )
+# Re-train deterministically (fresh init + fixed steps).
+key = jax.random.PRNGKey(0)
+key, subkey = jax.random.split(key)
+model2 = CondGaussian(
+    net=eqx.nn.MLP(
+        in_size=3,
+        out_size=2,
+        width_size=16,
+        depth=2,
+        activation=jax.nn.tanh,
+        key=subkey,
     )
+)
 
-    opt2 = optax.adam(1e-2)
-    opt_state2 = opt2.init(eqx.filter(model2, eqx.is_array))
+opt2 = optax.adam(1e-2)
+opt_state2 = opt2.init(eqx.filter(model2, eqx.is_array))
 
-    batch_size = 128
-    n_steps = 300
-    key, subkey = jax.random.split(key)
-    idx = jax.random.permutation(subkey, Xn.shape[0])
+batch_size = 128
+n_steps = 300
+key, subkey = jax.random.split(key)
+idx = jax.random.permutation(subkey, Xn.shape[0])
 
-    for t in range(n_steps):
-        i0 = (t * batch_size) % Xn.shape[0]
-        batch_idx = idx[i0 : i0 + batch_size]
-        xb = Xn[batch_idx]
-        yb = y[batch_idx]
-        model2, opt_state2, l = step(model2, opt_state2, xb, yb)
+for t in range(n_steps):
+    i0 = (t * batch_size) % Xn.shape[0]
+    batch_idx = idx[i0 : i0 + batch_size]
+    xb = Xn[batch_idx]
+    yb = y[batch_idx]
+    model2, opt_state2, l = step(model2, opt_state2, xb, yb)
 
-    # --- Approx posterior for log(beta) given observed summaries ---
-    s_obs_j = jnp.asarray(s_obs)
-    s_obs_n = (s_obs_j - x_mean) / x_std
-    mu_hat, log_sigma_hat = model2(s_obs_n)
-    log_sigma_hat = jnp.maximum(log_sigma_hat, -6.0)
+# --- Approx posterior for log(beta) given observed summaries ---
+s_obs_j = jnp.asarray(s_obs)
+s_obs_n = (s_obs_j - x_mean) / x_std
+mu_hat, log_sigma_hat = model2(s_obs_n)
+log_sigma_hat = jnp.maximum(log_sigma_hat, -6.0)
 
-    q = distrax.Normal(loc=mu_hat, scale=jnp.exp(log_sigma_hat))
+q = distrax.Normal(loc=mu_hat, scale=jnp.exp(log_sigma_hat))
 
-    key, subkey = jax.random.split(key)
-    logb_samps = np.asarray(q.sample(seed=subkey, sample_shape=(2_000,)))
-    beta_samps = np.exp(logb_samps)
+key, subkey = jax.random.split(key)
+logb_samps = np.asarray(q.sample(seed=subkey, sample_shape=(2_000,)))
+beta_samps = np.exp(logb_samps)
 
-    print(
-        {
-            "beta_true": beta_true,
-            "beta_post_mean": float(np.mean(beta_samps)),
-            "beta_post_q05": float(np.quantile(beta_samps, 0.05)),
-            "beta_post_q95": float(np.quantile(beta_samps, 0.95)),
-        }
+print(
+    {
+        "beta_true": beta_true,
+        "beta_post_mean": float(np.mean(beta_samps)),
+        "beta_post_q05": float(np.quantile(beta_samps, 0.05)),
+        "beta_post_q95": float(np.quantile(beta_samps, 0.95)),
+    }
+)
+
+# --- Tiny posterior predictive check on the summary space ---
+rng_ppc = np.random.default_rng(0)
+n_ppc = 80
+S_ppc = np.zeros((n_ppc, 3), dtype=float)
+for i in range(n_ppc):
+    beta_i = float(beta_samps[i])
+    params_i = SEIRParams(beta=beta_i, sigma=params_true.sigma, gamma=params_true.gamma)
+    ds_i = simulate_seir_and_report_stochastic(
+        params=params_i,
+        s0=10_000,
+        e0=3,
+        i0=2,
+        r0=0,
+        dt=1.0,
+        steps=steps,
+        reporting_rate=0.25,
+        rng=rng_ppc,
     )
+    S_ppc[i] = summary(ds_i.y)
 
-    # --- Tiny posterior predictive check on the summary space ---
-    rng_ppc = np.random.default_rng(0)
-    n_ppc = 80
-    S_ppc = np.zeros((n_ppc, 3), dtype=float)
-    for i in range(n_ppc):
-        beta_i = float(beta_samps[i])
-        params_i = SEIRParams(beta=beta_i, sigma=params_true.sigma, gamma=params_true.gamma)
-        ds_i = simulate_seir_and_report_stochastic(
-            params=params_i,
-            s0=10_000,
-            e0=3,
-            i0=2,
-            r0=0,
-            dt=1.0,
-            steps=steps,
-            reporting_rate=0.25,
-            rng=rng_ppc,
-        )
-        S_ppc[i] = summary(ds_i.y)
-
-    # Compare observed summary to PPC distribution (just a few quantiles).
-    q_lo = np.quantile(S_ppc, 0.1, axis=0)
-    q_hi = np.quantile(S_ppc, 0.9, axis=0)
-    print(
-        {
-            "ppc_q10": q_lo.round(2).tolist(),
-            "ppc_q90": q_hi.round(2).tolist(),
-            "s_obs": s_obs.round(2).tolist(),
-        }
-    )
+# Compare observed summary to PPC distribution (just a few quantiles).
+q_lo = np.quantile(S_ppc, 0.1, axis=0)
+q_hi = np.quantile(S_ppc, 0.9, axis=0)
+print(
+    {
+        "ppc_q10": q_lo.round(2).tolist(),
+        "ppc_q90": q_hi.round(2).tolist(),
+        "s_obs": s_obs.round(2).tolist(),
+    }
+)
 ```
 
 ### 3b) NLE: neural likelihood estimation

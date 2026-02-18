@@ -435,35 +435,30 @@ fig
   - Step size / tree depth (NUTS)
   - Divergences / energy diagnostics
 
-#### Optional: autodiff + NUTS via BlackJAX
+#### Autodiff + NUTS via BlackJAX
 
-This repository keeps JAX/BlackJAX as an **optional dependency**. If installed (see
-`pyproject.toml` extra `nuts`), you can run a full NUTS baseline with window adaptation.
-
-Below is a minimal sanity check on a 1D standard normal target. When the optional
-dependencies are missing, the cell prints a message and continues.
+Below is a minimal sanity check on a 1D standard normal target.
 
 ```{python}
-try:
-    import numpy as np
-    import jax.numpy as jnp
+import numpy as np
+import jax.numpy as jnp
 
-    from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
+from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
 
-    def log_prob_standard_normal(x):
-        return -0.5 * jnp.sum(x**2)
 
-    res_nuts = run_blackjax_nuts(
-        log_prob_standard_normal,
-        x0=np.array([5.0]),
-        num_warmup=ci(200, 50),
-        num_samples=ci(500, 150),
-        seed=0,
-    )
+def log_prob_standard_normal(x):
+    return -0.5 * jnp.sum(x**2)
 
-    float(res_nuts.accept_rate), float(np.mean(res_nuts.chain[:, 0])), float(np.std(res_nuts.chain[:, 0]))
-except ImportError as e:
-    print("Skipping BlackJAX NUTS demo (optional deps not installed):", e)
+
+res_nuts = run_blackjax_nuts(
+    log_prob_standard_normal,
+    x0=np.array([5.0]),
+    num_warmup=ci(200, 50),
+    num_samples=ci(500, 150),
+    seed=0,
+)
+
+float(res_nuts.accept_rate), float(np.mean(res_nuts.chain[:, 0])), float(np.std(res_nuts.chain[:, 0]))
 ```
 
 #### Optional: NUTS for the SEIR `beta`-only posterior (JAX reimplementation)
@@ -472,7 +467,7 @@ To use NUTS on the SEIR running example, the log posterior must be **JAX-traceab
 The core simulator in this repo is NumPy-based, so below we re-implement the *minimal*
 `beta`-only likelihood in `jax.numpy` (Euler step + delay convolution + NB likelihood).
 
-This is intentionally scoped to the `beta`-only demo so we can keep the optional path
+This is intentionally scoped to the `beta`-only demo so we can keep the path
 self-contained.
 
 **Note:** there is also an optional *calibration/coverage smoke test* for this NUTS path in
@@ -481,73 +476,67 @@ self-contained.
 reimplementation).
 
 ```{python}
-try:
-    import numpy as np
+import numpy as np
 
-    from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
+from diff_epi_inference.mcmc.nuts_blackjax import run_blackjax_nuts
 
-    from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
+from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
 
-    log_post_logbeta_jax = make_log_post_logbeta_jax(
-        y_obs=np.asarray(y_obs),
-        w_delay_pmf=np.asarray(w, dtype=float),
-        sigma=float(sigma_fixed),
-        gamma=float(gamma_fixed),
-        s0=float(s0),
-        e0=float(e0),
-        i0=float(i0),
-        r0=float(r0),
-        dt=float(dt),
-        steps=int(steps),
-        reporting_rate=float(reporting_rate),
-        dispersion=float(dispersion),
-        logbeta_prior_mean=float(logbeta_prior_mean),
-        logbeta_prior_sd=float(logbeta_prior_sd),
-    )
+log_post_logbeta_jax = make_log_post_logbeta_jax(
+    y_obs=np.asarray(y_obs),
+    w_delay_pmf=np.asarray(w, dtype=float),
+    sigma=float(sigma_fixed),
+    gamma=float(gamma_fixed),
+    s0=float(s0),
+    e0=float(e0),
+    i0=float(i0),
+    r0=float(r0),
+    dt=float(dt),
+    steps=int(steps),
+    reporting_rate=float(reporting_rate),
+    dispersion=float(dispersion),
+    logbeta_prior_mean=float(logbeta_prior_mean),
+    logbeta_prior_sd=float(logbeta_prior_sd),
+)
 
-    res_nuts_seir = run_blackjax_nuts(
-        log_post_logbeta_jax,
-        x0=np.array([np.log(0.3)]),
-        num_warmup=ci(400, 100),
-        num_samples=ci(800, 250),
-        seed=3,
-    )
+res_nuts_seir = run_blackjax_nuts(
+    log_post_logbeta_jax,
+    x0=np.array([np.log(0.3)]),
+    num_warmup=ci(400, 100),
+    num_samples=ci(800, 250),
+    seed=3,
+)
 
-    beta_chain_nuts = np.exp(res_nuts_seir.chain[:, 0])
-    accept_rate_nuts = float(res_nuts_seir.accept_rate)
-    beta_mean_nuts = float(np.mean(beta_chain_nuts))
-    beta_q05_nuts, beta_q95_nuts = [float(q) for q in np.quantile(beta_chain_nuts, [0.05, 0.95])]
+beta_chain_nuts = np.exp(res_nuts_seir.chain[:, 0])
+accept_rate_nuts = float(res_nuts_seir.accept_rate)
+beta_mean_nuts = float(np.mean(beta_chain_nuts))
+beta_q05_nuts, beta_q95_nuts = [float(q) for q in np.quantile(beta_chain_nuts, [0.05, 0.95])]
 
-    accept_rate_nuts, beta_mean_nuts, beta_q05_nuts, beta_q95_nuts
-except ImportError as e:
-    print("Skipping BlackJAX NUTS SEIR demo (optional deps not installed):", e)
+accept_rate_nuts, beta_mean_nuts, beta_q05_nuts, beta_q95_nuts
 ```
 
-A quick posterior predictive check (if NUTS ran):
+A quick posterior predictive check:
 
 ```{python}
-try:
-    q05_nuts, q50_nuts, q95_nuts = ppc_from_beta_draws(
-        beta_chain_nuts,
-        rng=np.random.default_rng(789),
-        n_draws=ci(60, 20),
-    )
+q05_nuts, q50_nuts, q95_nuts = ppc_from_beta_draws(
+    beta_chain_nuts,
+    rng=np.random.default_rng(789),
+    n_draws=ci(60, 20),
+)
 
-    t = np.arange(len(y_obs)) * dt
+t = np.arange(len(y_obs)) * dt
 
-    fig, ax = plot_observation_overlay(
-        t=t,
-        observed=y_obs,
-        expected=q50_nuts,
-        observed_label="observed y",
-        expected_label="posterior predictive median",
-        title="PPC (NUTS via BlackJAX; beta only)",
-    )
-    ax.fill_between(t, q05_nuts, q95_nuts, alpha=0.2, label="posterior predictive 90%")
-    ax.legend(loc="upper right")
-    fig
-except NameError:
-    print("Skipping NUTS PPC (NUTS SEIR demo did not run)")
+fig, ax = plot_observation_overlay(
+    t=t,
+    observed=y_obs,
+    expected=q50_nuts,
+    observed_label="observed y",
+    expected_label="posterior predictive median",
+    title="PPC (NUTS via BlackJAX; beta only)",
+)
+ax.fill_between(t, q05_nuts, q95_nuts, alpha=0.2, label="posterior predictive 90%")
+ax.legend(loc="upper right")
+fig
 ```
 
 ### 4) Diagnostics
@@ -564,45 +553,39 @@ In this project we use a small “core” of diagnostics repeatedly:
 A trace plot is the cheapest sanity check: it should look like a stationary “hairy caterpillar” rather than a drifting trend.
 In the examples above we used a single chain and inspected the trace visually.
 
-#### ESS and R-hat (where available)
+#### ESS and R-hat
 
 Effective sample size (ESS) and split $\\hat{R}$ are most meaningful when you run **multiple independent chains**.
-This repo intentionally avoids hard dependencies on MCMC diagnostic libraries, but if you have
-[ArviZ](https://python.arviz.org/en/stable/) installed you can compute these summaries with a few lines.
+With [ArviZ](https://python.arviz.org/en/stable/) we can compute these summaries with a few lines.
 
 ```{python}
-# Optional: compute R-hat / ESS for the MH beta-only demo using ArviZ.
-# This cell is safe to run even if ArviZ is not installed.
-try:
-    import numpy as np
-    import arviz as az
+import numpy as np
+import arviz as az
 
-    from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
+from diff_epi_inference.mcmc.mh import random_walk_metropolis_hastings
 
-    n_chains = 4
-    n_steps = 2_000
-    burn = 500
+n_chains = 4
+n_steps = 2_000
+burn = 500
 
-    chains = []
-    for seed in range(n_chains):
-        res_c = random_walk_metropolis_hastings(
-            log_post_logbeta,
-            x0=np.array([np.log(0.3)]),
-            proposal_std=0.10,
-            n_steps=n_steps,
-            rng=np.random.default_rng(100 + seed),
-        )
-        chains.append(np.exp(res_c.chain[burn:, 0]))
+chains = []
+for seed in range(n_chains):
+    res_c = random_walk_metropolis_hastings(
+        log_post_logbeta,
+        x0=np.array([np.log(0.3)]),
+        proposal_std=0.10,
+        n_steps=n_steps,
+        rng=np.random.default_rng(100 + seed),
+    )
+    chains.append(np.exp(res_c.chain[burn:, 0]))
 
-    beta_chains = np.stack(chains, axis=0)  # (chain, draw)
+beta_chains = np.stack(chains, axis=0)  # (chain, draw)
 
-    # ArviZ expects an InferenceData or an array with chain/draw dims.
-    rhat = float(az.rhat(beta_chains))
-    ess = float(az.ess(beta_chains))
+# ArviZ expects an InferenceData or an array with chain/draw dims.
+rhat = float(az.rhat(beta_chains))
+ess = float(az.ess(beta_chains))
 
-    rhat, ess
-except ImportError as e:
-    print("Skipping ESS/R-hat (optional dependency not installed):", e)
+rhat, ess
 ```
 
 Interpretation pointers (rules of thumb, not laws):

@@ -20,6 +20,7 @@ dev = [
   "pytest>=8",
   "ruff>=0.4",
   "matplotlib>=3.8",
+  "arviz>=0.19",
   "jupyter>=1.0",
   "pyyaml>=6.0",
 ]

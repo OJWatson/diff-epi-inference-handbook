@@ -274,104 +274,97 @@ This is an intentionally minimal implementation:
 ```{python}
 import numpy as np
 
-try:
-    import jax  # noqa: F401
+from diff_epi_inference import SEIRParams, discrete_gamma_delay_pmf
+from diff_epi_inference import expected_reported_cases_delayed, incidence_from_susceptibles
+from diff_epi_inference import sample_nbinom_reports, simulate_seir_euler
+from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
+from diff_epi_inference.vi import fit_meanfield_gaussian_vi_jax
 
-    from diff_epi_inference import SEIRParams, discrete_gamma_delay_pmf
-    from diff_epi_inference import expected_reported_cases_delayed, incidence_from_susceptibles
-    from diff_epi_inference import sample_nbinom_reports, simulate_seir_euler
-    from diff_epi_inference.models.seir_jax_beta_only import make_log_post_logbeta_jax
-    from diff_epi_inference.vi import fit_meanfield_gaussian_vi_jax
+rng = np.random.default_rng(2026)
 
-    rng = np.random.default_rng(2026)
+# Fixed model settings (small for a quick demo)
+sigma_fixed = 1 / 5
+gamma_fixed = 1 / 7
 
-    # Fixed model settings (small for a quick demo)
-    sigma_fixed = 1 / 5
-    gamma_fixed = 1 / 7
+s0, e0, i0, r0 = 999.0, 0.0, 1.0, 0.0
+dt = 0.5
+steps = 60
 
-    s0, e0, i0, r0 = 999.0, 0.0, 1.0, 0.0
-    dt = 0.5
-    steps = 60
+reporting_rate = 0.3
+w = discrete_gamma_delay_pmf(shape=2.0, scale=1.0, max_delay=15)
+dispersion = 20.0
 
-    reporting_rate = 0.3
-    w = discrete_gamma_delay_pmf(shape=2.0, scale=1.0, max_delay=15)
-    dispersion = 20.0
+# Prior on log(beta)
+logbeta_prior_mean = float(np.log(0.5))
+logbeta_prior_sd = 0.5
 
-    # Prior on log(beta)
-    logbeta_prior_mean = float(np.log(0.5))
-    logbeta_prior_sd = 0.5
+# Synthetic dataset
+beta_true = 0.6
+params_true = SEIRParams(beta=float(beta_true), sigma=sigma_fixed, gamma=gamma_fixed)
+out_true = simulate_seir_euler(
+    params=params_true,
+    s0=s0,
+    e0=e0,
+    i0=i0,
+    r0=r0,
+    dt=dt,
+    steps=steps,
+)
+inc_true = incidence_from_susceptibles(out_true["S"])
+mu_true = expected_reported_cases_delayed(
+    incidence=inc_true,
+    reporting_rate=reporting_rate,
+    delay_pmf=w,
+)
+y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
 
-    # Synthetic dataset
-    beta_true = 0.6
-    params_true = SEIRParams(beta=float(beta_true), sigma=sigma_fixed, gamma=gamma_fixed)
-    out_true = simulate_seir_euler(
-        params=params_true,
-        s0=s0,
-        e0=e0,
-        i0=i0,
-        r0=r0,
-        dt=dt,
-        steps=steps,
-    )
-    inc_true = incidence_from_susceptibles(out_true["S"])
-    mu_true = expected_reported_cases_delayed(
-        incidence=inc_true,
-        reporting_rate=reporting_rate,
-        delay_pmf=w,
-    )
-    y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
+log_post = make_log_post_logbeta_jax(
+    y_obs=y_obs,
+    w_delay_pmf=w,
+    sigma=sigma_fixed,
+    gamma=gamma_fixed,
+    s0=s0,
+    e0=e0,
+    i0=i0,
+    r0=r0,
+    dt=dt,
+    steps=steps,
+    reporting_rate=reporting_rate,
+    dispersion=dispersion,
+    logbeta_prior_mean=logbeta_prior_mean,
+    logbeta_prior_sd=logbeta_prior_sd,
+)
 
-    log_post = make_log_post_logbeta_jax(
-        y_obs=y_obs,
-        w_delay_pmf=w,
-        sigma=sigma_fixed,
-        gamma=gamma_fixed,
-        s0=s0,
-        e0=e0,
-        i0=i0,
-        r0=r0,
-        dt=dt,
-        steps=steps,
-        reporting_rate=reporting_rate,
-        dispersion=dispersion,
-        logbeta_prior_mean=logbeta_prior_mean,
-        logbeta_prior_sd=logbeta_prior_sd,
-    )
+vi = fit_meanfield_gaussian_vi_jax(
+    log_post,
+    dim=1,
+    seed=0,
+    num_steps=400,
+    lr=5e-2,
+    num_mc_samples=32,
+    init_mean=np.array([np.log(0.3)]),
+    init_log_std=np.array([np.log(0.5)]),
+)
 
-    vi = fit_meanfield_gaussian_vi_jax(
-        log_post,
-        dim=1,
-        seed=0,
-        num_steps=400,
-        lr=5e-2,
-        num_mc_samples=32,
-        init_mean=np.array([np.log(0.3)]),
-        init_log_std=np.array([np.log(0.5)]),
-    )
+beta_vi_mean = float(np.exp(vi.mean[0]))
+beta_vi_sd = float(np.exp(vi.log_std[0])) * beta_vi_mean  # delta method-ish
 
-    beta_vi_mean = float(np.exp(vi.mean[0]))
-    beta_vi_sd = float(np.exp(vi.log_std[0])) * beta_vi_mean  # delta method-ish
-
-    {
-        "beta_true": beta_true,
-        "beta_vi_mean": beta_vi_mean,
-        "beta_vi_sd_approx": beta_vi_sd,
-        "elbo_start": float(vi.elbo_history[0]),
-        "elbo_end": float(vi.elbo_history[-1]),
-    }
-
-except ModuleNotFoundError as e:
-    print("Optional dependency missing; skipping JAX VI demo:", e)
+{
+    "beta_true": beta_true,
+    "beta_vi_mean": beta_vi_mean,
+    "beta_vi_sd_approx": beta_vi_sd,
+    "elbo_start": float(vi.elbo_history[0]),
+    "elbo_end": float(vi.elbo_history[-1]),
+}
 ```
 
 ```{python}
-if "vi" in locals():
-    fig, ax = plot_loss_curve(
-        np.asarray(vi.elbo_history),
-        title="SEIR beta-only VI: ELBO over optimisation",
-        ylabel="ELBO",
-    )
-    fig
+fig, ax = plot_loss_curve(
+    np.asarray(vi.elbo_history),
+    title="SEIR beta-only VI: ELBO over optimisation",
+    ylabel="ELBO",
+)
+fig
 ```
 
 ## 7) Where VI fits in differentiable epidemiology

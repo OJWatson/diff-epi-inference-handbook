@@ -35,13 +35,10 @@ Binary-Concrete-style relaxation to produce differentiable "counts".
 #| echo: true
 #| warning: false
 
-HAVE_JAX = True
-try:
-    import jax  # noqa: F401
-except ModuleNotFoundError:
-    HAVE_JAX = False
+import numpy as np
 
-print("JAX available:", HAVE_JAX)
+from diff_epi_inference import plot_loss_curve, plot_series_comparison
+from diff_epi_inference.examples.toy_diff_epi_jax import fit_beta_by_gradient_descent, simulate_toy_relaxed_sir
 ```
 
 ```{python}
@@ -49,87 +46,78 @@ print("JAX available:", HAVE_JAX)
 #| echo: true
 #| warning: false
 
-if HAVE_JAX:
-    import numpy as np
+steps = 25
+true_beta = 0.40
+gamma = 0.20
 
-    from diff_epi_inference import plot_loss_curve, plot_series_comparison
-    from diff_epi_inference.examples.toy_diff_epi_jax import fit_beta_by_gradient_descent, simulate_toy_relaxed_sir
+# Generate a synthetic incidence curve
+path = simulate_toy_relaxed_sir(
+    seed=0,
+    beta=true_beta,
+    gamma=gamma,
+    s0=80.0,
+    i0=20.0,
+    r0=0.0,
+    steps=steps,
+    temperature=0.6,
+)
+y_obs = np.asarray(path.new_infections)
 
-    steps = 25
-    true_beta = 0.40
-    gamma = 0.20
+# Fit beta by differentiating through the simulator
+res = fit_beta_by_gradient_descent(
+    y_obs=y_obs,
+    seed=0,
+    beta_init=0.15,
+    gamma=gamma,
+    s0=80.0,
+    i0=20.0,
+    r0=0.0,
+    steps=steps,
+    temperature=0.6,
+    lr=0.25,
+    iters=40,
+)
 
-    # Generate a synthetic incidence curve
-    path = simulate_toy_relaxed_sir(
-        seed=0,
-        beta=true_beta,
-        gamma=gamma,
-        s0=80.0,
-        i0=20.0,
-        r0=0.0,
-        steps=steps,
-        temperature=0.6,
-    )
-    y_obs = np.asarray(path.new_infections)
-
-    # Fit beta by differentiating through the simulator
-    res = fit_beta_by_gradient_descent(
-        y_obs=y_obs,
-        seed=0,
-        beta_init=0.15,
-        gamma=gamma,
-        s0=80.0,
-        i0=20.0,
-        r0=0.0,
-        steps=steps,
-        temperature=0.6,
-        lr=0.25,
-        iters=40,
-    )
-
-    print("beta_init:", res.beta_init)
-    print("beta_hat :", round(res.beta_hat, 3))
-    print("loss[0]  :", float(res.losses[0]))
-    print("loss[-1] :", float(res.losses[-1]))
-else:
-    print("Skipping demo because JAX is not installed.")
+print("beta_init:", res.beta_init)
+print("beta_hat :", round(res.beta_hat, 3))
+print("loss[0]  :", float(res.losses[0]))
+print("loss[-1] :", float(res.losses[-1]))
 ```
 
 ```{python}
 #| echo: true
 #| warning: false
 
-if HAVE_JAX:
-    import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-    path_hat = simulate_toy_relaxed_sir(
-        seed=0,
-        beta=float(res.beta_hat),
-        gamma=gamma,
-        s0=80.0,
-        i0=20.0,
-        r0=0.0,
-        steps=steps,
-        temperature=0.6,
-    )
+path_hat = simulate_toy_relaxed_sir(
+    seed=0,
+    beta=float(res.beta_hat),
+    gamma=gamma,
+    s0=80.0,
+    i0=20.0,
+    r0=0.0,
+    steps=steps,
+    temperature=0.6,
+)
 
-    fig, ax = plot_series_comparison(
-        t=np.arange(steps, dtype=float),
-        observed=y_obs,
-        fitted=np.asarray(path_hat.new_infections),
-        observed_label="observed new infections",
-        fitted_label="fitted new infections",
-        title="Toy relaxed-SIR: observed vs fitted incidence",
-        ylabel="new infections / step",
-    )
-    plt.show()
+fig, ax = plot_series_comparison(
+    t=np.arange(steps, dtype=float),
+    observed=y_obs,
+    fitted=np.asarray(path_hat.new_infections),
+    observed_label="observed new infections",
+    fitted_label="fitted new infections",
+    title="Toy relaxed-SIR: observed vs fitted incidence",
+    ylabel="new infections / step",
+)
+plt.show()
 
-    fig, ax = plot_loss_curve(
-        np.asarray(res.losses),
-        title="Toy relaxed-SIR optimisation trajectory",
-        ylabel="MSE loss",
-    )
-    plt.show()
+fig, ax = plot_loss_curve(
+    np.asarray(res.losses),
+    title="Toy relaxed-SIR optimisation trajectory",
+    ylabel="MSE loss",
+)
+plt.show()
 ```
 
 ## Notes and caveats

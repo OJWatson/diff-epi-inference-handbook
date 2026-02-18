@@ -45,7 +45,10 @@ from diff_epi_inference import (
 ```
 
 ```{python}
-params = SEIRParams(beta=0.6, sigma=1 / 5, gamma=1 / 7)
+# Use a higher transmission rate and a longer horizon so the epidemic wave
+# rises and declines within the simulation window.
+sim_steps = 300
+params = SEIRParams(beta=2.2, sigma=1 / 5, gamma=1 / 7)
 out = simulate_seir_euler(
     params=params,
     s0=999.0,
@@ -53,7 +56,7 @@ out = simulate_seir_euler(
     i0=1.0,
     r0=0.0,
     dt=0.2,
-    steps=200,
+    steps=sim_steps,
 )
 
 t = out["t"]
@@ -108,7 +111,7 @@ ds_det2 = simulate_seir_and_report_deterministic(
     i0=1.0,
     r0=0.0,
     dt=0.2,
-    steps=200,
+    steps=sim_steps,
     reporting_rate=rho,
     rng=np.random.default_rng(1),
     name="reported (det pipeline)",
@@ -121,7 +124,7 @@ ds_sto2 = simulate_seir_and_report_stochastic(
     i0=1,
     r0=0,
     dt=0.2,
-    steps=200,
+    steps=sim_steps,
     reporting_rate=rho,
     rng=np.random.default_rng(2),
     name="reported (stoch pipeline)",

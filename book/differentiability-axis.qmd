@@ -79,7 +79,7 @@ print({"x0": res.x0, "eps": res.eps.tolist(), "fd": res.fd_estimates.round(2).to
 **Takeaway:** if your simulator includes hard thresholds, conditionals that change behaviour, integer rounding,
 or discrete-event updates, finite-difference gradients can become meaningless (or wildly sensitive to your choice of $\epsilon$).
 
-## Demo 2: autodiff on a smooth function is stable (optional JAX)
+## Demo 2: autodiff on a smooth function is stable
 
 When your simulator and likelihood are smooth, autodiff gives you gradients that are:
 
@@ -88,20 +88,17 @@ When your simulator and likelihood are smooth, autodiff gives you gradients that
 - cheap compared to finite differences in high dimensions.
 
 ```{python}
-try:
-    from diff_epi_inference.differentiability.demos import smooth_function_jax_grad_demo
+from diff_epi_inference.differentiability.demos import smooth_function_jax_grad_demo
 
-    res = smooth_function_jax_grad_demo(x0=0.3)
-    print(
-        {
-            "x0": res.x0,
-            "f0": round(res.f0, 6),
-            "grad_jax": round(res.grad0, 6),
-            "grad_analytic": round(res.grad0_analytic, 6),
-        }
-    )
-except ImportError as e:
-    print("Skipping JAX demo (optional deps not installed):", e)
+res = smooth_function_jax_grad_demo(x0=0.3)
+print(
+    {
+        "x0": res.x0,
+        "f0": round(res.f0, 6),
+        "grad_jax": round(res.grad0, 6),
+        "grad_analytic": round(res.grad0_analytic, 6),
+    }
+)
 ```
 
 ## Demo 3: a stochastic tau-leap SEIR simulator is non-differentiable as implemented

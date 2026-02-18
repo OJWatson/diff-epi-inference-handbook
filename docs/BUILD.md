@@ -28,7 +28,8 @@ python3 -m pip install -U pip
 # Install the package + dev deps (includes Jupyter + PyYAML for Quarto execution)
 pip install -e '.[dev]'
 
-# If you want to execute the Modern SBI (JAX) examples as well:
+# Install JAX-backed handbook paths (NUTS + modern SBI chapters):
+pip install -e '.[nuts]'
 pip install -e '.[modern-sbi]'
 
 # Quick sanity checks
@@ -46,6 +47,7 @@ Install extras like:
 
 ```bash
 pip install -e '.[dev]'
+pip install -e '.[nuts]'
 pip install -e '.[modern-sbi]'
 ```
 
