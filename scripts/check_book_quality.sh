@@ -4,15 +4,41 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+if command -v rg >/dev/null 2>&1; then
+  SEARCH_CMD="rg"
+else
+  SEARCH_CMD="grep"
+fi
+
+search_matches() {
+  local pattern="$1"
+  shift
+  if [[ "$SEARCH_CMD" == "rg" ]]; then
+    rg -n -e "$pattern" "$@"
+  else
+    grep -nE "$pattern" "$@"
+  fi
+}
+
+search_exists() {
+  local pattern="$1"
+  shift
+  if [[ "$SEARCH_CMD" == "rg" ]]; then
+    rg -q -e "$pattern" "$@"
+  else
+    grep -qE "$pattern" "$@"
+  fi
+}
+
 echo "[book-quality] Checking for roadmap-style language..."
 ROADMAP_PATTERN='## Goals|## Outline|## Plan|Deliverables:|to be expanded|working taxonomy|working sketch|milestone|next steps|work in progress'
-if rg -n -e "$ROADMAP_PATTERN" book/*.qmd; then
+if search_matches "$ROADMAP_PATTERN" book/*.qmd; then
   echo "[book-quality] Found roadmap-style sectioning or language."
   exit 1
 fi
 
 echo "[book-quality] Checking bibliography wiring..."
-if ! rg -q '^bibliography:' book/_quarto.yml; then
+if ! search_exists '^bibliography:' book/_quarto.yml; then
   echo "[book-quality] Missing bibliography in book/_quarto.yml"
   exit 1
 fi
@@ -22,7 +48,7 @@ if [[ ! -f book/references.bib ]]; then
   exit 1
 fi
 
-if ! rg -q '\[@' book/*.qmd; then
+if ! search_exists '\[@' book/*.qmd; then
   echo "[book-quality] No citation markers found in chapter files."
   exit 1
 fi
