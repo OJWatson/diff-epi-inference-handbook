@@ -18,6 +18,12 @@ Run in this order from repo root:
 make test
 ```
 
+`./scripts/ci.sh` includes a book-quality gate (`scripts/check_book_quality.sh`) that enforces:
+
+- no roadmap-style section markers in chapters,
+- bibliography wiring and citation usage,
+- bounded Python chunk length for readability.
+
 ## Local dev
 
 ```bash
@@ -32,3 +38,7 @@ pytest
 ## Build the book/site
 
 See [`docs/BUILD.md`](docs/BUILD.md) for prerequisites (Quarto + PDF deps) and render commands.
+
+## Publishing
+
+GitHub Pages is deployed by `.github/workflows/pages.yml` to the `gh-pages` branch from rendered `book/_book/`.

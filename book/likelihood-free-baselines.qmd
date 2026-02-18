@@ -5,30 +5,16 @@ title: "Likelihood-free baselines"
 This chapter introduces likelihood-free baselines for the running example.
 These methods are useful when the simulator is non-differentiable and/or when a tractable likelihood is unavailable.
 
-## Goals
+We focus on three families that define the classical foundation for simulation-based inference:
+ABC rejection [@beaumont2002abc], SMC-ABC, and synthetic likelihood
+[@wood2010synthetic].
 
-- Implement and demonstrate **ABC rejection** as a minimal, robust baseline.
-- (Optional) extend to **SMC-ABC** for better efficiency.
-- Introduce **synthetic likelihood** / likelihood-on-summaries as a bridge between ABC and modern SBI.
+## Chapter map
 
-## Outline
-
-### 1) Setup: summaries and distances
-
-- Choose summary statistics $s(y)$ for the observed time series (e.g. peak size/time, total cases, early growth rate).
-- Define a distance $d(s(y), s(y_{\mathrm{sim}}))$.
-- Discuss the trade-off between informativeness and dimensionality.
-
-### 2) ABC rejection
-
-- Sample $\theta \sim p(\theta)$.
-- Simulate $y_{\mathrm{sim}} \sim p(\cdot \mid \theta)$.
-- Accept if $d(s(y), s(y_{\mathrm{sim}})) \leq \varepsilon$.
-
-Deliverables:
-
-- A reusable `abc_rejection(...)` helper in `diff_epi_inference.abc`.
-- A small demo on the running example (start with `beta`-only, then expand).
+- Build low-dimensional summaries and a scaled distance.
+- Run ABC rejection for a first posterior approximation.
+- Tighten with SMC-ABC.
+- Bridge to synthetic likelihood on the same summary space.
 
 #### Demo: `beta`-only ABC on the stochastic simulator
 
@@ -66,7 +52,9 @@ ds_obs = simulate_seir_and_report_stochastic(
 )
 
 y_obs = ds_obs.y.astype(float)
+```
 
+```{python}
 
 # --- Prior and simulator ---
 # We sample log(beta) ~ Normal, then exponentiate.
@@ -113,8 +101,9 @@ def distance(s_sim: np.ndarray, s_obs: np.ndarray) -> float:
     # Rough scaling so "time" doesn't dominate.
     scale = np.array([1000.0, 50.0, 5.0])
     return float(np.linalg.norm((s_sim - s_obs) / scale))
+```
 
-
+```{python}
 res = abc_rejection(
     prior_sample=prior_sample,
     simulate=simulate,

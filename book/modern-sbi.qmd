@@ -6,33 +6,15 @@ This chapter starts the **modern SBI** track: amortised neural posterior / likel
 
 The goal is to provide a minimal, runnable baseline pipeline and show how to evaluate it (calibration, posterior predictive checks, and diagnostics).
 
-## Goals
+This chapter follows the modern SBI framing in [@cranmer2020frontier; @papamakarios2019snpe]
+and keeps the implementation deliberately transparent.
 
-- Introduce **normalising flows** (incl. conditional flows) as flexible density models.
-- Implement a small **NPE** (neural posterior estimation) pipeline.
-- Compare **amortised** vs **local** training on the running example.
-- Include at least one simple **calibration diagnostic**.
+## Chapter map
 
-## Outline
-
-### 1) SBI landscape (where flows fit)
-
-- Likelihood-free inference setting: simulator $y \sim p(\cdot\mid\theta)$.
-- Key families:
-  - **NPE**: learn $q_\phi(\theta\mid y)$.
-  - **NLE**: learn $q_\phi(y\mid\theta)$ then use MCMC.
-  - **NRE**: learn likelihood-to-evidence ratios / classifiers.
-- When to choose which (diff vs non-diff simulator, dimensionality, need for amortisation).
-
-### 2) Normalising flows (minimal tutorial)
-
-- Change of variables, log-determinant Jacobian.
-- Invertibility constraints.
-- Conditional flows: conditioning on summary features or raw time series embeddings.
-
-Deliverables:
-
-- A tiny flow-based density example (toy 1D/2D) to make the mechanics concrete.
+- Flow mechanics with an explicit change-of-variables example.
+- End-to-end beta-only NPE loop (simulation bank, conditional density fit, posterior sampling).
+- Lightweight JAX conditional density training loop.
+- Posterior predictive and amortised-vs-local diagnostics.
 
 #### A tiny flow “from scratch” (1D + 2D)
 
@@ -195,10 +177,6 @@ the same.
 - Choose an encoder for time series $y$ (summaries first; later a small neural encoder).
 - Train a conditional density model for $\theta\mid y$.
 - Evaluate on held-out simulations.
-
-Deliverables:
-
-- Minimal `train_npe(...)` / `sample_posterior_npe(...)` helpers (or a single notebook-style implementation in this chapter, if we keep code local).
 
 #### Demo: beta-only “NPE” with the package conditional-flow helper (no deep learning)
 
@@ -667,6 +645,7 @@ The goal is not to claim strong performance, but to make the trade-off concrete:
 
 import numpy as np
 
+from diff_epi_inference import plot_series_comparison
 from diff_epi_inference.flows import ConditionalAffineDiagNormal
 
 # Reuse from above: prior_sample_logbeta, simulate_y_from_logbeta, summary,
@@ -701,18 +680,6 @@ def fit_local_flow(
     return ConditionalAffineDiagNormal.fit_closed_form(contexts=S, thetas=logb[:, None])
 
 
-# Create a few synthetic "observations" with different true betas.
-K = 8
-rng_obs = np.random.default_rng(123)
-
-logb_true = np.array([prior_sample_logbeta(rng_obs) for _ in range(K)], dtype=float)
-beta_true_vec = np.exp(logb_true)
-
-s_obs_list: list[np.ndarray] = []
-for k in range(K):
-    yk = simulate_y_from_logbeta(float(logb_true[k]), rng=rng_obs)
-    s_obs_list.append(summary(yk))
-
 def lognormal_sd(*, mu: float, sigma: float) -> float:
     """SD of exp(X) when X ~ Normal(mu, sigma^2)."""
     v = float(sigma**2)
@@ -726,7 +693,7 @@ def ppc_summary_distance(
     n: int,
     rng: np.random.Generator,
 ) -> float:
-    """A tiny PPC score: mean L2 distance between simulated and observed summaries."""
+    """PPC score: mean L2 distance between simulated and observed summaries."""
     logb_samp = flow_model.sample(s_obs, n=n, rng=rng)[:, 0]
     dists = []
     for lb in logb_samp:
@@ -734,21 +701,33 @@ def ppc_summary_distance(
         s = summary(y)
         dists.append(float(np.linalg.norm(s - s_obs)))
     return float(np.mean(dists))
+```
+
+```{python}
+# Create a few synthetic "observations" with different true betas.
+K = 8
+rng_obs = np.random.default_rng(123)
+
+logb_true = np.array([prior_sample_logbeta(rng_obs) for _ in range(K)], dtype=float)
+beta_true_vec = np.exp(logb_true)
+
+s_obs_list: list[np.ndarray] = []
+for k in range(K):
+    yk = simulate_y_from_logbeta(float(logb_true[k]), rng=rng_obs)
+    s_obs_list.append(summary(yk))
 
 
 n_local = 400
 n_ppc = 120
 
-# Compare amortised vs local across: point estimate error, posterior width, and a PPC score.
+# Compare amortised vs local across point estimate error, posterior width, and PPC score.
 rows = []
 for k, s_k in enumerate(s_obs_list):
-    # Amortised: just evaluate the pre-trained flow.
     mu_am = float(flow.mean(s_k[None, :])[0, 0])
     beta_hat_am = float(np.exp(mu_am))
     sd_beta_am = lognormal_sd(mu=mu_am, sigma=float(np.exp(flow.log_sigma[0])))
     ppc_am = ppc_summary_distance(flow, s_k, n=n_ppc, rng=np.random.default_rng(200 + k))
 
-    # Local: refit around the amortised mean for this observation.
     flow_loc = fit_local_flow(
         s_k,
         flow_init=flow,
@@ -775,23 +754,19 @@ for k, s_k in enumerate(s_obs_list):
             "ppc_dist_loc": ppc_loc,
         }
     )
+```
 
-# Print a small table (keep dependencies light; no pandas).
-print("k  beta_true  beta_hat(am)  |err|  sd_beta(am)  ppc  ||  beta_hat(local)  |err|  sd_beta(local)  ppc")
-for r in rows:
-    print(
-        f"{r['k']:1d}  {r['beta_true']:.3f}     {r['beta_hat_am']:.3f}       {r['abs_err_am']:.3f}"
-        f"    {r['sd_beta_am']:.3f}      {r['ppc_dist_am']:.3f}"
-        f"   ||   {r['beta_hat_loc']:.3f}          {r['abs_err_loc']:.3f}"
-        f"    {r['sd_beta_loc']:.3f}         {r['ppc_dist_loc']:.3f}"
-    )
+```{python}
+abs_err_am = np.asarray([r["abs_err_am"] for r in rows], dtype=float)
+abs_err_loc = np.asarray([r["abs_err_loc"] for r in rows], dtype=float)
+ppc_am = np.asarray([r["ppc_dist_am"] for r in rows], dtype=float)
+ppc_loc = np.asarray([r["ppc_dist_loc"] for r in rows], dtype=float)
 
-mean_err_am = float(np.mean([r["abs_err_am"] for r in rows]))
-mean_err_loc = float(np.mean([r["abs_err_loc"] for r in rows]))
-mean_ppc_am = float(np.mean([r["ppc_dist_am"] for r in rows]))
-mean_ppc_loc = float(np.mean([r["ppc_dist_loc"] for r in rows]))
+mean_err_am = float(np.mean(abs_err_am))
+mean_err_loc = float(np.mean(abs_err_loc))
+mean_ppc_am = float(np.mean(ppc_am))
+mean_ppc_loc = float(np.mean(ppc_loc))
 
-# Simulation budgets (roughly): amortised sims once + local sims per observation.
 print(
     {
         "amortised_sims_total": int(len(S_train)),
@@ -803,6 +778,28 @@ print(
         "mean_ppc_dist_local": mean_ppc_loc,
     }
 )
+
+fig, ax = plot_series_comparison(
+    t=np.arange(K, dtype=float),
+    observed=abs_err_am,
+    fitted=abs_err_loc,
+    observed_label="amortised |error|",
+    fitted_label="local |error|",
+    title="Amortised vs local: absolute beta error by dataset",
+    ylabel="absolute error",
+)
+fig
+
+fig, ax = plot_series_comparison(
+    t=np.arange(K, dtype=float),
+    observed=ppc_am,
+    fitted=ppc_loc,
+    observed_label="amortised PPC distance",
+    fitted_label="local PPC distance",
+    title="Amortised vs local: PPC summary distance by dataset",
+    ylabel="mean L2 summary distance",
+)
+fig
 ```
 
 Interpretation (for this toy setup):

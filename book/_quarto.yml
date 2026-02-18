@@ -18,6 +18,9 @@ book:
     - likelihood-free-baselines.qmd
     - modern-sbi.qmd
     - validation-and-robustness.qmd
+    - references.qmd
+
+bibliography: references.bib
 
 format:
   html:

@@ -5,22 +5,15 @@ title: "Classical baselines"
 This chapter introduces *amortisation-free* inference baselines for the SEIR running example.
 These serve as anchors for later SBI/VI methods.
 
-## Goals
+The diagnostics and algorithm choices here follow standard MCMC references for HMC/NUTS and
+convergence assessment [@neal2011hmc; @hoffman2014nuts; @vehtari2021rankrhat].
 
-- Provide a **Metropolis–Hastings (MH)** baseline on the (possibly) non-differentiable simulator / likelihood.
-- Provide a **gradient-based HMC/NUTS** baseline on the differentiable ODE likelihood.
-- Include a minimal set of **diagnostics** that we will reuse throughout the book:
-  - Trace / mixing diagnostics (R-hat, ESS where available)
-  - Posterior predictive checks (PPC)
-  - Basic calibration checks (e.g. coverage on simulated datasets)
+## Chapter map
 
-## Plan
-
-### 1) Common interface
-
-- Define a parameter vector and priors consistent with the running example.
-- Define a log-likelihood `logp(y | theta)` (or unbiased estimate) plus `logp(theta)`.
-- Agree on what a “draw” contains (e.g. `theta`, latent trajectories optional, log joint).
+- Metropolis-Hastings baseline for a one-parameter posterior.
+- Finite-difference HMC as a pedagogical gradient bridge.
+- Optional autodiff NUTS baseline (BlackJAX).
+- Shared validation pieces: traces, PPC, and small coverage checks.
 
 ## Minimal MH demo: sampling a 1D Gaussian
 
@@ -148,7 +141,9 @@ mu_true = expected_reported_cases_delayed(
 
 rng = np.random.default_rng(0)
 y_obs = sample_nbinom_reports(expected=mu_true, dispersion=dispersion, rng=rng)
+```
 
+```{python}
 # --- Log posterior for log(beta) ---
 
 # Prior parameterisation note

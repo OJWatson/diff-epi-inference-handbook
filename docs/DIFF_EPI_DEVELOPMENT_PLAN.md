@@ -51,5 +51,5 @@ The package currently includes:
 ## Publication model
 
 - Main branch CI validates lint, tests, and executable HTML rendering.
-- Tag-triggered GitHub workflow publishes the rendered site to GitHub Pages.
+- Pushes to `main` (and optional release tags) publish the rendered site to GitHub Pages.
 - The live site should always correspond to a reproducible render from versioned sources.

@@ -24,6 +24,8 @@ jobs:
       - name: Sync deps (locked)
         run: |
           uv sync --frozen --extra dev
+      - name: Book quality checks
+        run: ./scripts/check_book_quality.sh
       - name: Lint (ruff)
         run: uv run ruff check .
       - name: Tests (pytest)

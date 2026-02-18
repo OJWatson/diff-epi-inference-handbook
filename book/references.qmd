@@ -1,0 +1,7 @@
+---
+title: "References"
+nocite: |
+  @*
+---
+
+This handbook cites primary references for inference methods, diagnostics, and differentiable modelling tools used in the chapters.

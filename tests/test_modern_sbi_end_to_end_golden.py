@@ -9,7 +9,7 @@ from diff_epi_inference.pipeline import simulate_seir_and_report_stochastic
 def test_modern_sbi_end_to_end_golden_outputs() -> None:
     """Golden checks for the offline deterministic Modern SBI end-to-end chapter.
 
-    This test intentionally mirrors `book/modern-sbi-end-to-end.qmd` and asserts key
+    This test intentionally mirrors `book/modern-sbi.qmd` and asserts key
     printed quantities are stable. If this test changes, update the chapter (and
     its frozen outputs) together.
     """

@@ -32,6 +32,7 @@ pip install -e '.[dev]'
 pip install -e '.[modern-sbi]'
 
 # Quick sanity checks
+./scripts/check_book_quality.sh
 ruff check .
 pytest
 ```

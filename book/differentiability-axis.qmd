@@ -13,8 +13,9 @@ In infectious disease modelling we often start from a simulator:
 
 Some of these are naturally differentiable (or can be made differentiable), and some are not.
 Choosing an inference method is easier if you explicitly locate your model on a **differentiability axis**.
+This framing mirrors current simulation-based inference practice [@cranmer2020frontier].
 
-## The differentiability axis (a working taxonomy)
+## The differentiability axis
 
 ### 1) Fully differentiable end-to-end
 
@@ -148,7 +149,7 @@ This is where you should consider:
 - synthetic likelihood / SBI / ABC,
 - differentiable surrogates or relaxations.
 
-## A method-selection decision tree (working sketch)
+## A method-selection decision tree
 
 This is deliberately simplified, but useful as a first pass.
 

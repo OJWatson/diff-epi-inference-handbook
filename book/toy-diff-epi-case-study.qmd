@@ -25,6 +25,7 @@ Directly sampling discrete counts blocks gradients.
 A common trick is to replace the discrete sampling with a **continuous
 relaxation** (e.g. a Concrete / Gumbel-Softmax relaxation), which produces
 fractional transition counts but keeps the computation differentiable.
+The relaxation used here follows the same core idea as [@jang2017gumbel; @maddison2017concrete].
 
 In this repo we implement a very small JAX-based toy simulator that uses a
 Binary-Concrete-style relaxation to produce differentiable "counts".
@@ -51,10 +52,8 @@ print("JAX available:", HAVE_JAX)
 if HAVE_JAX:
     import numpy as np
 
-    from diff_epi_inference.examples.toy_diff_epi_jax import (
-        fit_beta_by_gradient_descent,
-        simulate_toy_relaxed_sir,
-    )
+    from diff_epi_inference import plot_loss_curve, plot_series_comparison
+    from diff_epi_inference.examples.toy_diff_epi_jax import fit_beta_by_gradient_descent, simulate_toy_relaxed_sir
 
     steps = 25
     true_beta = 0.40
@@ -94,6 +93,43 @@ if HAVE_JAX:
     print("loss[-1] :", float(res.losses[-1]))
 else:
     print("Skipping demo because JAX is not installed.")
+```
+
+```{python}
+#| echo: true
+#| warning: false
+
+if HAVE_JAX:
+    import matplotlib.pyplot as plt
+
+    path_hat = simulate_toy_relaxed_sir(
+        seed=0,
+        beta=float(res.beta_hat),
+        gamma=gamma,
+        s0=80.0,
+        i0=20.0,
+        r0=0.0,
+        steps=steps,
+        temperature=0.6,
+    )
+
+    fig, ax = plot_series_comparison(
+        t=np.arange(steps, dtype=float),
+        observed=y_obs,
+        fitted=np.asarray(path_hat.new_infections),
+        observed_label="observed new infections",
+        fitted_label="fitted new infections",
+        title="Toy relaxed-SIR: observed vs fitted incidence",
+        ylabel="new infections / step",
+    )
+    plt.show()
+
+    fig, ax = plot_loss_curve(
+        np.asarray(res.losses),
+        title="Toy relaxed-SIR optimisation trajectory",
+        ylabel="MSE loss",
+    )
+    plt.show()
 ```
 
 ## Notes and caveats

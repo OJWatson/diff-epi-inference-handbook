@@ -9,6 +9,7 @@ Automatic differentiation (autodiff) is the workhorse that makes gradients pract
 models and pipelines.
 
 This chapter is intentionally **conceptual-first**. Runnable demos and helper code are included below.
+For deeper treatment, see [@griewank2008autodiff; @baydin2018autodiff].
 
 ## Learning goals
 
@@ -45,7 +46,7 @@ Reverse-mode computes derivatives by first running the program forward (saving i
 and then pulling *adjoint* information backwards.
 It is often efficient for scalar objectives with many parameters, which is common in inference.
 
-## Runnable demos (JAX; optional dependency)
+## Runnable demos (JAX path)
 
 This repository keeps JAX as an **optional dependency**.
 If you have it installed (see `pyproject.toml` extra `jax`), the cells below will run and produce
@@ -99,7 +100,7 @@ except ImportError as e:
     print("Skipping JAX reverse-mode demo (optional deps not installed):", e)
 ```
 
-## Practical checklist (to be expanded)
+## Practical checklist
 
 - Is your objective scalar? Reverse-mode is usually the default choice.
 - Are you computing derivatives w.r.t. many outputs? Consider forward-mode or batching.

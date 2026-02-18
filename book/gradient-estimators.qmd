@@ -4,6 +4,8 @@ title: "Gradient estimators & relaxations"
 
 Many inference and learning methods in differentiable epidemiology rely on gradients.
 When your model has **discrete** components (discrete latent states, interventions, thresholds, reporting rules), naive differentiation breaks.
+The estimator families below follow the classical REINFORCE and Concrete/Gumbel-Softmax literature
+[@williams1992reinforce; @jang2017gumbel; @maddison2017concrete].
 
 This chapter collects a few practical tools:
 

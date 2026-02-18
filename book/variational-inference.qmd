@@ -10,22 +10,17 @@ In differentiable epidemiology, VI is useful when you have a differentiable (app
 - scalable inference for larger models or many datasets,
 - a bridge from classical Bayesian modelling to *amortised* inference (where we learn an inference network).
 
-## Goals
+This chapter follows the standard VI treatment in [@blei2017vi; @kucukelbir2017advi].
 
-- Explain the **ELBO** and how it relates to the KL divergence.
-- Work through a **mean-field Gaussian VI** example end-to-end.
-- Introduce **stochastic gradient VI** (SVI) and the **reparameterisation trick**.
-- Connect VI to the rest of the handbook (classical baselines and modern SBI).
-
-## Outline
+## Chapter map
 
 1) VI in one diagram
-2) The ELBO: what we optimise, and why
-3) Choosing a variational family (mean-field vs richer families)
+2) ELBO derivation and interpretation
+3) Variational-family choices
 4) Optimisation strategies
-5) Worked example: normal–normal model (NumPy)
-6) Worked example: mean-field VI for the SEIR beta-only model (JAX)
-7) Where VI fits in differentiable epidemiology
+5) Normal-normal worked example
+6) SEIR beta-only mean-field VI example
+7) Placement relative to MCMC and SBI
 
 ## 1) VI in one diagram
 
@@ -124,6 +119,8 @@ Even though the posterior is exactly Gaussian here, the point is to show:
 
 ```{python}
 import numpy as np
+
+from diff_epi_inference import plot_distribution_comparison, plot_loss_curve
 
 rng = np.random.default_rng(0)
 
@@ -239,6 +236,21 @@ print(
 )
 ```
 
+```{python}
+posterior_draws = rng.normal(loc=mu_post, scale=tau_post, size=5_000)
+vi_draws = rng.normal(loc=m, scale=np.exp(log_s), size=5_000)
+
+fig, ax = plot_distribution_comparison(
+    a=posterior_draws,
+    b=vi_draws,
+    label_a="Exact posterior draws",
+    label_b="VI approximation draws",
+    title="Normal-normal example: posterior vs VI approximation",
+    xlabel="mu",
+)
+fig
+```
+
 ::: {.callout-tip}
 In higher dimensions you typically work with a *vector* mean and a parameterisation of the covariance
 (e.g. diagonal in mean-field VI).
@@ -350,6 +362,16 @@ try:
 
 except ModuleNotFoundError as e:
     print("Optional dependency missing; skipping JAX VI demo:", e)
+```
+
+```{python}
+if "vi" in locals():
+    fig, ax = plot_loss_curve(
+        np.asarray(vi.elbo_history),
+        title="SEIR beta-only VI: ELBO over optimisation",
+        ylabel="ELBO",
+    )
+    fig
 ```
 
 ## 7) Where VI fits in differentiable epidemiology
